@@ -1,5 +1,5 @@
 --============================================================
--- COCA SCRIPT : V42 GITHUB CLOUD EDITION
+-- COCA SCRIPT : V44 PROFESSIONAL EDITION
 -- Key: KINGCOCA | Pure Lua | 100% Crash-Proof | Zero Delay
 --============================================================
 
@@ -142,14 +142,16 @@ local targetGuiParent = nil
 pcall(function() if gethui then targetGuiParent = gethui() else targetGuiParent = CoreGui end end)
 if not targetGuiParent then targetGuiParent = LP:WaitForChild("PlayerGui") end
 
-local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V43") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
+local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V44") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
 if oldGui then oldGui:Destroy() end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "COCA_Capsule_V43"
+gui.Name = "COCA_Capsule_V44"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 999999
+gui.Enabled = true
 gui.Parent = targetGuiParent
 
 local targetESP = Instance.new("Highlight")
@@ -422,7 +424,7 @@ wrapper.Name = "Wrapper"
 wrapper.Size = UDim2.new(0, 260, 0, 520)
 wrapper.Position = UDim2.new(1, -300, 0.5, -260)
 wrapper.BackgroundTransparency = 1
-wrapper.Visible = false
+wrapper.Visible = true
 wrapper.Parent = gui
 
 local capsule = Instance.new("Frame")
@@ -683,46 +685,137 @@ local function createToggle(parent, labelText, stateTable, stateKey, callback)
 end
 
 local function createDirectStepper(parent, labelText, min, max, stateTable, stateKey)
+	-- Mobile-friendly slider with numeric editing and +/- precision controls.
 	local row = Instance.new("Frame")
-	row.Size = UDim2.new(1, 0, 0, 38)
+	row.Size = UDim2.new(1, 0, 0, 66)
 	row.BackgroundColor3 = BG_ELEMENT
+	row.BorderSizePixel = 0
 	row.Parent = parent
-	Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+	Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
 	local rStroke = Instance.new("UIStroke", row)
 	rStroke.Color = Color3.fromRGB(45, 45, 55)
-	
+
 	local lbl = Instance.new("TextLabel")
 	lbl.BackgroundTransparency = 1
-	lbl.Text = "  " .. labelText
-	lbl.TextSize = 12
+	lbl.Text = labelText
+	lbl.TextSize = 11
 	lbl.TextColor3 = TEXT_SUB
 	lbl.Font = Enum.Font.GothamBold
-	lbl.Size = UDim2.new(0.5, 0, 1, 0)
+	lbl.Size = UDim2.new(1, -92, 0, 20)
+	lbl.Position = UDim2.new(0, 10, 0, 5)
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = row
-	
+
 	local valInput = Instance.new("TextBox")
 	valInput.BackgroundTransparency = 1
 	valInput.Text = tostring(stateTable[stateKey])
-	valInput.TextSize = 13
+	valInput.TextSize = 12
 	valInput.TextColor3 = ACCENT
 	valInput.Font = Enum.Font.GothamBlack
-	valInput.Size = UDim2.new(0.5, -10, 1, 0)
-	valInput.Position = UDim2.new(0.5, 0, 0, 0)
+	valInput.Size = UDim2.new(0, 70, 0, 20)
+	valInput.Position = UDim2.new(1, -80, 0, 5)
 	valInput.TextXAlignment = Enum.TextXAlignment.Right
 	valInput.ClearTextOnFocus = false
 	valInput.Parent = row
-	
-	valInput.Focused:Connect(function() 
-		playSound(SOUNDS.Hover, 0.2, 1.5)
-		tween(rStroke, {Color = GRAD_2}, 0.2) 
+
+	local minus = Instance.new("TextButton")
+	minus.Size = UDim2.new(0, 24, 0, 24)
+	minus.Position = UDim2.new(1, -58, 0, 35)
+	minus.BackgroundColor3 = BG_MAIN
+	minus.Text = "−"
+	minus.TextSize = 15
+	minus.TextColor3 = TEXT_MAIN
+	minus.Font = Enum.Font.GothamBlack
+	minus.AutoButtonColor = false
+	minus.Parent = row
+	Instance.new("UICorner", minus).CornerRadius = UDim.new(0, 6)
+
+	local plus = Instance.new("TextButton")
+	plus.Size = UDim2.new(0, 24, 0, 24)
+	plus.Position = UDim2.new(1, -29, 0, 35)
+	plus.BackgroundColor3 = BG_MAIN
+	plus.Text = "+"
+	plus.TextSize = 15
+	plus.TextColor3 = TEXT_MAIN
+	plus.Font = Enum.Font.GothamBlack
+	plus.AutoButtonColor = false
+	plus.Parent = row
+	Instance.new("UICorner", plus).CornerRadius = UDim.new(0, 6)
+
+	local track = Instance.new("Frame")
+	track.Size = UDim2.new(1, -82, 0, 6)
+	track.Position = UDim2.new(0, 10, 0, 44)
+	track.BackgroundColor3 = RADIO_OFF
+	track.BorderSizePixel = 0
+	track.Active = true
+	track.Parent = row
+	Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+	local fill = Instance.new("Frame")
+	fill.BackgroundColor3 = GRAD_2
+	fill.BorderSizePixel = 0
+	fill.Size = UDim2.new(0, 0, 1, 0)
+	fill.Parent = track
+	Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+	local knob = Instance.new("TextButton")
+	knob.Size = UDim2.new(0, 16, 0, 16)
+	knob.AnchorPoint = Vector2.new(0.5, 0.5)
+	knob.BackgroundColor3 = TEXT_MAIN
+	knob.Text = ""
+	knob.AutoButtonColor = false
+	knob.ZIndex = 4
+	knob.Parent = track
+	Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+
+	local function decimals()
+		return (max <= 30 and min < 1) and 1 or 0
+	end
+	local step = (max <= 30 and min < 1) and 0.1 or 1
+	local function formatValue(v)
+		if decimals() == 1 then return string.format("%.1f", v) end
+		return tostring(math.floor(v + 0.5))
+	end
+	local function applyValue(v)
+		v = math.clamp(tonumber(v) or tonumber(stateTable[stateKey]) or min, min, max)
+		if step < 1 then v = math.floor(v / step + 0.5) * step end
+		stateTable[stateKey] = v
+		valInput.Text = formatValue(v)
+		local pct = (v - min) / math.max(max - min, 0.0001)
+		fill.Size = UDim2.new(pct, 0, 1, 0)
+		knob.Position = UDim2.new(pct, 0, 0.5, 0)
+	end
+
+	local dragging = false
+	local function setFromX(x)
+		local left = track.AbsolutePosition.X
+		local width = math.max(track.AbsoluteSize.X, 1)
+		local pct = math.clamp((x - left) / width, 0, 1)
+		applyValue(min + (max - min) * pct)
+	end
+	track.InputBegan:Connect(function(io)
+		if io.UserInputType == Enum.UserInputType.MouseButton1 or io.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			setFromX(io.Position.X)
+		end
+	end)
+	knob.InputBegan:Connect(function(io)
+		if io.UserInputType == Enum.UserInputType.MouseButton1 or io.UserInputType == Enum.UserInputType.Touch then dragging = true end
+	end)
+	UserInputService.InputChanged:Connect(function(io)
+		if dragging and (io.UserInputType == Enum.UserInputType.MouseMovement or io.UserInputType == Enum.UserInputType.Touch) then setFromX(io.Position.X) end
+	end)
+	UserInputService.InputEnded:Connect(function(io)
+		if io.UserInputType == Enum.UserInputType.MouseButton1 or io.UserInputType == Enum.UserInputType.Touch then dragging = false end
 	end)
 	valInput.FocusLost:Connect(function()
-		tween(rStroke, {Color = Color3.fromRGB(45, 45, 55)}, 0.2)
-		local num = tonumber(valInput.Text)
-		if num then stateTable[stateKey] = math.clamp(num, min, max) else valInput.Text = tostring(stateTable[stateKey]) end
-		valInput.Text = tostring(stateTable[stateKey])
+		applyValue(valInput.Text)
+		tween(rStroke, {Color = Color3.fromRGB(45,45,55)}, 0.15)
 	end)
+	valInput.Focused:Connect(function() tween(rStroke, {Color = GRAD_2}, 0.15) end)
+	minus.Activated:Connect(function() applyValue((tonumber(stateTable[stateKey]) or min) - step) end)
+	plus.Activated:Connect(function() applyValue((tonumber(stateTable[stateKey]) or min) + step) end)
+	applyValue(stateTable[stateKey])
 	return row
 end
 
@@ -1305,7 +1398,10 @@ Internal.RefreshTargets = function()
 
 	for _, target in ipairs(targets) do
 		if targetMatches(target, tSearch.Text) then
-			local row = createTargetRow(tList, target)
+			local rowOk, row = pcall(createTargetRow, tList, target)
+			if not rowOk or not row then
+				warn("[COCA] Target row error: " .. tostring(row))
+			else
 			table.insert(targetButtonData, {btn = row, targetData = target})
 			if State.Target then
 				local match = (State.Target.kind == "PLAYER" and State.Target.player == target.player)
@@ -1314,6 +1410,7 @@ Internal.RefreshTargets = function()
 					row.BackgroundColor3 = Color3.fromRGB(38,58,46)
 					local s = row:FindFirstChildOfClass("UIStroke")
 					if s then s.Color = SUCCESS; s.Thickness = 1.5 end
+				end
 				end
 			end
 		end
@@ -2385,6 +2482,7 @@ verification.Size = UDim2.new(0, 320, 0, 380)
 verification.Position = UDim2.new(0.5, -160, 0.5, -190)
 verification.BackgroundColor3 = BG_MAIN
 verification.BorderSizePixel = 0
+verification.ZIndex = 1000
 verification.Parent = gui
 Instance.new("UICorner", verification).CornerRadius = UDim.new(0, 16)
 local vStroke = Instance.new("UIStroke", verification)
@@ -2666,6 +2764,7 @@ end)
 
 verification.Visible = true
 wrapper.Visible = false
+gui.Enabled = true
 
 task.spawn(function()
 	while gui.Parent do
@@ -2676,4 +2775,9 @@ task.spawn(function()
 	end
 end)
 
-print("COCA CAPSULE: V43 PREMIUM CLOUD ENGINE INITIALIZED | Key: KINGCOCA")
+task.defer(function()
+	if not gui or not gui.Parent then return end
+	gui.Enabled = true
+	if not verification.Visible and not State.Unlocked then verification.Visible = true end
+end)
+print("COCA CAPSULE: V44 PROFESSIONAL ENGINE INITIALIZED | Key: KINGCOCA")
