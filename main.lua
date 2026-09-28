@@ -1,5 +1,5 @@
 --============================================================
--- COCA SCRIPT : V44 PROFESSIONAL EDITION
+-- COCA SCRIPT : V45 RESTORED STABLE EDITION
 -- Key: KINGCOCA | Pure Lua | 100% Crash-Proof | Zero Delay
 --============================================================
 
@@ -139,8 +139,16 @@ end
 --============================================================
 
 local targetGuiParent = nil
-pcall(function() if gethui then targetGuiParent = gethui() else targetGuiParent = CoreGui end end)
-if not targetGuiParent then targetGuiParent = LP:WaitForChild("PlayerGui") end
+pcall(function()
+    if gethui then
+        local h = gethui()
+        if typeof(h) == "Instance" then targetGuiParent = h end
+    end
+end)
+if not targetGuiParent then targetGuiParent = CoreGui end
+if not targetGuiParent or typeof(targetGuiParent) ~= "Instance" then
+    targetGuiParent = LP:WaitForChild("PlayerGui")
+end
 
 local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V44") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
 if oldGui then oldGui:Destroy() end
@@ -264,24 +272,50 @@ local function flatCF(cf)
 	return CFrame.new(cf.Position) * CFrame.Angles(0, y, 0) 
 end
 
+local function resolveCharacterRoot(model)
+    if not model or not model.Parent then return nil end
+    local h = hum(model)
+    if not h or h.Health <= 0 then return nil end
+    local r = model:FindFirstChild("HumanoidRootPart")
+        or model.PrimaryPart
+        or model:FindFirstChild("UpperTorso")
+        or model:FindFirstChild("Torso")
+    if r and r:IsA("BasePart") then return r end
+    return nil
+end
+
 local function getTargetChar()
-	if not State.Target then return nil end
-	if State.Target.kind == "PLAYER" then
-		local p = State.Target.player
-		if p and p.Parent and p.Character then 
-			State.Target.instance = p.Character
-			if hum(p.Character) and root(p.Character) then return p.Character end 
-		end
-	elseif State.Target.kind == "NPC" then
-		local m = State.Target.instance
-		if m and m.Parent and hum(m) and root(m) then return m end
-	end
-	return nil
+    local target = State.Target
+    if not target then return nil end
+
+    if target.kind == "PLAYER" then
+        local p = target.player
+        if not p or not p.Parent then return nil end
+
+        local char = p.Character
+        if not char then return nil end
+
+        local r = resolveCharacterRoot(char)
+        if r then
+            target.instance = char
+            return char
+        end
+        return nil
+    end
+
+    if target.kind == "NPC" then
+        local m = target.instance
+        if m and m.Parent and resolveCharacterRoot(m) then
+            return m
+        end
+    end
+
+    return nil
 end
 
 local function getTargetRoot()
-	local tc = getTargetChar()
-	return tc and root(tc)
+    local tc = getTargetChar()
+    return tc and resolveCharacterRoot(tc)
 end
 
 -- IMPORTANT: declare this before getTargets. The previous build referenced
@@ -1557,13 +1591,15 @@ local movesStart = button(tabs.Moves, "⚡ INITIATE TROLL", true)
 
 Internal.StopMoves = function()
 	State.Moves.Running = false
+	State.Moves.TargetLostAt = nil
 	local char = LP.Character
 	if char then 
 		local humanoid = hum(char)
-		if humanoid then 
+		if humanoid then
 			humanoid.AutoRotate = true
-			humanoid.PlatformStand = false 
-		end 
+			humanoid.PlatformStand = false
+			humanoid.Sit = false
+		end
 		for _, part in ipairs(char:GetDescendants()) do 
 			if part:IsA("BasePart") then 
 				part.CanCollide = true
@@ -1581,31 +1617,42 @@ Internal.StopMoves = function()
 end
 
 movesStart.Activated:Connect(function()
-	if State.Moves.Running then 
-		Internal.StopMoves()
-		return 
-	end
-	if not State.Target then 
-		Notify("ERROR", "You must select a target first!", DANGER)
-		return 
-	end
-	
-	local tr = getTargetRoot()
-	local myChar = LP.Character
-	local myH = myChar and hum(myChar)
-	
-	if not tr or not myH then
-		Notify("ERROR", "Target not spawned or dead.", DANGER)
-		return
-	end
-	
-	myH.PlatformStand = true
-	myH.Sit = false
-	pcall(function() myChar:PivotTo(tr.CFrame) end)
-	
-	State.Moves.Running = true
-	movesStart.Text = "■ ABORT TROLL"
-	Notify("TROLL ENGINE", State.Moves.Mode .. " engaged.", SUCCESS)
+    if State.Moves.Running then
+        Internal.StopMoves()
+        return
+    end
+
+    if not State.Target then
+        Notify("ERROR", "You must select a target first!", DANGER)
+        return
+    end
+
+    local tr = getTargetRoot()
+    if not tr and State.Target.kind == "PLAYER" and State.Target.player then
+        local liveChar = State.Target.player.Character
+        local liveRoot = resolveCharacterRoot(liveChar)
+        if liveRoot then
+            State.Target.instance = liveChar
+            tr = liveRoot
+        end
+    end
+
+    local myChar = LP.Character
+    local myH = myChar and hum(myChar)
+
+    if not tr or not myH then
+        Notify("ERROR", "Target character is not ready yet. Try again after it spawns.", DANGER)
+        return
+    end
+
+    myH.PlatformStand = true
+    myH.Sit = false
+    State.Moves.TargetLostAt = nil
+    pcall(function() myChar:PivotTo(tr.CFrame) end)
+
+    State.Moves.Running = true
+    movesStart.Text = "■ ABORT TROLL"
+    Notify("TROLL ENGINE", State.Moves.Mode .. " engaged.", SUCCESS)
 end)
 
 --============================================================
@@ -1722,8 +1769,20 @@ titleHeader(tabs.Chat, "💬 CHAT SPAMMER")
 createMiniDash(tabs.Chat)
 
 header(tabs.Chat, "MESSAGE OVERRIDE")
-local chatMessage = input(tabs.Chat, "Enter message to spam...", 60, false)
+local chatMessage = input(tabs.Chat, "Enter message to send...", 60, false)
 chatMessage.MultiLine = true
+
+local chatMode = "ALL"
+local chatModeBtn = button(tabs.Chat, "◎ SEND TO ALL")
+chatModeBtn.Activated:Connect(function()
+    if chatMode == "ALL" then
+        chatMode = "TARGET"
+        chatModeBtn.Text = "◎ WHISPER TARGET"
+    else
+        chatMode = "ALL"
+        chatModeBtn.Text = "◎ SEND TO ALL"
+    end
+end)
 chatMessage.TextWrapped = true
 chatMessage.TextYAlignment = Enum.TextYAlignment.Top
 
@@ -1748,9 +1807,17 @@ chatStart.Activated:Connect(function()
 			while State.Chat.Running do
 				local text = chatMessage.Text
 				if text == "" then text = "GG!" end
-				if State.Target and State.Target.kind == "PLAYER" and State.Target.player then 
-					text = "/w " .. State.Target.player.Name .. " " .. text 
+
+				if chatMode == "TARGET" then
+					if State.Target and State.Target.kind == "PLAYER" and State.Target.player and State.Target.player.Parent then
+						text = "/w " .. State.Target.player.Name .. " " .. text
+					else
+						Notify("CHAT", "Whisper mode needs a player target. Switching to SEND TO ALL.", YELLOW)
+						chatMode = "ALL"
+						chatModeBtn.Text = "◎ SEND TO ALL"
+					end
 				end
+
 				local bypass = ""
 				for i = 1, math.random(1, 4) do bypass = bypass .. "\226\128\139" end
 				local finalText = text .. bypass
@@ -2173,7 +2240,8 @@ phText.Position = UDim2.new(0, 6, 0, 0)
 phText.TextXAlignment = Enum.TextXAlignment.Center
 phText.Parent = perfHud
 
-perfExecutor.Text = "EXECUTOR: " .. perfExecutorName
+local perfExecutorName = getExecutorName()
+perfExecutor.Text = "EXECUTOR  •  " .. perfExecutorName
 
 -- Refreshing this display at a modest interval avoids adding unnecessary work to the
 -- frame loop while still feeling live.
@@ -2305,12 +2373,27 @@ RunService.Heartbeat:Connect(function()
 	-- Master Troll Execution Pipeline
 	if State.Moves.Running then
 		if not targetRoot then
-			State.Moves.Running = false
-			myHum.PlatformStand = false
-			myHum.AutoRotate = true
-			movesStart.Text = "⚡ INITIATE TROLL"
+			local liveChar = getTargetChar()
+			if liveChar then
+				targetRoot = resolveCharacterRoot(liveChar)
+				targetHead = liveChar:FindFirstChild("Head")
+			end
+		end
+
+		if not targetRoot then
+			State.Moves.TargetLostAt = State.Moves.TargetLostAt or os.clock()
+			if os.clock() - State.Moves.TargetLostAt > 2 then
+				State.Moves.Running = false
+				State.Moves.TargetLostAt = nil
+				myHum.PlatformStand = false
+				myHum.AutoRotate = true
+				movesStart.Text = "⚡ INITIATE TROLL"
+				Notify("TROLL ENGINE", "Target character is not spawned.", DANGER)
+			end
 			return
 		end
+
+		State.Moves.TargetLostAt = nil
 		local t = os.clock()
 		local dist = math.max(0.1, State.Moves.Distance)
 		local spd = math.max(0.1, State.Moves.Speed)
@@ -2763,7 +2846,9 @@ Players.PlayerRemoving:Connect(function(plr)
 end)
 
 verification.Visible = true
+verification.ZIndex = 1000
 wrapper.Visible = false
+wrapper.ZIndex = 100
 gui.Enabled = true
 
 task.spawn(function()
@@ -2778,6 +2863,10 @@ end)
 task.defer(function()
 	if not gui or not gui.Parent then return end
 	gui.Enabled = true
-	if not verification.Visible and not State.Unlocked then verification.Visible = true end
+	verification.Visible = not State.Unlocked
+	wrapper.Visible = State.Unlocked
+	if State.Unlocked then
+		Internal.RefreshTargets()
+	end
 end)
-print("COCA CAPSULE: V44 PROFESSIONAL ENGINE INITIALIZED | Key: KINGCOCA")
+print("COCA CAPSULE: V45 RESTORED STABLE ENGINE INITIALIZED | Key: KINGCOCA")
