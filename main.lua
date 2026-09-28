@@ -5,8 +5,8 @@
 
 local cloneref = cloneref or function(...) return ... end
 local S = setmetatable({}, {__index=function(_,n) return cloneref(game:GetService(n)) end})
-local Players, RunService, UserInputService, TextChatService, TweenService, VirtualUser, CoreGui, HttpService =
-	S.Players, S.RunService, S.UserInputService, S.TextChatService, S.TweenService, S.VirtualUser, S.CoreGui, S.HttpService
+local Players, RunService, UserInputService, TextChatService, TweenService, VirtualUser, CoreGui, HttpService, GuiService, Stats =
+	S.Players, S.RunService, S.UserInputService, S.TextChatService, S.TweenService, S.VirtualUser, S.CoreGui, S.HttpService, S.GuiService, S.Stats
 
 local LP = Players.LocalPlayer
 
@@ -14,7 +14,11 @@ local LP = Players.LocalPlayer
 -- 🔒 SUPREME ACCESS WHITELIST
 --============================================================
 local VIP_USERNAMES = {
-	["shivyy73"] = true, -- 👑 SUPREME OWNER
+	["shivyy73"] = { role = "SUPREME OWNER", icon = "♛", tier = 3 },
+	["armaan_lulla"] = { role = "PREMIUM GUEST", icon = "✦", tier = 2 },
+	["shivyy7711"] = { role = "PREMIUM GUEST", icon = "✦", tier = 2 },
+	["mannat_8490"] = { role = "PREMIUM GUEST", icon = "✦", tier = 2 },
+	["attitudehizru"] = { role = "PREMIUM GUEST", icon = "✦", tier = 2 },
 }
 
 --============================================================
@@ -36,7 +40,9 @@ local State = {
 	Movement = { SpeedEnabled = false, WalkSpeed = 50, FlyEnabled = false, FlySpeed = 100, Noclip = false, InfJump = false },
 	Safety = { AntiVoid = false, AntiAFK = false, SafeCFrame = nil },
 	Emotes = { Track = nil, Pack = nil },
-	Filling = { Running = false, AutoRejoin = false }
+	Filling = { Running = false, AutoRejoin = false },
+	Performance = { Visible = true, Hud = true },
+	Badges = { ShowRoleBadges = true }
 }
 
 local Internal = { ApplyTarget = nil, StopMoves = nil, RefreshTargets = nil, RefreshImmunityList = nil, TargetUserId = nil }
@@ -280,7 +286,7 @@ local function getTargets()
 	local result = {}
 	local seen = {}
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LP and not State.WhitelistedPlayers[string.lower(player.Name)] then 
+		if player ~= LP and not isProtectedPlayer(player) then 
 			table.insert(result, { kind = "PLAYER", player = player, instance = player.Character, name = player.DisplayName, username = player.Name }) 
 		end
 	end
@@ -300,6 +306,44 @@ local function targetMatches(target, query)
 	query = string.lower(query or "")
 	if query == "" then return true end
 	return string.find(string.lower(target.name), query, 1, true) ~= nil or string.find(string.lower(target.username), query, 1, true) ~= nil
+end
+
+local function getVIPRole(username)
+	local data = VIP_USERNAMES[string.lower(username or "")]
+	return data and data.role or nil
+end
+
+local function isProtectedPlayer(player)
+	if not player then return false end
+	local name = string.lower(player.Name)
+	return VIP_USERNAMES[name] ~= nil or State.WhitelistedPlayers[name] == true
+end
+
+local function getExecutorName()
+	local probes = {
+		function() return identifyexecutor and identifyexecutor() end,
+		function() return getexecutorname and getexecutorname() end,
+		function() return (syn and syn.get_executor_name and syn.get_executor_name()) end,
+	}
+	for _, probe in ipairs(probes) do
+		local ok, value = pcall(probe)
+		if ok and value and tostring(value) ~= "" then
+			return tostring(value)
+		end
+	end
+	return "Unknown / Roblox"
+end
+
+local function getPingMs()
+	local ok, value = pcall(function()
+		local network = Stats:FindFirstChild("Network")
+		local serverStats = network and network:FindFirstChild("ServerStatsItem")
+		local item = serverStats and (serverStats:FindFirstChild("Data Ping") or serverStats:FindFirstChild("Ping"))
+		if item and item.GetValue then return tonumber(item:GetValue()) end
+		return nil
+	end)
+	if ok and value then return math.max(0, math.floor(value + 0.5)) end
+	return nil
 end
 
 --============================================================
@@ -431,6 +475,7 @@ tabs.Filling = createTab()
 tabs.Whitelist = createTab()
 tabs.Movement = createTab()
 tabs.Safety = createTab()
+tabs.Performance = createTab()
 
 local function showTab(tab)
 	playSound(SOUNDS.Click, 0.3, 1.1)
@@ -774,6 +819,9 @@ local btnFilling   = navIcon("🧪"); btnFilling.Activated:Connect(function() sh
 local btnWhitelist = navIcon("🛡️"); btnWhitelist.Activated:Connect(function() showTab(tabs.Whitelist) end)
 local btnMovement  = navIcon("🚀"); btnMovement.Activated:Connect(function() showTab(tabs.Movement) end)
 local btnSafe      = navIcon("⚙"); btnSafe.Activated:Connect(function() showTab(tabs.Safety) end)
+local btnPerformance = navIcon("◈"); btnPerformance.Activated:Connect(function()
+	if State.Performance.Visible then showTab(tabs.Performance) end
+end)
 
 local minimize = Instance.new("TextButton")
 minimize.Size = UDim2.new(0, 46, 0, 46)
@@ -1133,7 +1181,55 @@ Internal.RefreshImmunityList = function()
 		end)
 		table.insert(wData, b)
 	end
-	if State.Target and State.Target.kind == "PLAYER" and State.Target.player and State.WhitelistedPlayers[string.lower(State.Target.player.Name)] then
+	for username, vip in pairs(VIP_USERNAMES) do
+		local p = Players:FindFirstChild(username)
+		local roleRow = Instance.new("Frame")
+		roleRow.Size = UDim2.new(1, 0, 0, 52)
+		roleRow.BackgroundColor3 = BG_ELEMENT
+		roleRow.Parent = wList
+		Instance.new("UICorner", roleRow).CornerRadius = UDim.new(0, 10)
+		local rs = Instance.new("UIStroke", roleRow)
+		rs.Color = vip.tier == 3 and YELLOW or GRAD_2
+		rs.Thickness = vip.tier == 3 and 2 or 1.2
+		local av = Instance.new("ImageLabel")
+		av.Size = UDim2.new(0, 40, 0, 40)
+		av.Position = UDim2.new(0, 6, 0.5, -20)
+		av.BackgroundTransparency = 1
+		av.Parent = roleRow
+		Instance.new("UICorner", av).CornerRadius = UDim.new(1, 0)
+		task.spawn(function()
+			local uid = p and p.UserId
+			if not uid then
+				pcall(function() uid = Players:GetUserIdFromNameAsync(username) end)
+			end
+			if uid then
+				local ok, img = pcall(function() return Players:GetUserThumbnailAsync(uid, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100) end)
+				if ok and img and av.Parent then av.Image = img end
+			end
+		end)
+		local crown = Instance.new("TextLabel")
+		crown.BackgroundTransparency = 1
+		crown.Text = vip.icon
+		crown.TextSize = vip.tier == 3 and 20 or 16
+		crown.TextColor3 = vip.tier == 3 and YELLOW or GRAD_2
+		crown.Font = Enum.Font.GothamBlack
+		crown.Size = UDim2.new(0, 28, 0, 28)
+		crown.Position = UDim2.new(1, -34, 0.5, -14)
+		crown.Visible = State.Badges.ShowRoleBadges
+		crown.Parent = roleRow
+		local roleText = Instance.new("TextLabel")
+		roleText.BackgroundTransparency = 1
+		roleText.Text = vip.role .. "  @" .. username
+		roleText.TextSize = 11
+		roleText.TextColor3 = vip.tier == 3 and YELLOW or TEXT_MAIN
+		roleText.Font = Enum.Font.GothamBlack
+		roleText.Size = UDim2.new(1, -56, 1, 0)
+		roleText.Position = UDim2.new(0, 52, 0, 0)
+		roleText.TextXAlignment = Enum.TextXAlignment.Left
+		roleText.Parent = roleRow
+		table.insert(wData, roleRow)
+	end
+	if State.Target and State.Target.kind == "PLAYER" and State.Target.player and isProtectedPlayer(State.Target.player) then
 		Internal.ApplyTarget(nil)
 		if State.Moves.Running then Internal.StopMoves() end
 	end
@@ -1142,7 +1238,12 @@ end
 
 wAddBtn.Activated:Connect(function()
 	local targetName = string.lower(wInput.Text)
-	if targetName ~= "" then 
+	if targetName ~= "" then
+		if VIP_USERNAMES[targetName] then
+			Notify("WHITELIST", "Built-in premium access is already protected.", YELLOW)
+			wInput.Text = ""
+			return
+		end
 		State.WhitelistedPlayers[targetName] = true
 		wInput.Text = ""
 		Notify("WHITELIST", targetName .. " is now globally immune.", SUCCESS)
@@ -1182,7 +1283,12 @@ Internal.StopMoves = function()
 				part.CanCollide = true
 				part.Massless = false 
 			end 
-		end 
+		end
+		local moveRoot = root(char)
+		if moveRoot then
+			moveRoot.AssemblyLinearVelocity = Vector3.zero
+			moveRoot.AssemblyAngularVelocity = Vector3.zero
+		end
 	end
 	movesStart.Text = "⚡ INITIATE TROLL"
 	Notify("TROLL ENGINE", "Sequence aborted. Physics restored.", DANGER)
@@ -1665,6 +1771,137 @@ LP.Idled:Connect(function()
 end)
 
 --============================================================
+-- 10. PERFORMANCE / EXECUTOR MONITOR
+--============================================================
+titleHeader(tabs.Performance, "◈ PERFORMANCE CENTER")
+createMiniDash(tabs.Performance)
+
+local perfCard = Instance.new("Frame")
+perfCard.Size = UDim2.new(1, 0, 0, 190)
+perfCard.BackgroundColor3 = BG_ELEMENT
+perfCard.Parent = tabs.Performance
+Instance.new("UICorner", perfCard).CornerRadius = UDim.new(0, 14)
+local perfStroke = Instance.new("UIStroke", perfCard)
+perfStroke.Color = Color3.fromRGB(45, 45, 55)
+
+local perfTitle = Instance.new("TextLabel")
+perfTitle.BackgroundTransparency = 1
+perfTitle.Text = "LIVE CLIENT STATUS"
+perfTitle.TextSize = 11
+perfTitle.TextColor3 = TEXT_SUB
+perfTitle.Font = Enum.Font.GothamBold
+perfTitle.Size = UDim2.new(1, -20, 0, 20)
+perfTitle.Position = UDim2.new(0, 10, 0, 8)
+perfTitle.TextXAlignment = Enum.TextXAlignment.Left
+perfTitle.Parent = perfCard
+
+local perfFPS = Instance.new("TextLabel")
+perfFPS.BackgroundTransparency = 1
+perfFPS.Text = "FPS: --"
+perfFPS.TextSize = 22
+perfFPS.TextColor3 = SUCCESS
+perfFPS.Font = Enum.Font.GothamBlack
+perfFPS.Size = UDim2.new(0.5, -10, 0, 35)
+perfFPS.Position = UDim2.new(0, 10, 0, 35)
+perfFPS.TextXAlignment = Enum.TextXAlignment.Left
+perfFPS.Parent = perfCard
+
+local perfPing = Instance.new("TextLabel")
+perfPing.BackgroundTransparency = 1
+perfPing.Text = "PING: --"
+perfPing.TextSize = 22
+perfPing.TextColor3 = YELLOW
+perfPing.Font = Enum.Font.GothamBlack
+perfPing.Size = UDim2.new(0.5, -10, 0, 35)
+perfPing.Position = UDim2.new(0.5, 0, 0, 35)
+perfPing.TextXAlignment = Enum.TextXAlignment.Right
+perfPing.Parent = perfCard
+
+local perfExecutor = Instance.new("TextLabel")
+perfExecutor.BackgroundTransparency = 1
+perfExecutor.Text = "EXECUTOR: Detecting..."
+perfExecutor.TextSize = 12
+perfExecutor.TextColor3 = TEXT_MAIN
+perfExecutor.Font = Enum.Font.GothamBold
+perfExecutor.Size = UDim2.new(1, -20, 0, 25)
+perfExecutor.Position = UDim2.new(0, 10, 0, 80)
+perfExecutor.TextXAlignment = Enum.TextXAlignment.Center
+perfExecutor.TextTruncate = Enum.TextTruncate.AtEnd
+perfExecutor.Parent = perfCard
+
+local perfHint = Instance.new("TextLabel")
+perfHint.BackgroundTransparency = 1
+perfHint.Text = "Client metrics • updates automatically"
+perfHint.TextSize = 10
+perfHint.TextColor3 = TEXT_SUB
+perfHint.Font = Enum.Font.Gotham
+perfHint.Size = UDim2.new(1, -20, 0, 20)
+perfHint.Position = UDim2.new(0, 10, 0, 110)
+perfHint.TextXAlignment = Enum.TextXAlignment.Center
+perfHint.Parent = perfCard
+
+local perfHud = Instance.new("Frame")
+perfHud.Name = "PerformanceHUD"
+perfHud.Size = UDim2.new(0, 190, 0, 48)
+perfHud.Position = UDim2.new(0, 14, 0, 14)
+perfHud.BackgroundColor3 = BG_MAIN
+perfHud.BackgroundTransparency = 0.08
+perfHud.Visible = true
+perfHud.ZIndex = 80
+perfHud.Parent = gui
+Instance.new("UICorner", perfHud).CornerRadius = UDim.new(0, 12)
+local phStroke = Instance.new("UIStroke", perfHud)
+phStroke.Color = GRAD_2
+phStroke.Thickness = 1.5
+
+local phText = Instance.new("TextLabel")
+phText.BackgroundTransparency = 1
+phText.Text = "FPS --  •  PING --"
+phText.TextSize = 11
+phText.TextColor3 = TEXT_MAIN
+phText.Font = Enum.Font.GothamBold
+phText.Size = UDim2.new(1, -12, 1, 0)
+phText.Position = UDim2.new(0, 6, 0, 0)
+phText.TextXAlignment = Enum.TextXAlignment.Center
+phText.Parent = perfHud
+
+local perfExecutorName = getExecutorName()
+perfExecutor.Text = "EXECUTOR: " .. perfExecutorName
+
+-- Refreshing this display at a modest interval avoids adding unnecessary work to the
+-- frame loop while still feeling live.
+local perfAccum, perfFrames, perfLast = 0, 0, os.clock()
+RunService.RenderStepped:Connect(function(dt)
+	if not State.Unlocked then return end
+	perfAccum = perfAccum + dt
+	perfFrames = perfFrames + 1
+	if perfAccum >= 0.5 then
+		local fps = math.floor((perfFrames / perfAccum) + 0.5)
+		local ping = getPingMs()
+		perfFPS.Text = "FPS: " .. tostring(fps)
+		perfPing.Text = "PING: " .. (ping and (tostring(ping) .. " ms") or "--")
+		phText.Text = "FPS " .. tostring(fps) .. "  •  PING " .. (ping and (tostring(ping) .. "ms") or "--")
+		perfFrames, perfAccum = 0, 0
+	end
+end)
+
+header(tabs.Safety, "DASHBOARD OPTIONS")
+createToggle(tabs.Safety, "Show Performance Tab", State.Performance, "Visible", function(isOn)
+	btnPerformance.Visible = isOn
+	if not isOn and activeTab == tabs.Performance then
+		for _, other in pairs(tabs) do other.Visible = false end
+		activeTab = nil
+		tween(flyout, {Position = UDim2.new(1, -60, 0, 20), Size = UDim2.new(0, 0, 1, -40)}, 0.25, Enum.EasingStyle.Quint)
+	end
+end)
+createToggle(tabs.Safety, "Show Performance HUD", State.Performance, "Hud", function(isOn)
+	perfHud.Visible = isOn
+end)
+createToggle(tabs.Safety, "Show Premium Role Badges", State.Badges, "ShowRoleBadges", function()
+	Internal.RefreshImmunityList()
+end)
+
+--============================================================
 -- PHYSICS ENGINE (STEPPED) -> DYNAMIC SCALE OVERRIDES
 --============================================================
 
@@ -1676,7 +1913,7 @@ UserInputService.JumpRequest:Connect(function()
 	end 
 end)
 
-RunService.Stepped:Connect(function()
+RunService.Heartbeat:Connect(function()
 	if not State.Unlocked then return end
 	local char = LP.Character
 	local myRoot = root(char)
@@ -1700,10 +1937,14 @@ RunService.Stepped:Connect(function()
 	end
 
 	-- Collision Cancellation
-	if State.Movement.Noclip or State.Moves.Running or State.Anim.Follow or State.Filling.Running then 
-		for _, p in ipairs(char:GetDescendants()) do 
-			if p:IsA("BasePart") then p.CanCollide = false end 
-		end 
+	if State.Movement.Noclip then
+		for _, p in ipairs(char:GetDescendants()) do
+			if p:IsA("BasePart") then p.CanCollide = false end
+		end
+	else
+		for _, p in ipairs(char:GetDescendants()) do
+			if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.CanCollide = true end
+		end
 	end
 
 	-- WalkSpeed Sync
@@ -1755,13 +1996,20 @@ RunService.Stepped:Connect(function()
 	end
 
 	-- Master Troll Execution Pipeline
-	if State.Moves.Running and targetRoot then
+	if State.Moves.Running then
+		if not targetRoot then
+			State.Moves.Running = false
+			myHum.PlatformStand = false
+			myHum.AutoRotate = true
+			movesStart.Text = "⚡ INITIATE TROLL"
+			return
+		end
 		local t = os.clock()
 		local dist = math.max(0.1, State.Moves.Distance)
 		local spd = math.max(0.1, State.Moves.Speed)
 		myHum.PlatformStand = true 
 
-		pcall(function()
+		local ok, execErr = pcall(function()
 			local pingOffset = targetRoot.AssemblyLinearVelocity * (math.clamp(State.PingComp, 0, 500) / 1000)
 			local predictedPos = targetRoot.Position + pingOffset
 			local predictedCF = CFrame.new(predictedPos) * (targetRoot.CFrame - targetRoot.Position)
@@ -1803,7 +2051,10 @@ RunService.Stepped:Connect(function()
 				elseif State.Moves.Mode == "Attach" then 
 					myRoot.CFrame = predictedCF * CFrame.new(0, headYOffset + 0.5, 0)
 				elseif State.Moves.Mode == "Glitch" then 
-					myRoot.CFrame = flatPredictedCF * CFrame.new(math.random(-dist, dist), math.random(-dist, dist), math.random(-dist, dist))
+					local rx = math.random() * (dist * 2) - dist
+					local ry = math.random() * (dist * 2) - dist
+					local rz = math.random() * (dist * 2) - dist
+					myRoot.CFrame = flatPredictedCF * CFrame.new(rx, ry, rz)
 				elseif State.Moves.Mode == "Pat" then 
 					local armReachY = headYOffset - 1.5 
 					local sidePos = flatPredictedCF.Position + (flatPredictedCF.RightVector * math.clamp(dist, 1.2, 2.5)) + Vector3.new(0, armReachY, 0)
@@ -1819,6 +2070,13 @@ RunService.Stepped:Connect(function()
 				end
 			end
 		end)
+		if not ok then
+			warn("[COCA] Troll execution error (" .. tostring(State.Moves.Mode) .. "): " .. tostring(execErr))
+			State.Moves.Running = false
+			myHum.PlatformStand = false
+			myHum.AutoRotate = true
+			movesStart.Text = "⚡ INITIATE TROLL"
+		end
 	end
 end)
 
@@ -1978,18 +2236,30 @@ uName.Position = UDim2.new(0, 0, 0, 165)
 uName.TextXAlignment = Enum.TextXAlignment.Center
 uName.Parent = verification
 
+local roleName = getVIPRole(LP.Name) or "AUTHORIZED USER"
+local roleLabel = Instance.new("TextLabel")
+roleLabel.BackgroundTransparency = 1
+roleLabel.Text = "♛ " .. roleName
+roleLabel.TextSize = 12
+roleLabel.TextColor3 = getVIPRole(LP.Name) == "SUPREME OWNER" and YELLOW or GRAD_1
+roleLabel.Font = Enum.Font.GothamBlack
+roleLabel.Size = UDim2.new(1, 0, 0, 20)
+roleLabel.Position = UDim2.new(0, 0, 0, 185)
+roleLabel.TextXAlignment = Enum.TextXAlignment.Center
+roleLabel.Parent = verification
+
 local keyBox = input(verification, "🔒 Enter Access Key...", 40, true)
 keyBox.Size = UDim2.new(1, -60, 0, 40)
-keyBox.Position = UDim2.new(0, 30, 0, 210)
+keyBox.Position = UDim2.new(0, 30, 0, 220)
 keyBox.TextXAlignment = Enum.TextXAlignment.Center
 
 local getKeyBtn = button(verification, "◉ GET KEY", false)
 getKeyBtn.Size = UDim2.new(0.5, -35, 0, 40)
-getKeyBtn.Position = UDim2.new(0, 30, 0, 260)
+getKeyBtn.Position = UDim2.new(0, 30, 0, 270)
 
 local unlockBtn = button(verification, "✓ UNLOCK", true)
 unlockBtn.Size = UDim2.new(0.5, -35, 0, 40)
-unlockBtn.Position = UDim2.new(0.5, 5, 0, 260)
+unlockBtn.Position = UDim2.new(0.5, 5, 0, 270)
 
 local verifyStatus = Instance.new("TextLabel")
 verifyStatus.BackgroundTransparency = 1
@@ -1998,7 +2268,7 @@ verifyStatus.TextSize = 12
 verifyStatus.TextColor3 = TEXT_SUB
 verifyStatus.Font = Enum.Font.GothamMedium
 verifyStatus.Size = UDim2.new(1, 0, 0, 30)
-verifyStatus.Position = UDim2.new(0, 0, 0, 320)
+verifyStatus.Position = UDim2.new(0, 0, 0, 330)
 verifyStatus.TextXAlignment = Enum.TextXAlignment.Center
 verifyStatus.Parent = verification
 
@@ -2023,10 +2293,10 @@ local function unlockUI()
 		verifyStatus.Text = "ACCESS DENIED: NOT WHITELISTED!"
 		verifyStatus.TextColor3 = DANGER
 		keyBox.Text = ""
-		tween(keyBox, {Position = UDim2.new(0, 25, 0, 210)}, 0.05)
+		tween(keyBox, {Position = UDim2.new(0, 25, 0, 220)}, 0.05)
 		task.delay(0.05, function() 
-			tween(keyBox, {Position = UDim2.new(0, 35, 0, 210)}, 0.05)
-			task.delay(0.05, function() tween(keyBox, {Position = UDim2.new(0, 30, 0, 210)}, 0.05) end) 
+			tween(keyBox, {Position = UDim2.new(0, 35, 0, 220)}, 0.05)
+			task.delay(0.05, function() tween(keyBox, {Position = UDim2.new(0, 30, 0, 220)}, 0.05) end) 
 		end)
 		task.delay(2, function() if verification.Visible then verifyStatus.Text = "Awaiting authentication..."; verifyStatus.TextColor3 = TEXT_SUB end end)
 		return
@@ -2037,10 +2307,10 @@ local function unlockUI()
 		verifyStatus.Text = "Invalid Authorization Key!"
 		verifyStatus.TextColor3 = DANGER
 		keyBox.Text = ""
-		tween(keyBox, {Position = UDim2.new(0, 25, 0, 210)}, 0.05)
+		tween(keyBox, {Position = UDim2.new(0, 25, 0, 220)}, 0.05)
 		task.delay(0.05, function() 
-			tween(keyBox, {Position = UDim2.new(0, 35, 0, 210)}, 0.05)
-			task.delay(0.05, function() tween(keyBox, {Position = UDim2.new(0, 30, 0, 210)}, 0.05) end) 
+			tween(keyBox, {Position = UDim2.new(0, 35, 0, 220)}, 0.05)
+			task.delay(0.05, function() tween(keyBox, {Position = UDim2.new(0, 30, 0, 220)}, 0.05) end) 
 		end)
 		task.delay(1.5, function() if verification.Visible then verifyStatus.Text = "Awaiting authentication..."; verifyStatus.TextColor3 = TEXT_SUB end end)
 		return
