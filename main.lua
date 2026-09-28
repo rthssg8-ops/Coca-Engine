@@ -1,6 +1,6 @@
 --============================================================
--- COCA SCRIPT : V45 RESTORED STABLE EDITION
--- Key: KINGCOCA | Pure Lua | 100% Crash-Proof | Zero Delay
+-- COCA SCRIPT : V50 CLEAN UI / TARGET / DEEPHAT / ANIMATION EDITION
+-- Key: KINGCOCA | Roblox Lua/Luau | client-side utility
 --============================================================
 
 local cloneref = cloneref or function(...) return ... end
@@ -34,20 +34,163 @@ local State = {
 	TargetESP = true,
 	PingComp = 35,
 	WhitelistedPlayers = {}, 
-	Moves = { Running = false, Mode = "Facebang", Distance = 1.2, Speed = 40 },
+	Moves = {
+        Running = false, Mode = "Facebang", Distance = 1.2, Speed = 40,
+        AutoAcquire = true, TargetLostAt = nil, LastAutoAcquire = 0
+    },
 	Chat = { Running = false, Count = 0, Delay = 1.5, Message = "" },
 	Anim = { TrackSync = false, Follow = false, Distance = 3.0, Side = "Right" },
 	Movement = { SpeedEnabled = false, WalkSpeed = 50, FlyEnabled = false, FlySpeed = 100, Noclip = false, InfJump = false },
 	Safety = { AntiVoid = false, AntiAFK = false, SafeCFrame = nil },
-	Emotes = { Track = nil, Pack = nil },
-	Filling = { Running = false, AutoRejoin = false },
+	Emotes = { Track = nil, Pack = nil, OriginalAnimate = nil },
+	Filling = { Running = false, AutoRejoin = false, RejoinUserId = nil },
 	Performance = { Visible = true, Hud = true },
-	Badges = { ShowRoleBadges = true }
+	Badges = { ShowRoleBadges = true },
+	Reverse = { Recording = false, Playing = false, Loop = false, MaxSeconds = 30, SampleRate = 0.05, Buffer = {}, LastSample = 0 },
+	QuickBar = {
+        Enabled = true,
+        Modes = {
+            Pat = true,
+            Headsit = true,
+            Facebang = true,
+            Hipbang = false,
+            ["Close Contact"] = false,
+            Orbit = false,
+            Mount = false,
+            Tornado = false,
+            Fling = false,
+            ["Void Send"] = false,
+            Stomp = false,
+            Spin = false,
+            Attach = false,
+            Glitch = false,
+        }
+    },
+	Pat = {
+        Speed = 12,
+        TorsoBob = 0.3,
+        HipSway = 0.4,
+        HeadJitter = 0.2,
+        Smoothness = 0.15,
+        SwaySpeed = 1.0,
+        HeadBobSpeed = 2.0,
+        HeadBobAngle = 0.2,
+        Intensity = 1.0,
+        EngineState = "PatTroll"
+    }
 }
 
 local Internal = { ApplyTarget = nil, StopMoves = nil, RefreshTargets = nil, RefreshImmunityList = nil, TargetUserId = nil }
 local flyVelocity = Vector3.zero 
 local selectedEmoteBtn = nil
+
+--============================================================
+-- 30-SECOND AUTOMATIC REVERSE MEMORY
+-- Continuously keeps the most recent 30 seconds of local movement.
+-- The user does not need to start/stop recording manually.
+--============================================================
+local reversePlaybackConn = nil
+
+local function reverseStopPlayback()
+    State.Reverse.Playing = false
+    if reversePlaybackConn then reversePlaybackConn:Disconnect(); reversePlaybackConn = nil end
+    local char = LP.Character
+    local h = char and hum(char)
+    if h then h.AutoRotate = true end
+end
+
+local function reverseClear()
+    reverseStopPlayback()
+    State.Reverse.Buffer = {}
+    State.Reverse.LastSample = 0
+end
+
+local function reverseRecordStep()
+    if State.Reverse.Playing then return end
+    local now = os.clock()
+    if now - State.Reverse.LastSample < State.Reverse.SampleRate then return end
+    State.Reverse.LastSample = now
+    local char = LP.Character
+    local rp = char and root(char)
+    if not rp then return end
+
+    local buffer = State.Reverse.Buffer
+    buffer[#buffer + 1] = {
+        t = now,
+        cf = rp.CFrame,
+        lv = rp.AssemblyLinearVelocity,
+        av = rp.AssemblyAngularVelocity
+    }
+
+    local maxSamples = math.floor(State.Reverse.MaxSeconds / State.Reverse.SampleRate) + 1
+    while #buffer > maxSamples do
+        table.remove(buffer, 1)
+    end
+end
+
+local function reversePlayOnce()
+    local buffer = State.Reverse.Buffer
+    if #buffer < 2 then
+        Notify("REVERSE", "Not enough movement history yet.", DANGER)
+        return
+    end
+
+    if State.Reverse.Playing then
+        reverseStopPlayback()
+        return
+    end
+
+    State.Reverse.Playing = true
+    local index = #buffer
+    local accumulator = 0
+    local char = LP.Character
+    local h = char and hum(char)
+    if h then h.AutoRotate = false end
+
+    reversePlaybackConn = RunService.RenderStepped:Connect(function(dt)
+        if not State.Reverse.Playing then return end
+        local current = LP.Character
+        local rp = current and root(current)
+        if not rp then
+            reverseStopPlayback()
+            return
+        end
+
+        accumulator += dt
+        local step = math.max(State.Reverse.SampleRate, 0.01)
+        while accumulator >= step do
+            accumulator -= step
+            index -= 1
+        end
+
+        if index < 1 then
+            if State.Reverse.Loop and #buffer >= 2 then
+                index = #buffer
+                accumulator = 0
+            else
+                reverseStopPlayback()
+                Notify("REVERSE", "Movement history replay finished.", SUCCESS)
+                return
+            end
+        end
+
+        local sample = buffer[index]
+        if sample then
+            rp.CFrame = sample.cf
+            rp.AssemblyLinearVelocity = sample.lv
+            rp.AssemblyAngularVelocity = sample.av
+        end
+    end)
+end
+
+-- Always-on rolling recorder: the latest 30 seconds are available automatically.
+local reverseConn = RunService.Heartbeat:Connect(reverseRecordStep)
+
+LP.CharacterAdded:Connect(function()
+    reverseStopPlayback()
+    State.Reverse.Buffer = {}
+    State.Reverse.LastSample = 0
+end)
 
 --============================================================
 -- ANTI-TRIP / ANTI-RAGDOLL ENGINE
@@ -150,11 +293,11 @@ if not targetGuiParent or typeof(targetGuiParent) ~= "Instance" then
     targetGuiParent = LP:WaitForChild("PlayerGui")
 end
 
-local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V44") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
+local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V50") or targetGuiParent:FindFirstChild("COCA_Capsule_V49") or targetGuiParent:FindFirstChild("COCA_Capsule_V48") or targetGuiParent:FindFirstChild("COCA_Capsule_V47") or targetGuiParent:FindFirstChild("COCA_Capsule_V44") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
 if oldGui then oldGui:Destroy() end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "COCA_Capsule_V44"
+gui.Name = "COCA_Capsule_V50"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -264,7 +407,13 @@ end
 --============================================================
 
 local function hum(model) return model and model:FindFirstChildOfClass("Humanoid") end
-local function root(model) return model and model:FindFirstChild("HumanoidRootPart") end
+local function root(model)
+    if not model then return nil end
+    return model:FindFirstChild("HumanoidRootPart")
+        or model.PrimaryPart
+        or model:FindFirstChild("UpperTorso")
+        or model:FindFirstChild("Torso")
+end
 local function getCharacter() return LP.Character or LP.CharacterAdded:Wait() end
 
 local function flatCF(cf) 
@@ -321,10 +470,18 @@ end
 -- IMPORTANT: declare this before getTargets. The previous build referenced
 -- isProtectedPlayer before its local declaration, which made Lua resolve it
 -- as a nil global and stopped the entire server roster from being created.
+local function isSupremeOwner(player)
+	if not player then return false end
+	local role = VIP_USERNAMES[string.lower(player.Name)]
+	return role and role.tier == 3 or false
+end
+
 local function isProtectedPlayer(player)
 	if not player then return false end
 	local name = string.lower(player.Name)
-	return VIP_USERNAMES[name] ~= nil or State.WhitelistedPlayers[name] == true
+	-- Premium Guests keep their role badge but remain valid troll targets.
+	-- Only the Supreme Owner and manually added whitelist entries are immune.
+	return isSupremeOwner(player) or State.WhitelistedPlayers[name] == true
 end
 
 local function getTargets()
@@ -334,7 +491,7 @@ local function getTargets()
 
 	-- Server player roster is collected first and independently.
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LP and not isProtectedPlayer(player) then
+		if player ~= LP then
 			local key = tostring(player.UserId)
 			if not seenPlayers[key] then
 				table.insert(result, {
@@ -342,7 +499,8 @@ local function getTargets()
 					player = player,
 					instance = player.Character,
 					name = player.DisplayName ~= "" and player.DisplayName or player.Name,
-					username = player.Name
+					username = player.Name,
+					protected = isProtectedPlayer(player)
 				})
 				seenPlayers[key] = true
 			end
@@ -377,6 +535,113 @@ local function getTargets()
 		return string.lower(a.name) < string.lower(b.name)
 	end)
 	return result
+end
+
+--============================================================
+-- AUTOMATIC NEAREST-TARGET ACQUISITION
+--============================================================
+local nearestNpcCache = { stamp = 0, list = {} }
+
+local function getAutoTargetCandidates()
+    local list = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LP and not isProtectedPlayer(player) then
+            local char = player.Character
+            if resolveCharacterRoot(char) then
+                list[#list + 1] = {
+                    kind = "PLAYER",
+                    player = player,
+                    instance = char,
+                    name = player.DisplayName ~= "" and player.DisplayName or player.Name,
+                    username = player.Name,
+                    protected = false
+                }
+            end
+        end
+    end
+
+    -- NPC discovery is deliberately cached because Workspace:GetDescendants()
+    -- every frame would reintroduce the delay this build is designed to remove.
+    local now = os.clock()
+    if now - nearestNpcCache.stamp > 1.0 then
+        nearestNpcCache.stamp = now
+        nearestNpcCache.list = {}
+        pcall(function()
+            for _, object in ipairs(workspace:GetDescendants()) do
+                if object:IsA("Model")
+                    and object ~= LP.Character
+                    and not Players:GetPlayerFromCharacter(object)
+                    and hum(object)
+                    and resolveCharacterRoot(object) then
+                    nearestNpcCache.list[#nearestNpcCache.list + 1] = {
+                        kind = "NPC",
+                        instance = object,
+                        name = object.Name,
+                        username = "NPC"
+                    }
+                end
+            end
+        end)
+    end
+
+    for _, npc in ipairs(nearestNpcCache.list) do
+        local live = npc.instance
+        if live and live.Parent and resolveCharacterRoot(live) then
+            list[#list + 1] = npc
+        end
+    end
+    return list
+end
+
+local function findNearestValidTarget()
+    local myChar = LP.Character
+    local myRoot = resolveCharacterRoot(myChar)
+    if not myRoot then return nil, math.huge end
+
+    local nearest, nearestDistance = nil, math.huge
+    for _, candidate in ipairs(getAutoTargetCandidates()) do
+        local char = candidate.kind == "PLAYER" and candidate.player and candidate.player.Character or candidate.instance
+        local targetRoot = resolveCharacterRoot(char)
+        if targetRoot then
+            local distance = (myRoot.Position - targetRoot.Position).Magnitude
+            if distance < nearestDistance then
+                nearest = candidate
+                nearestDistance = distance
+            end
+        end
+    end
+    return nearest, nearestDistance
+end
+
+local function shouldAutoAcquire()
+    return State.Moves.Running and State.Moves.AutoAcquire == true
+end
+
+local function targetNeedsAutoAcquire()
+    if not State.Target then return true end
+    return getTargetChar() == nil
+end
+
+local function targetAcquireCooldownReady()
+    local now = os.clock()
+    if now - (State.Moves.LastAutoAcquire or 0) < 0.35 then return false end
+    State.Moves.LastAutoAcquire = now
+    return true
+end
+
+local function autoAcquireNearestTarget(notifyUser)
+    if not shouldAutoAcquire() or not targetAcquireCooldownReady() then return false end
+    local candidate, distance = findNearestValidTarget()
+    if not candidate then return false end
+
+    if Internal.ApplyTarget then
+        Internal.ApplyTarget(candidate)
+        if notifyUser then
+            Notify("AUTO TARGET", "Nearest target: " .. candidate.name .. " (" .. math.floor(distance + 0.5) .. " studs)", SUCCESS)
+        end
+        return true
+    end
+    return false
 end
 
 local function targetMatches(target, query)
@@ -416,6 +681,170 @@ local function getPingMs()
 	if ok and value then return math.max(0, math.floor(value + 0.5)) end
 	return nil
 end
+
+--============================================================
+-- PROCEDURAL PAT CONTROLLER
+-- Based on the supplied DeepHat Pat references.
+-- One managed controller is used so multiple Heartbeat loops never fight
+-- over the same R15 Motor6Ds.
+--============================================================
+
+local PatMotion = {
+    Character = nil,
+    Waist = nil,
+    Neck = nil,
+    OriginalWaistC0 = nil,
+    OriginalNeckC0 = nil,
+    Time = 0,
+    State = "Idle"
+}
+
+-- Unified procedural animation state manager.
+-- This incorporates the useful part of the supplied Animation Manager:
+-- one connection/state owner, stable original C0 baselines, and explicit
+-- state switching. It deliberately avoids the source's cumulative-C0 drift.
+function PatMotion:Stop()
+    if self.Waist and self.OriginalWaistC0 then
+        pcall(function() self.Waist.C0 = self.OriginalWaistC0 end)
+    end
+    if self.Neck and self.OriginalNeckC0 then
+        pcall(function() self.Neck.C0 = self.OriginalNeckC0 end)
+    end
+    self.Character = nil
+    self.Waist = nil
+    self.Neck = nil
+    self.OriginalWaistC0 = nil
+    self.OriginalNeckC0 = nil
+    self.Time = 0
+    self.State = "Idle"
+end
+
+function PatMotion:Begin(character)
+    if self.Character == character and self.Waist and self.Neck
+        and self.Waist.Parent and self.Neck.Parent then
+        return true
+    end
+
+    self:Stop()
+    if not character then return false end
+
+    local humanoid = hum(character)
+    local waist = character:FindFirstChild("Waist", true)
+    local neck = character:FindFirstChild("Neck", true)
+
+    if not humanoid or humanoid.Health <= 0 or not waist or not neck then
+        return false
+    end
+    if not waist:IsA("Motor6D") or not neck:IsA("Motor6D") then
+        return false
+    end
+
+    self.Character = character
+    self.Waist = waist
+    self.Neck = neck
+    self.OriginalWaistC0 = waist.C0
+    self.OriginalNeckC0 = neck.C0
+    self.Time = 0
+    return true
+end
+
+function PatMotion:SetState(character, stateName)
+    stateName = stateName or "Idle"
+    if stateName == "Idle" then
+        self:Stop()
+        return true
+    end
+
+    if not self:Begin(character) then
+        return false
+    end
+
+    if self.State ~= stateName then
+        -- Preserve the original C0 baseline when switching states.
+        if self.OriginalWaistC0 then self.Waist.C0 = self.OriginalWaistC0 end
+        if self.OriginalNeckC0 then self.Neck.C0 = self.OriginalNeckC0 end
+        self.Time = 0
+        self.State = stateName
+    end
+    return true
+end
+
+function PatMotion:IsActive()
+    return self.Character ~= nil
+        and self.Waist ~= nil and self.Neck ~= nil
+        and self.Waist.Parent ~= nil and self.Neck.Parent ~= nil
+end
+
+function PatMotion:Update(character, dt, stateName)
+    if stateName then
+        if not self:SetState(character, stateName) then return false end
+    elseif not self:Begin(character) then
+        return false
+    end
+
+    local humanoid = hum(character)
+    if not humanoid or humanoid.Health <= 0 then
+        self:Stop()
+        return false
+    end
+
+    local settings = State.Pat
+    local intensity = math.clamp(tonumber(settings.Intensity) or 1, 0, 3)
+    local swaySpeed = math.max(tonumber(settings.SwaySpeed) or 1, 0.05)
+    local headBobSpeed = math.max(tonumber(settings.HeadBobSpeed) or 2, 0.05)
+    local headBobAngle = tonumber(settings.HeadBobAngle) or 0.2
+    self.Time += math.max(dt or 0, 0) * math.max(settings.Speed, 0.1) * swaySpeed
+
+    if self.State == "PatTroll" then
+        local pulse = math.sin(self.Time)
+        local jitter = math.cos(self.Time * 1.5)
+        local targetWaistCFrame = self.OriginalWaistC0
+            * CFrame.Angles(
+                pulse * settings.TorsoBob * intensity,
+                jitter * headBobAngle * intensity,
+                -pulse * settings.HipSway * intensity
+            )
+            * CFrame.new(0, math.sin(self.Time * 0.5) * 0.1 * intensity, 0)
+        local targetNeckCFrame = self.OriginalNeckC0
+            * CFrame.Angles(
+                math.sin(self.Time * headBobSpeed) * settings.HeadJitter * intensity,
+                math.cos(self.Time * headBobSpeed * 0.6) * settings.HeadJitter * intensity,
+                math.sin(self.Time * headBobSpeed * 0.75) * settings.HeadJitter * 0.5 * intensity
+            )
+        local alpha = math.clamp(settings.Smoothness, 0.01, 1)
+        self.Waist.C0 = self.Waist.C0:Lerp(targetWaistCFrame, alpha)
+        self.Neck.C0 = self.Neck.C0:Lerp(targetNeckCFrame, alpha)
+        return true
+    elseif self.State == "EmoteTroll" then
+        -- Optional chaotic non-explicit procedural state from the supplied
+        -- manager. It uses the saved C0 baseline, so it cannot accumulate drift.
+        local chaos = math.clamp(settings.TorsoBob, 0, 1) * 0.5 * intensity
+        local targetWaistCFrame = self.OriginalWaistC0
+            * CFrame.Angles(
+                math.noise(self.Time, 0, 0) * chaos,
+                math.noise(0, self.Time, 0) * chaos,
+                math.noise(0, 0, self.Time) * chaos
+            )
+        local targetNeckCFrame = self.OriginalNeckC0
+            * CFrame.Angles(
+                math.sin(self.Time * 10) * settings.HeadJitter * 0.2 * intensity + math.sin(self.Time * headBobSpeed) * headBobAngle * 0.25 * intensity,
+                math.cos(self.Time * 10) * settings.HeadJitter * 0.2 * intensity,
+                0
+            )
+        local alpha = math.clamp(settings.Smoothness * 0.7, 0.01, 1)
+        self.Waist.C0 = self.Waist.C0:Lerp(targetWaistCFrame, alpha)
+        self.Neck.C0 = self.Neck.C0:Lerp(targetNeckCFrame, alpha)
+        return true
+    end
+
+    return false
+end
+
+LP.CharacterAdded:Connect(function()
+    PatMotion:Stop()
+    State.Moves.TargetLostAt = nil
+    State.Moves.LastAutoAcquire = 0
+end)
 
 --============================================================
 -- ANIMATION RUNTIME CONTROLLER
@@ -900,6 +1329,81 @@ local function createCyclicStepper(parent, labelText, optionsArray, stateTable, 
 	end)
 end
 
+-- DeepHat Loader Controller: consolidated UI for the procedural Animation Manager.
+-- This replaces the standalone TrollMenu/ReplicatedStorage loader and keeps
+-- all state changes inside the existing V50 GUI/runtime.
+local function createDeepHatController(parent)
+    header(parent, "DEEPHAT ANIMATION LOADER")
+
+    local status = Instance.new("TextLabel")
+    status.Size = UDim2.new(1, 0, 0, 30)
+    status.BackgroundTransparency = 1
+    status.Text = "STATE: " .. tostring(State.Pat.EngineState)
+    status.TextColor3 = ACCENT
+    status.TextSize = 12
+    status.Font = Enum.Font.GothamBlack
+    status.TextXAlignment = Enum.TextXAlignment.Left
+    status.Parent = parent
+
+    local stateButtons = Instance.new("Frame")
+    stateButtons.Size = UDim2.new(1, 0, 0, 42)
+    stateButtons.BackgroundTransparency = 1
+    stateButtons.Parent = parent
+    local grid = Instance.new("UIGridLayout")
+    grid.CellPadding = UDim2.new(0, 6, 0, 0)
+    grid.CellSize = UDim2.new(0.24, -4, 1, 0)
+    grid.FillDirectionMaxCells = 4
+    grid.Parent = stateButtons
+
+    local buttons = {}
+    local function setState(stateName)
+        State.Pat.EngineState = stateName
+        status.Text = "STATE: " .. stateName
+        if stateName == "Idle" then
+            PatMotion:SetState(LP.Character, "Idle")
+        else
+            PatMotion:SetState(LP.Character, stateName)
+        end
+        for name, btn in pairs(buttons) do
+            btn.BackgroundColor3 = (name == stateName) and SUCCESS or BG_ELEMENT
+        end
+    end
+
+    for _, stateName in ipairs({"Idle", "PatTroll", "EmoteTroll"}) do
+        local btn = button(stateButtons, stateName)
+        btn.TextSize = 11
+        btn.AutoButtonColor = false
+        btn.Activated:Connect(function() setState(stateName) end)
+        buttons[stateName] = btn
+    end
+    for name, btn in pairs(buttons) do
+        btn.BackgroundColor3 = (name == State.Pat.EngineState) and SUCCESS or BG_ELEMENT
+    end
+
+    local reset = button(parent, "RESET PROCEDURAL ANIMATION")
+    reset.Activated:Connect(function()
+        State.Pat.EngineState = "Idle"
+        PatMotion:SetState(LP.Character, "Idle")
+        status.Text = "STATE: Idle"
+        for name, btn in pairs(buttons) do
+            btn.BackgroundColor3 = (name == "Idle") and SUCCESS or BG_ELEMENT
+        end
+    end)
+
+    local note = Instance.new("TextLabel")
+    note.Size = UDim2.new(1, 0, 0, 34)
+    note.BackgroundTransparency = 1
+    note.Text = "One controller • one Heartbeat • stable Motor6D baselines"
+    note.TextColor3 = TEXT_SUB
+    note.TextSize = 10
+    note.Font = Enum.Font.Gotham
+    note.TextWrapped = true
+    note.TextXAlignment = Enum.TextXAlignment.Left
+    note.Parent = parent
+end
+
+local updateQuickBarVisuals
+
 local function createGridRadioGroup(parent, options, stateKey, callback)
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(1, 0, 0, 0)
@@ -940,9 +1444,311 @@ local function createGridRadioGroup(parent, options, stateKey, callback)
 			tween(b, {BackgroundColor3 = Color3.fromRGB(40, 70, 45), TextColor3 = TEXT_MAIN}, 0.2)
 			tween(s, {Color = SUCCESS}, 0.2)
 			callback(opt)
+            if updateQuickBarVisuals then updateQuickBarVisuals() end
 		end)
 	end
 end
+
+--============================================================
+-- FLOATING QUICK TROLL DOCK
+--============================================================
+-- The quick dock lives directly under the ScreenGui so it remains visible
+-- even when the main dashboard is minimized. It is intentionally compact,
+-- pill-shaped, and touch-friendly like the supplied reference image.
+local quickDock = Instance.new("Frame")
+quickDock.Name = "QuickTrollDock"
+quickDock.AnchorPoint = Vector2.new(0, 0.5)
+quickDock.Size = UDim2.new(0, 132, 0, 410)
+quickDock.Position = UDim2.new(0, 12, 0.5, 0)
+quickDock.BackgroundColor3 = BG_MAIN
+quickDock.BackgroundTransparency = 0.04
+quickDock.BorderSizePixel = 0
+quickDock.ZIndex = 900
+quickDock.Parent = gui
+Instance.new("UICorner", quickDock).CornerRadius = UDim.new(0, 28)
+local qdStroke = Instance.new("UIStroke", quickDock)
+qdStroke.Color = Color3.fromRGB(58, 62, 70)
+qdStroke.Thickness = 1.5
+createShadow(quickDock, 28, 0.55, 4)
+
+local quickHeader = Instance.new("Frame")
+quickHeader.Size = UDim2.new(1, 0, 0, 38)
+quickHeader.BackgroundTransparency = 1
+quickHeader.ZIndex = 901
+quickHeader.Parent = quickDock
+local quickTitle = Instance.new("TextLabel")
+quickTitle.BackgroundTransparency = 1
+quickTitle.Text = "TROLL"
+quickTitle.TextSize = 10
+quickTitle.TextColor3 = TEXT_SUB
+quickTitle.Font = Enum.Font.GothamBlack
+quickTitle.Size = UDim2.new(1, -20, 1, 0)
+quickTitle.Position = UDim2.new(0, 10, 0, 0)
+quickTitle.TextXAlignment = Enum.TextXAlignment.Center
+quickTitle.ZIndex = 902
+quickTitle.Parent = quickHeader
+
+local quickList = Instance.new("ScrollingFrame")
+quickList.Size = UDim2.new(1, -10, 1, -82)
+quickList.Position = UDim2.new(0, 5, 0, 38)
+quickList.BackgroundTransparency = 1
+quickList.ZIndex = 901
+quickList.Parent = quickDock
+quickList.BorderSizePixel = 0
+quickList.ScrollBarThickness = 0
+quickList.CanvasSize = UDim2.new(0, 0, 0, 0)
+local quickLayout = Instance.new("UIListLayout")
+quickLayout.Padding = UDim.new(0, 7)
+quickLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+quickLayout.SortOrder = Enum.SortOrder.LayoutOrder
+quickLayout.Parent = quickList
+quickLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    quickList.CanvasSize = UDim2.new(0, 0, 0, quickLayout.AbsoluteContentSize.Y + 4)
+end)
+
+local quickFooter = Instance.new("Frame")
+quickFooter.Size = UDim2.new(1, -10, 0, 38)
+quickFooter.Position = UDim2.new(0, 5, 1, -43)
+quickFooter.BackgroundTransparency = 1
+quickFooter.ZIndex = 901
+quickFooter.Parent = quickDock
+
+local quickSetupButton = Instance.new("TextButton")
+quickSetupButton.Size = UDim2.new(0, 38, 0, 32)
+quickSetupButton.Position = UDim2.new(0.5, -19, 0, 2)
+quickSetupButton.BackgroundColor3 = BG_ELEMENT
+quickSetupButton.Text = "⚙"
+quickSetupButton.TextSize = 17
+quickSetupButton.TextColor3 = TEXT_MAIN
+quickSetupButton.Font = Enum.Font.GothamBold
+quickSetupButton.AutoButtonColor = false
+quickSetupButton.ZIndex = 902
+quickSetupButton.Parent = quickFooter
+Instance.new("UICorner", quickSetupButton).CornerRadius = UDim.new(0, 10)
+local qsStroke = Instance.new("UIStroke", quickSetupButton)
+qsStroke.Color = Color3.fromRGB(55, 58, 66)
+
+local quickBarButtons = {}
+local QUICK_ORDER = {
+    "Pat", "Headsit", "Facebang", "Hipbang", "Close Contact", "Orbit",
+    "Mount", "Tornado", "Fling", "Void Send", "Stomp", "Spin", "Attach", "Glitch"
+}
+
+local quickManager = nil
+
+local function quickLabel(mode)
+    if mode == "Close Contact" then return "Close" end
+    if mode == "Void Send" then return "Void" end
+    return mode
+end
+
+local function updateQuickBarVisuals()
+    local count = 0
+    for _, mode in ipairs(QUICK_ORDER) do
+        if State.QuickBar.Modes[mode] then count += 1 end
+    end
+    quickDock.Visible = State.Unlocked and State.QuickBar.Enabled and count > 0
+    if not quickDock.Visible and quickManager then quickManager.Visible = false end
+    quickDock.Size = UDim2.new(0, 132, 0, math.clamp(82 + count * 45, 145, 620))
+    quickDock.Position = UDim2.new(0, 12, 0.5, -quickDock.Size.Y.Offset / 2)
+    quickList.Size = UDim2.new(1, -10, 1, -82)
+    quickList.CanvasSize = UDim2.new(0, 0, 0, quickLayout.AbsoluteContentSize.Y + 4)
+    quickFooter.Position = UDim2.new(0, 5, 1, -43)
+
+    for mode, btnData in pairs(quickBarButtons) do
+        local enabled = State.QuickBar.Modes[mode] == true
+        btnData.button.Visible = quickDock.Visible and enabled
+        local active = enabled and State.Moves.Mode == mode and State.Moves.Running
+        btnData.dot.BackgroundColor3 = active and SUCCESS or Color3.fromRGB(82, 86, 94)
+        btnData.button.BackgroundColor3 = active and Color3.fromRGB(28, 52, 38) or BG_MAIN
+        btnData.label.TextColor3 = active and TEXT_MAIN or TEXT_SUB
+        btnData.stroke.Color = active and SUCCESS or Color3.fromRGB(55, 58, 66)
+    end
+end
+
+local function createQuickButton(mode)
+    local buttonFrame = Instance.new("TextButton")
+    buttonFrame.Name = "Quick_" .. mode:gsub("%W", "_")
+    buttonFrame.Size = UDim2.new(1, -10, 0, 39)
+    buttonFrame.BackgroundColor3 = BG_MAIN
+    buttonFrame.BackgroundTransparency = 0.02
+    buttonFrame.BorderSizePixel = 0
+    buttonFrame.Text = ""
+    buttonFrame.AutoButtonColor = false
+    buttonFrame.ZIndex = 902
+    buttonFrame.Parent = quickList
+    Instance.new("UICorner", buttonFrame).CornerRadius = UDim.new(0, 20)
+    local stroke = Instance.new("UIStroke", buttonFrame)
+    stroke.Color = Color3.fromRGB(55, 58, 66)
+    stroke.Thickness = 1.2
+
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.new(0, 10, 0, 10)
+    dot.Position = UDim2.new(0, 12, 0.5, -5)
+    dot.BackgroundColor3 = Color3.fromRGB(82, 86, 94)
+    dot.BorderSizePixel = 0
+    dot.ZIndex = 903
+    dot.Parent = buttonFrame
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+    local label = Instance.new("TextLabel")
+    label.BackgroundTransparency = 1
+    label.Text = quickLabel(mode)
+    label.TextSize = 12
+    label.TextColor3 = TEXT_SUB
+    label.Font = Enum.Font.GothamBold
+    label.Size = UDim2.new(1, -35, 1, 0)
+    label.Position = UDim2.new(0, 29, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTruncate = Enum.TextTruncate.AtEnd
+    label.ZIndex = 903
+    label.Parent = buttonFrame
+
+    buttonFrame.MouseEnter:Connect(function()
+        playSound(SOUNDS.Hover, 0.08, 1.12)
+        if not (State.Moves.Mode == mode and State.Moves.Running) then
+            tween(buttonFrame, {BackgroundColor3 = BG_HOVER}, 0.1)
+        end
+    end)
+    buttonFrame.MouseLeave:Connect(function()
+        if not (State.Moves.Mode == mode and State.Moves.Running) then
+            tween(buttonFrame, {BackgroundColor3 = BG_MAIN}, 0.1)
+        end
+    end)
+    buttonFrame.Activated:Connect(function()
+        playSound(SOUNDS.Click, 0.25, 1.0)
+        State.Moves.Mode = mode
+        updateQuickBarVisuals()
+        if Internal.StartMoves then
+            Internal.StartMoves(true)
+        end
+    end)
+
+    quickBarButtons[mode] = {button = buttonFrame, dot = dot, label = label, stroke = stroke}
+end
+
+for _, mode in ipairs(QUICK_ORDER) do
+    createQuickButton(mode)
+end
+
+-- Compact add/remove panel. This keeps the main GUI clean while making every
+-- troll option individually addable/removable from the floating dock.
+quickManager = Instance.new("Frame")
+quickManager.Name = "QuickTrollManager"
+quickManager.Size = UDim2.new(0, 230, 0, 430)
+quickManager.Position = UDim2.new(0, 152, 0.5, -215)
+quickManager.BackgroundColor3 = BG_FLYOUT
+quickManager.BorderSizePixel = 0
+quickManager.Visible = false
+quickManager.ZIndex = 910
+quickManager.Parent = gui
+Instance.new("UICorner", quickManager).CornerRadius = UDim.new(0, 16)
+local qmStroke = Instance.new("UIStroke", quickManager)
+qmStroke.Color = Color3.fromRGB(55, 58, 66)
+qmStroke.Thickness = 1.5
+createShadow(quickManager, 24, 0.55, 4)
+
+local qmTitle = Instance.new("TextLabel")
+qmTitle.BackgroundTransparency = 1
+qmTitle.Text = "QUICK TROLL BUTTONS"
+qmTitle.TextSize = 12
+qmTitle.TextColor3 = TEXT_MAIN
+qmTitle.Font = Enum.Font.GothamBlack
+qmTitle.Size = UDim2.new(1, -40, 0, 34)
+qmTitle.Position = UDim2.new(0, 14, 0, 4)
+qmTitle.TextXAlignment = Enum.TextXAlignment.Left
+qmTitle.ZIndex = 911
+qmTitle.Parent = quickManager
+
+local qmClose = Instance.new("TextButton")
+qmClose.Size = UDim2.new(0, 28, 0, 28)
+qmClose.Position = UDim2.new(1, -34, 0, 7)
+qmClose.BackgroundColor3 = BG_ELEMENT
+qmClose.Text = "×"
+qmClose.TextSize = 18
+qmClose.TextColor3 = TEXT_SUB
+qmClose.Font = Enum.Font.GothamBold
+qmClose.AutoButtonColor = false
+qmClose.ZIndex = 912
+qmClose.Parent = quickManager
+Instance.new("UICorner", qmClose).CornerRadius = UDim.new(0, 8)
+
+local qmList = Instance.new("ScrollingFrame")
+qmList.Size = UDim2.new(1, -20, 1, -50)
+qmList.Position = UDim2.new(0, 10, 0, 42)
+qmList.BackgroundTransparency = 1
+qmList.BorderSizePixel = 0
+qmList.ScrollBarThickness = 2
+qmList.ScrollBarImageColor3 = GRAD_2
+qmList.ZIndex = 911
+qmList.Parent = quickManager
+local qmLayout = Instance.new("UIListLayout")
+qmLayout.Padding = UDim.new(0, 5)
+qmLayout.Parent = qmList
+local qmPad = Instance.new("UIPadding", qmList)
+qmPad.PaddingBottom = UDim.new(0, 8)
+qmLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    qmList.CanvasSize = UDim2.new(0, 0, 0, qmLayout.AbsoluteContentSize.Y + 10)
+end)
+
+local function createQuickManagerRow(mode)
+    local row = Instance.new("TextButton")
+    row.Size = UDim2.new(1, -4, 0, 34)
+    row.BackgroundColor3 = BG_ELEMENT
+    row.Text = ""
+    row.AutoButtonColor = false
+    row.ZIndex = 912
+    row.Parent = qmList
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 9)
+
+    local label = Instance.new("TextLabel")
+    label.BackgroundTransparency = 1
+    label.Text = quickLabel(mode)
+    label.TextSize = 11
+    label.TextColor3 = TEXT_MAIN
+    label.Font = Enum.Font.GothamBold
+    label.Size = UDim2.new(1, -58, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.ZIndex = 913
+    label.Parent = row
+
+    local state = Instance.new("TextLabel")
+    state.BackgroundTransparency = 1
+    state.TextSize = 10
+    state.Font = Enum.Font.GothamBlack
+    state.Size = UDim2.new(0, 42, 1, 0)
+    state.Position = UDim2.new(1, -48, 0, 0)
+    state.TextXAlignment = Enum.TextXAlignment.Right
+    state.ZIndex = 913
+    state.Parent = row
+
+    local function refresh()
+        local on = State.QuickBar.Modes[mode] == true
+        state.Text = on and "ON" or "OFF"
+        state.TextColor3 = on and SUCCESS or TEXT_SUB
+        row.BackgroundColor3 = on and Color3.fromRGB(25, 43, 33) or BG_ELEMENT
+    end
+    row.Activated:Connect(function()
+        State.QuickBar.Modes[mode] = not State.QuickBar.Modes[mode]
+        refresh()
+        updateQuickBarVisuals()
+    end)
+    refresh()
+end
+for _, mode in ipairs(QUICK_ORDER) do
+    createQuickManagerRow(mode)
+end
+
+quickSetupButton.Activated:Connect(function()
+    playSound(SOUNDS.Click, 0.25, 1.0)
+    quickManager.Visible = not quickManager.Visible
+end)
+qmClose.Activated:Connect(function()
+    quickManager.Visible = false
+end)
+
+updateQuickBarVisuals()
 
 --============================================================
 -- NAVIGATION BAR
@@ -1059,7 +1865,7 @@ local function fetchAdvancedInfo(uid)
 			if res and res.Body then
 				local d = HttpService:JSONDecode(res.Body)
 				if d.created then
-					local c = DateTime.fromISO(d.created)
+					local c = DateTime.fromIsoDate(d.created)
 					local days = (DateTime.now().UnixTimestamp - c.UnixTimestamp) / 86400
 					if days < 30 then info.age = math.floor(days).."d" 
 					elseif days < 365 then info.age = math.floor(days/30).."mo" 
@@ -1289,6 +2095,16 @@ local function createTargetRow(parent, target)
 			badge.Parent = row
 			Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 6)
 		end
+		if target.protected and State.Badges.ShowRoleBadges then
+			local lockBadge = Instance.new("TextLabel")
+			lockBadge.BackgroundTransparency = 1
+			lockBadge.Text = "🔒"
+			lockBadge.TextSize = 13
+			lockBadge.Size = UDim2.new(0, 24, 0, 24)
+			lockBadge.Position = UDim2.new(1, -26, 0.5, -12)
+			lockBadge.ZIndex = 5
+			lockBadge.Parent = row
+		end
 	else
 		local icon = Instance.new("TextLabel")
 		icon.BackgroundTransparency = 1
@@ -1321,6 +2137,10 @@ local function createTargetRow(parent, target)
 	selectButton.ZIndex = 6
 	selectButton.Parent = row
 	selectButton.Activated:Connect(function()
+		if target.protected then
+			Notify("TARGETING", "This account is protected and cannot be selected.", YELLOW)
+			return
+		end
 		Internal.ApplyTarget(target)
 	end)
 
@@ -1328,6 +2148,10 @@ local function createTargetRow(parent, target)
 end
 
 Internal.ApplyTarget = function(target)
+    if target and target.protected then
+        Notify("TARGETING", "This account is protected and cannot be selected.", YELLOW)
+        return false
+    end
 	State.Target = target
 
 	if not State.Target then
@@ -1403,6 +2227,7 @@ Internal.ApplyTarget = function(target)
 			if rowStroke then rowStroke.Color = Color3.fromRGB(45,45,55); rowStroke.Thickness = 1 end
 		end
 	end
+    return true
 end
 
 tClear.Activated:Connect(function() Internal.ApplyTarget(nil) end)
@@ -1428,7 +2253,7 @@ Internal.RefreshTargets = function()
 	for _, target in ipairs(targets) do
 		if target.kind == "PLAYER" then playerCount += 1 end
 	end
-	playerListHeader.Text = "SERVER PLAYERS  •  " .. tostring(playerCount) .. " AVAILABLE"
+	playerListHeader.Text = "SERVER PLAYERS  •  " .. tostring(playerCount) .. " ONLINE"
 
 	for _, target in ipairs(targets) do
 		if targetMatches(target, tSearch.Text) then
@@ -1560,7 +2385,11 @@ wAddBtn.Activated:Connect(function()
 	local targetName = string.lower(wInput.Text)
 	if targetName ~= "" then
 		if VIP_USERNAMES[targetName] then
-			Notify("WHITELIST", "Built-in premium access is already protected.", YELLOW)
+			if VIP_USERNAMES[targetName].tier == 3 then
+				Notify("WHITELIST", "Supreme Owner is already protected.", YELLOW)
+			else
+				Notify("WHITELIST", "Premium Guest remains targetable; no immunity was added.", YELLOW)
+			end
 			wInput.Text = ""
 			return
 		end
@@ -1578,19 +2407,111 @@ titleHeader(tabs.Moves, "⚡ TROLL ENGINE")
 createMiniDash(tabs.Moves)
 
 header(tabs.Moves, "EXECUTION STANCE")
-createGridRadioGroup(tabs.Moves, {"Facebang", "Hipbang", "Headsit", "Orbit", "Mount", "Tornado", "Void Send", "Stomp", "Spin", "Attach", "Glitch", "Pat"}, State.Moves.Mode, function(sel) 
+createGridRadioGroup(tabs.Moves, {"Facebang", "Hipbang", "Close Contact", "Headsit", "Orbit", "Mount", "Tornado", "Fling", "Void Send", "Stomp", "Spin", "Attach", "Glitch", "Pat"}, State.Moves.Mode, function(sel) 
 	State.Moves.Mode = sel 
 end)
 
 header(tabs.Moves, "ENGINE SETTINGS")
 createDirectStepper(tabs.Moves, "Proximity (Studs)", 0.0, 30.0, State.Moves, "Distance")
 createDirectStepper(tabs.Moves, "Thrust Speed", 5, 300, State.Moves, "Speed")
+header(tabs.Moves, "PAT PROCEDURAL MOTION")
+createDirectStepper(tabs.Moves, "Pat Speed", 1, 30, State.Pat, "Speed")
+createDirectStepper(tabs.Moves, "Torso Bob", 0.0, 1.0, State.Pat, "TorsoBob")
+createDirectStepper(tabs.Moves, "Hip Sway", 0.0, 1.0, State.Pat, "HipSway")
+createDirectStepper(tabs.Moves, "Head Jitter", 0.0, 1.0, State.Pat, "HeadJitter")
+createDirectStepper(tabs.Moves, "Pat Smoothness", 0.01, 1.0, State.Pat, "Smoothness")
+createDirectStepper(tabs.Moves, "Sway Speed", 0.05, 5.0, State.Pat, "SwaySpeed")
+createDirectStepper(tabs.Moves, "Head Bob Speed", 0.05, 10.0, State.Pat, "HeadBobSpeed")
+createDirectStepper(tabs.Moves, "Head Bob Angle", 0.0, 1.0, State.Pat, "HeadBobAngle")
+createDirectStepper(tabs.Moves, "Motion Intensity", 0.0, 3.0, State.Pat, "Intensity")
+createDeepHatController(tabs.Moves)
+
+header(tabs.Moves, "FLOATING QUICK TROLL BAR")
+createToggle(tabs.Moves, "Show Quick Troll Bar", State.QuickBar, "Enabled", function()
+    updateQuickBarVisuals()
+end)
+createToggle(tabs.Moves, "Auto-Acquire Nearest Target", State.Moves, "AutoAcquire", function(isOn)
+    Notify("AUTO TARGET", isOn and "Nearest valid target will be acquired when none is selected." or "Manual target selection only.", isOn and SUCCESS or YELLOW)
+end)
+
+local quickModeOrder = {
+    "Pat", "Headsit", "Facebang", "Hipbang", "Close Contact", "Orbit",
+    "Mount", "Tornado", "Fling", "Void Send", "Stomp", "Spin", "Attach", "Glitch"
+}
+for _, mode in ipairs(quickModeOrder) do
+    createToggle(tabs.Moves, "Quick: " .. mode, State.QuickBar.Modes, mode, function()
+        updateQuickBarVisuals()
+    end)
+end
+
 createDirectStepper(tabs.Moves, "Ping Comp (ms)", 0, 500, State, "PingComp")
 
 local movesStart = button(tabs.Moves, "⚡ INITIATE TROLL", true)
 
+Internal.StartMoves = function(fromQuickBar)
+    if State.Moves.Running then
+        -- A quick-bar press on another mode switches immediately without
+        -- leaving the player stuck in the previous controller.
+        if fromQuickBar then
+            PatMotion:Stop()
+            State.Moves.TargetLostAt = nil
+        else
+            Internal.StopMoves()
+            return false
+        end
+    end
+
+    if not State.Target and State.Moves.AutoAcquire then
+        local acquired = false
+        if targetAcquireCooldownReady() then
+            local candidate, distance = findNearestValidTarget()
+            if candidate and Internal.ApplyTarget then
+                Internal.ApplyTarget(candidate)
+                acquired = true
+                if fromQuickBar then
+                    Notify("AUTO TARGET", "Nearest target: " .. candidate.name .. " (" .. math.floor(distance + 0.5) .. " studs)", SUCCESS)
+                end
+            end
+        end
+        if not acquired then
+            Notify("TROLL ENGINE", "No valid nearby target found.", DANGER)
+            return false
+        end
+    end
+
+    local tr = getTargetRoot()
+    if not tr and State.Target and State.Target.kind == "PLAYER" and State.Target.player then
+        local liveChar = State.Target.player.Character
+        local liveRoot = resolveCharacterRoot(liveChar)
+        if liveRoot then
+            State.Target.instance = liveChar
+            tr = liveRoot
+        end
+    end
+
+    local myChar = LP.Character
+    local myH = myChar and hum(myChar)
+    if not tr or not myH then
+        Notify("ERROR", "Target character is not ready yet. Auto-target will retry when available.", DANGER)
+        return false
+    end
+
+    myH.PlatformStand = true
+    myH.Sit = false
+    State.Moves.TargetLostAt = nil
+    State.Moves.LastAutoAcquire = os.clock()
+    pcall(function() myChar:PivotTo(tr.CFrame) end)
+
+    State.Moves.Running = true
+    movesStart.Text = "■ ABORT TROLL"
+    updateQuickBarVisuals()
+    Notify("TROLL ENGINE", State.Moves.Mode .. " engaged.", SUCCESS)
+    return true
+end
+
 Internal.StopMoves = function()
 	State.Moves.Running = false
+	PatMotion:Stop()
 	State.Moves.TargetLostAt = nil
 	local char = LP.Character
 	if char then 
@@ -1611,48 +2532,73 @@ Internal.StopMoves = function()
 			moveRoot.AssemblyLinearVelocity = Vector3.zero
 			moveRoot.AssemblyAngularVelocity = Vector3.zero
 		end
+		for _, joint in ipairs(char:GetDescendants()) do
+			if joint:IsA("Motor6D") then
+				joint.Transform = CFrame.identity
+			end
+		end
 	end
 	movesStart.Text = "⚡ INITIATE TROLL"
+    updateQuickBarVisuals()
 	Notify("TROLL ENGINE", "Sequence aborted. Physics restored.", DANGER)
 end
 
 movesStart.Activated:Connect(function()
     if State.Moves.Running then
         Internal.StopMoves()
-        return
+    else
+        Internal.StartMoves(false)
     end
+end)
 
-    if not State.Target then
-        Notify("ERROR", "You must select a target first!", DANGER)
-        return
+--============================================================
+-- 4. AUTOMATIC 30-SECOND REVERSE
+--============================================================
+titleHeader(tabs.Moves, "↶ 30-SECOND REVERSE")
+header(tabs.Moves, "AUTOMATIC MOVEMENT MEMORY")
+
+local reverseStatus = Instance.new("TextLabel")
+reverseStatus.Size = UDim2.new(1, 0, 0, 34)
+reverseStatus.BackgroundTransparency = 1
+reverseStatus.Text = "MEMORY: 0.0s / 30.0s  •  AUTO RECORDING"
+reverseStatus.TextColor3 = TEXT_SUB
+reverseStatus.Font = Enum.Font.GothamMedium
+reverseStatus.TextSize = 11
+reverseStatus.Parent = tabs.Moves
+
+local reversePlayBtn = button(tabs.Moves, "↶ REVERSE LAST 30S", true)
+reversePlayBtn.Activated:Connect(function()
+    reversePlayOnce()
+    if State.Reverse.Playing then
+        reversePlayBtn.Text = "■ STOP REVERSE"
+    else
+        reversePlayBtn.Text = "↶ REVERSE LAST 30S"
     end
+end)
 
-    local tr = getTargetRoot()
-    if not tr and State.Target.kind == "PLAYER" and State.Target.player then
-        local liveChar = State.Target.player.Character
-        local liveRoot = resolveCharacterRoot(liveChar)
-        if liveRoot then
-            State.Target.instance = liveChar
-            tr = liveRoot
-        end
+local reverseLoopToggle = createToggle(tabs.Moves, "Repeat Reverse Playback", State.Reverse, "Loop", function(isOn)
+    if isOn then
+        Notify("REVERSE", "Reverse history will repeat.", SUCCESS)
+    else
+        Notify("REVERSE", "Repeat disabled.", YELLOW)
     end
+end)
 
-    local myChar = LP.Character
-    local myH = myChar and hum(myChar)
+local reverseClearBtn = button(tabs.Moves, "CLEAR MOVEMENT MEMORY")
+reverseClearBtn.Activated:Connect(function()
+    reverseClear()
+    reversePlayBtn.Text = "↶ REVERSE LAST 30S"
+    Notify("REVERSE", "30-second movement memory cleared.", DANGER)
+end)
 
-    if not tr or not myH then
-        Notify("ERROR", "Target character is not ready yet. Try again after it spawns.", DANGER)
-        return
+local reverseStatusConn = RunService.Heartbeat:Connect(function()
+    local count = #State.Reverse.Buffer
+    local seconds = math.min(State.Reverse.MaxSeconds, math.max(0, count - 1) * State.Reverse.SampleRate)
+    local mode = State.Reverse.Playing and "REPLAYING BACKWARD" or "AUTO RECORDING"
+    reverseStatus.Text = string.format("MEMORY: %.1fs / 30.0s  •  %s", seconds, mode)
+    if not State.Reverse.Playing and reversePlayBtn.Text == "■ STOP REVERSE" then
+        reversePlayBtn.Text = "↶ REVERSE LAST 30S"
     end
-
-    myH.PlatformStand = true
-    myH.Sit = false
-    State.Moves.TargetLostAt = nil
-    pcall(function() myChar:PivotTo(tr.CFrame) end)
-
-    State.Moves.Running = true
-    movesStart.Text = "■ ABORT TROLL"
-    Notify("TROLL ENGINE", State.Moves.Mode .. " engaged.", SUCCESS)
 end)
 
 --============================================================
@@ -1661,9 +2607,11 @@ end)
 titleHeader(tabs.Filling, "🧪 COCA FILLING")
 createMiniDash(tabs.Filling)
 
-header(tabs.Filling, "COMPACT FLING OVERRIDE")
+header(tabs.Filling, "FLING ENGINE")
 local fillingStart = button(tabs.Filling, "▶ START COCA FLING", true)
-createToggle(tabs.Filling, "Auto-Fling On Rejoin", State.Filling, "AutoRejoin")
+createToggle(tabs.Filling, "Auto-Fling On Rejoin", State.Filling, "AutoRejoin", function(isOn)
+    if not isOn then State.Filling.RejoinUserId = nil end
+end)
 
 local cocaOrbitAngle = 0
 local cocaFlingConn = nil
@@ -1671,6 +2619,7 @@ local cocaSeatConn = nil
 
 local function stopCocaFling()
 	State.Filling.Running = false
+    if not State.Filling.AutoRejoin then State.Filling.RejoinUserId = nil end
 	fillingStart.Text = "▶ START COCA FLING"
 	Notify("COCA FILLING", "Fling aborted.", DANGER)
 	if cocaFlingConn then cocaFlingConn:Disconnect(); cocaFlingConn = nil end
@@ -1695,6 +2644,7 @@ fillingStart.Activated:Connect(function()
 	if not tr or not mr then Notify("ERROR", "Target not found.", DANGER); return end
 	
 	State.Filling.Running = true
+    State.Filling.RejoinUserId = (State.Target and State.Target.kind == "PLAYER" and State.Target.player and State.Target.player.UserId) or nil
 	fillingStart.Text = "■ ABORT COCA FLING"
 	cocaOrbitAngle = 0
 	Notify("COCA FILLING", "Compact Fling Initiated.", SUCCESS)
@@ -1729,37 +2679,58 @@ fillingStart.Activated:Connect(function()
 end)
 
 Players.PlayerAdded:Connect(function(p)
-	task.wait(0.3)
-	Internal.RefreshTargets()
-	if State.Filling.AutoRejoin and Internal.TargetUserId and p.UserId == Internal.TargetUserId and not State.WhitelistedPlayers[string.lower(p.Name)] then
-		Internal.ApplyTarget({ kind = "PLAYER", player = p, instance = p.Character, name = p.DisplayName, username = p.Name })
-		Notify("COCA FILLING", "Target rejoined. Resuming Fling...", YELLOW)
-		task.spawn(function()
-			local tries = 0
-			repeat task.wait(0.5); tries = tries + 1 until (p.Character and root(p.Character)) or tries > 20
-			if p.Character and root(p.Character) and not State.Filling.Running then
-				task.wait(0.4)
-				fillingStart.Text = "■ ABORT COCA FLING"
-				State.Filling.Running = true
-				cocaOrbitAngle = 0
-				local c = LP.Character
-				local mh = hum(c)
-				if mh then mh.PlatformStand = true; mh.Sit = false end
-				cocaFlingConn = RunService.RenderStepped:Connect(function(dt)
-					if not State.Filling.Running then return end
-					local tr = getTargetRoot()
-					local mr = root(LP.Character)
-					if not tr or not mr then return end
-					cocaOrbitAngle = cocaOrbitAngle + (dt * 45)
-					local tp = tr.Position
-					local op = tp + Vector3.new(math.cos(cocaOrbitAngle)*2.2, 1.2 + math.sin(cocaOrbitAngle*2)*0.4, math.sin(cocaOrbitAngle)*2.2)
-					mr.CFrame = CFrame.new(op, tp)
-					mr.AssemblyLinearVelocity = (op - mr.Position) * 80
-					mr.AssemblyAngularVelocity = Vector3.new(math.random(-600,600), math.random(-600,600), math.random(-600,600))
-				end)
-			end
-		end)
-	end
+    task.wait(0.3)
+    Internal.RefreshTargets()
+
+    if State.Filling.AutoRejoin and State.Filling.RejoinUserId and p.UserId == State.Filling.RejoinUserId
+        and not isProtectedPlayer(p) then
+        task.spawn(function()
+            local tries = 0
+            repeat
+                task.wait(0.5)
+                tries += 1
+            until (p.Character and resolveCharacterRoot(p.Character)) or tries > 20
+
+            if not (p.Character and resolveCharacterRoot(p.Character)) then
+                Notify("COCA FILLING", "Target rejoined but did not spawn in time.", DANGER)
+                return
+            end
+
+            Internal.ApplyTarget({
+                kind = "PLAYER",
+                player = p,
+                instance = p.Character,
+                name = p.DisplayName ~= "" and p.DisplayName or p.Name,
+                username = p.Name,
+                protected = false
+            })
+            Notify("COCA FILLING", "Target rejoined. Resuming fling...", YELLOW)
+
+            if not State.Filling.Running then
+                State.Filling.Running = true
+                State.Filling.RejoinUserId = p.UserId
+                fillingStart.Text = "■ ABORT COCA FLING"
+                cocaOrbitAngle = 0
+                local c = LP.Character
+                local mh = hum(c)
+                if mh then mh.PlatformStand = true; mh.Sit = false end
+
+                if cocaFlingConn then cocaFlingConn:Disconnect() end
+                cocaFlingConn = RunService.RenderStepped:Connect(function(dt)
+                    if not State.Filling.Running then return end
+                    local tr = getTargetRoot()
+                    local mr = root(LP.Character)
+                    if not tr or not mr then return end
+                    cocaOrbitAngle += dt * 45
+                    local tp = tr.Position
+                    local op = tp + Vector3.new(math.cos(cocaOrbitAngle) * 2.2, 1.2 + math.sin(cocaOrbitAngle * 2) * 0.4, math.sin(cocaOrbitAngle) * 2.2)
+                    mr.CFrame = CFrame.new(op, tp)
+                    mr.AssemblyLinearVelocity = (op - mr.Position) * 80
+                    mr.AssemblyAngularVelocity = Vector3.new(math.random(-600, 600), math.random(-600, 600), math.random(-600, 600))
+                end)
+            end
+        end)
+    end
 end)
 
 --============================================================
@@ -1844,20 +2815,76 @@ end)
 titleHeader(tabs.Anim, "👁 LIVE ANIM SYNC")
 createMiniDash(tabs.Anim)
 
-header(tabs.Anim, "SERVER REPLICATION HACKS")
+header(tabs.Anim, "ANIMATION COPY & LIVE SYNC")
 
 local activeCopiedTracks = {}
-local function clearTracks() 
-	for id, track in pairs(activeCopiedTracks) do 
-		pcall(function() track.mTrack:Stop(0.1); track.mTrack:Destroy() end) 
+
+local function clearTracks()
+	for sourceTrack, cache in pairs(activeCopiedTracks) do
+		pcall(function()
+			if cache.mTrack then cache.mTrack:Stop(0.08); cache.mTrack:Destroy() end
+			if cache.animObj then cache.animObj:Destroy() end
+		end)
 	end
-	activeCopiedTracks = {} 
+	table.clear(activeCopiedTracks)
 end
+
+local function syncCopiedTrack(sourceTrack, targetAnimator)
+	if not sourceTrack or not sourceTrack.Animation then return nil end
+	local animationId = sourceTrack.Animation.AnimationId
+	if animationId == nil or animationId == "" then return nil end
+
+	local cache = activeCopiedTracks[sourceTrack]
+	if not cache or not cache.mTrack or cache.mTrack.Parent == nil then
+		local animObj = Instance.new("Animation")
+		animObj.AnimationId = animationId
+		local ok, mTrack = pcall(function() return targetAnimator:LoadAnimation(animObj) end)
+		if not ok or not mTrack then
+			animObj:Destroy()
+			return nil
+		end
+		mTrack.Looped = sourceTrack.Looped
+		mTrack.Priority = sourceTrack.Priority
+		mTrack:Play(0.08, math.clamp(sourceTrack.WeightCurrent or 1, 0, 1), sourceTrack.Speed or 1)
+		cache = { mTrack = mTrack, animObj = animObj, animationId = animationId }
+		activeCopiedTracks[sourceTrack] = cache
+	end
+
+	local mTrack = cache.mTrack
+	pcall(function() mTrack.Looped = sourceTrack.Looped end)
+	pcall(function() mTrack.Priority = sourceTrack.Priority end)
+	pcall(function() mTrack:AdjustSpeed(sourceTrack.Speed or 1) end)
+	pcall(function() mTrack:AdjustWeight(math.clamp(sourceTrack.WeightCurrent or 1, 0, 1), 0.05) end)
+	pcall(function()
+		if math.abs((mTrack.TimePosition or 0) - (sourceTrack.TimePosition or 0)) > 0.12 then
+			mTrack.TimePosition = sourceTrack.TimePosition
+		end
+	end)
+	return cache
+end
+
+LP.CharacterAdded:Connect(function(newChar)
+	clearTracks()
+	State.Emotes.Track = nil
+	State.Emotes.OriginalAnimate = nil
+	task.defer(function()
+		if State.Anim.TrackSync then
+			local animate = newChar:FindFirstChild("Animate")
+			if animate then animate.Disabled = true end
+		end
+	end)
+end)
 
 createToggle(tabs.Anim, "Sync Server Animations", State.Anim, "TrackSync", function(isOn)
 	local char = LP.Character
 	local animate = char and char:FindFirstChild("Animate")
-	if isOn then 
+	if isOn then
+        if not State.Target and State.Moves.AutoAcquire then
+            local candidate = findNearestValidTarget()
+            if candidate and Internal.ApplyTarget then
+                Internal.ApplyTarget(candidate)
+            end
+        end
 		if animate then animate.Disabled = true end
 		clearAllEmoteTracks()
 		Notify("ANIMATION", "Server sync engaged.", SUCCESS)
@@ -1865,6 +2892,40 @@ createToggle(tabs.Anim, "Sync Server Animations", State.Anim, "TrackSync", funct
 		if animate then animate.Disabled = false end
 		clearTracks()
 		Notify("ANIMATION", "Local animations restored.", DANGER) 
+	end
+end)
+
+local copyNow = button(tabs.Anim, "⧉ COPY CURRENT TARGET ANIMATIONS")
+copyNow.Activated:Connect(function()
+    if not State.Target and State.Moves.AutoAcquire then
+        local candidate, distance = findNearestValidTarget()
+        if candidate and Internal.ApplyTarget then
+            Internal.ApplyTarget(candidate)
+            Notify("AUTO TARGET", "Using nearest target for animation copy: " .. candidate.name .. " (" .. math.floor(distance + 0.5) .. " studs)", SUCCESS)
+        end
+    end
+	local targetChar = getTargetChar()
+	local myChar = getCharacter()
+	if not targetChar or not myChar then
+		Notify("ANIMATION", "No valid spawned target is available for animation copy.", DANGER)
+		return
+	end
+	local targetAnimator = hum(targetChar) and hum(targetChar):FindFirstChildOfClass("Animator")
+	local myAnimator = getAnimator(myChar)
+	if not targetAnimator or not myAnimator then
+		Notify("ANIMATION", "Animator is not available yet.", DANGER)
+		return
+	end
+	local copied = 0
+	for _, sourceTrack in ipairs(targetAnimator:GetPlayingAnimationTracks()) do
+		if sourceTrack.IsPlaying and sourceTrack.Animation and sourceTrack.Animation.AnimationId ~= "" then
+			if syncCopiedTrack(sourceTrack, myAnimator) then copied += 1 end
+		end
+	end
+	if copied > 0 then
+		Notify("ANIMATION", "Copied " .. tostring(copied) .. " active target animation(s).", SUCCESS)
+	else
+		Notify("ANIMATION", "No copyable target animations are playing.", YELLOW)
 	end
 end)
 
@@ -1914,14 +2975,41 @@ eListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 local EMOTES = {
+	-- Movement packs
 	{"Pack - DEFAULT (Reset)", "Pack", idle = "507766951", walk = "507777826", run = "507767714", jump = "507765000", fall = "507767968"},
 	{"Pack - Zombie", "Pack", idle = "616158929", walk = "616168032", run = "616163682", jump = "616161112", fall = "616157476"},
 	{"Pack - Vampire", "Pack", idle = "1083445855", walk = "1083473930", run = "1083462077", jump = "1083466542", fall = "1083443587"},
 	{"Pack - Superhero", "Pack", idle = "782841498", walk = "782843345", run = "782842708", jump = "782847020", fall = "782846423"},
-	{"Dance 1", "Emote", id = "507771019"}, {"Dance 2", "Emote", id = "507776043"}, {"Dance 3", "Emote", id = "507777268"},
-	{"Laugh", "Emote", id = "507770818"}, {"Cheer", "Emote", id = "507770677"}, {"Point", "Emote", id = "507770453"},
-	{"Wave", "Emote", id = "507770239"}, {"Floss", "Emote", id = "5828456208"}, {"Tilt", "Emote", id = "3360692915"}
+	-- Classic emotes
+	{"Dance 1", "Emote", id = "507771019"},
+	{"Dance 2", "Emote", id = "507776043"},
+	{"Dance 3", "Emote", id = "507777268"},
+	{"Laugh", "Emote", id = "507770818"},
+	{"Cheer", "Emote", id = "507770677"},
+	{"Point", "Emote", id = "507770453"},
+	{"Wave", "Emote", id = "507770239"},
+	{"Floss", "Emote", id = "582855105"},
+	{"Tilt", "Emote", id = "3360692915"},
+	{"Salute", "Emote", id = "3360689775"},
+	{"Shrug", "Emote", id = "3334392772"},
+	{"Applaud", "Emote", id = "5915779043"},
+	{"Stadium", "Emote", id = "3360686498"},
+	{"Monkey", "Emote", id = "3716636630"},
+	{"Fancy Feet", "Emote", id = "3333432454"},
+	{"Oldschool Dance", "Emote", id = "10714340543"},
+	{"Rock On", "Emote", id = "5918726674"},
+	{"Cha Cha", "Emote", id = "6862001786"},
+	{"Line Dance", "Emote", id = "4049037604"},
+	{"Top Rock", "Emote", id = "5915712534"},
+	{"Flare", "Emote", id = "5915773999"},
+	{"Breakdance", "Emote", id = "5915776835"},
+	{"Hype Dance", "Emote", id = "3696759792"},
+	{"Hero Landing", "Emote", id = "5104377791"},
+	{"Old Dance", "Emote", id = "507771955"},
+	{"Laugh 2", "Emote", id = "507770818"},
+	{"Point 2", "Emote", id = "507770453"},
 }
+
 
 local emoteEntries = {}
 
@@ -1957,9 +3045,46 @@ local function playEmote(id, btnObj)
 	if ok and track then 
 		State.Emotes.Track = track
 		track.Priority = Enum.AnimationPriority.Action4
+		track.Looped = false
 		track:Play(0.1, 1, 1)
-		Notify("EMOTE", "Playing server animation.", SUCCESS) 
+		track.Stopped:Connect(function()
+			if State.Emotes.Track == track then
+				State.Emotes.Track = nil
+				resetEmoteSelectionUI()
+			end
+		end)
+		Notify("EMOTE", "Playing animation.", SUCCESS) 
+	else
+		Notify("EMOTE", "Animation could not be loaded in this client.", DANGER)
 	end
+end
+
+local function saveOriginalAnimate(animate)
+	if not animate or State.Emotes.OriginalAnimate then return end
+	State.Emotes.OriginalAnimate = {}
+	for _, stateName in ipairs({"idle", "walk", "run", "jump", "fall"}) do
+		local state = animate:FindFirstChild(stateName)
+		if state then
+			State.Emotes.OriginalAnimate[stateName] = {}
+			for _, obj in ipairs(state:GetChildren()) do
+				if obj:IsA("Animation") then
+					table.insert(State.Emotes.OriginalAnimate[stateName], {obj = obj, id = obj.AnimationId})
+				end
+			end
+		end
+	end
+end
+
+local function restoreOriginalAnimate(animate)
+	local saved = State.Emotes.OriginalAnimate
+	if not animate or not saved then return end
+	for stateName, entries in pairs(saved) do
+		for _, entry in ipairs(entries) do
+			if entry.obj and entry.obj.Parent then entry.obj.AnimationId = entry.id end
+		end
+	end
+	State.Emotes.OriginalAnimate = nil
+	State.Emotes.Pack = nil
 end
 
 local function equipPack(packData, btnObj)
@@ -1967,6 +3092,7 @@ local function equipPack(packData, btnObj)
 	local char = getCharacter()
 	local animate = char and char:FindFirstChild("Animate")
 	if not animate then return end
+	saveOriginalAnimate(animate)
 	
 	clearAllEmoteTracks()
 	resetEmoteSelectionUI()
@@ -2009,7 +3135,13 @@ end
 emoteStop.Activated:Connect(function()
 	clearAllEmoteTracks()
 	resetEmoteSelectionUI()
-	Notify("EMOTE", "Animation halted.", DANGER)
+	local char = LP.Character
+	local animate = char and char:FindFirstChild("Animate")
+	if animate then
+		restoreOriginalAnimate(animate)
+		animate.Disabled = false
+	end
+	Notify("EMOTE", "Animation halted and default movement restored.", DANGER)
 end)
 
 for _, entry in ipairs(EMOTES) do
@@ -2288,7 +3420,7 @@ UserInputService.JumpRequest:Connect(function()
 	end 
 end)
 
-RunService.Heartbeat:Connect(function()
+RunService.Heartbeat:Connect(function(dt)
 	if not State.Unlocked then return end
 	local char = LP.Character
 	local myRoot = root(char)
@@ -2346,8 +3478,11 @@ RunService.Heartbeat:Connect(function()
 	end
 
 	-- Target Verification
+    if State.Moves.Running and State.Moves.AutoAcquire and not State.Target then
+        autoAcquireNearestTarget(true)
+    end
 	local targetChar = getTargetChar()
-	local targetRoot = targetChar and root(targetChar)
+	local targetRoot = targetChar and resolveCharacterRoot(targetChar)
 	local targetHead = targetChar and targetChar:FindFirstChild("Head")
 
 	-- Side-by-Side Anchor Tracking
@@ -2381,16 +3516,24 @@ RunService.Heartbeat:Connect(function()
 		end
 
 		if not targetRoot then
-			State.Moves.TargetLostAt = State.Moves.TargetLostAt or os.clock()
-			if os.clock() - State.Moves.TargetLostAt > 2 then
-				State.Moves.Running = false
-				State.Moves.TargetLostAt = nil
-				myHum.PlatformStand = false
-				myHum.AutoRotate = true
-				movesStart.Text = "⚡ INITIATE TROLL"
-				Notify("TROLL ENGINE", "Target character is not spawned.", DANGER)
-			end
-			return
+            State.Moves.TargetLostAt = State.Moves.TargetLostAt or os.clock()
+
+            -- If the current target disappears, clear it and look for the
+            -- nearest valid player/NPC instead of leaving the engine frozen.
+            if State.Moves.AutoAcquire and os.clock() - State.Moves.TargetLostAt >= 0.65 then
+                Internal.ApplyTarget(nil)
+                autoAcquireNearestTarget(false)
+                targetChar = getTargetChar()
+                targetRoot = targetChar and resolveCharacterRoot(targetChar)
+                targetHead = targetChar and targetChar:FindFirstChild("Head")
+                State.Moves.TargetLostAt = targetRoot and nil or State.Moves.TargetLostAt
+            end
+
+            if not targetRoot then
+                myRoot.AssemblyLinearVelocity = Vector3.zero
+                myRoot.AssemblyAngularVelocity = Vector3.zero
+                return
+            end
 		end
 
 		State.Moves.TargetLostAt = nil
@@ -2398,6 +3541,11 @@ RunService.Heartbeat:Connect(function()
 		local dist = math.max(0.1, State.Moves.Distance)
 		local spd = math.max(0.1, State.Moves.Speed)
 		myHum.PlatformStand = true 
+
+		if State.Moves.Mode ~= "Pat" and PatMotion:IsActive() then
+            PatMotion:Stop()
+            State.Pat.EngineState = "Idle"
+        end
 
 		local ok, execErr = pcall(function()
 			local pingOffset = targetRoot.AssemblyLinearVelocity * (math.clamp(State.PingComp, 0, 500) / 1000)
@@ -2418,7 +3566,8 @@ RunService.Heartbeat:Connect(function()
 			else
 				myRoot.AssemblyLinearVelocity = targetRoot.AssemblyLinearVelocity
 				myRoot.AssemblyAngularVelocity = Vector3.zero
-				local thrust = math.clamp(math.sin(t * spd), 0, 1) * dist
+				local cycle = (math.sin(t * spd) + 1) * 0.5
+				local thrust = cycle * dist
 
 				if State.Moves.Mode == "Facebang" then 
 					local headPos = (targetHead and targetHead.Position or (targetRoot.Position + Vector3.new(0, 1.5, 0))) + pingOffset
@@ -2426,6 +3575,13 @@ RunService.Heartbeat:Connect(function()
 					myRoot.CFrame = headCF * CFrame.new(0, 0, -(dist - thrust)) * CFrame.Angles(0, math.pi, 0)
 				elseif State.Moves.Mode == "Hipbang" then 
 					myRoot.CFrame = flatPredictedCF * CFrame.new(0, -0.7, (dist - thrust))
+                elseif State.Moves.Mode == "Close Contact" then
+                    -- Non-sexual close-contact choreography: short forward/backward steps
+                    -- while keeping the avatars upright and facing one another.
+                    local contact = (math.sin(t * spd) + 1) * 0.5
+                    local gap = math.clamp(dist, 0.9, 2.0)
+                    local z = gap - contact * math.min(gap * 0.75, 0.8)
+                    myRoot.CFrame = flatPredictedCF * CFrame.new(0, 0, z) * CFrame.Angles(0, math.pi, 0)
 				elseif State.Moves.Mode == "Headsit" then 
 					myRoot.CFrame = predictedCF * CFrame.new(0, headYOffset + 1.2, 0)
 				elseif State.Moves.Mode == "Orbit" then 
@@ -2445,22 +3601,22 @@ RunService.Heartbeat:Connect(function()
 					local ry = math.random() * (dist * 2) - dist
 					local rz = math.random() * (dist * 2) - dist
 					myRoot.CFrame = flatPredictedCF * CFrame.new(rx, ry, rz)
-				elseif State.Moves.Mode == "Pat" then 
-					local armReachY = headYOffset - 1.5 
-					local sidePos = flatPredictedCF.Position + (flatPredictedCF.RightVector * math.clamp(dist, 1.2, 2.5)) + Vector3.new(0, armReachY, 0)
-					local targetPos = Vector3.new(flatPredictedCF.Position.X, sidePos.Y, flatPredictedCF.Position.Z)
-					local bob = math.sin(t * 8) * 0.25
-					
-					myRoot.CFrame = CFrame.lookAt(sidePos, targetPos) * CFrame.new(0, bob, 0)
-					
-					local shoulder = char:FindFirstChild("Right Shoulder", true) or char:FindFirstChild("RightShoulder", true)
-					if shoulder and shoulder:IsA("Motor6D") then
-						shoulder.Transform = CFrame.Angles(math.rad(85) + math.sin(t * 8) * 0.35, math.rad(-15), math.rad(-10))
-					end
+                elseif State.Moves.Mode == "Pat" then
+                    -- Non-explicit pat choreography using the supplied high-energy
+                    -- procedural R15 Waist/Neck motion as the sole joint controller.
+                    local patSide = math.clamp(dist, 1.25, 2.25)
+                    local tap = (math.sin(t * math.max(State.Pat.Speed, 0.1)) + 1) * 0.5
+                    local patPos = flatPredictedCF.Position
+                        + flatPredictedCF.RightVector * patSide
+                        + Vector3.new(0, math.clamp(headYOffset - 0.55, 0.5, 1.7) + tap * 0.12, 0)
+                    myRoot.CFrame = CFrame.lookAt(patPos, flatPredictedCF.Position)
+                    PatMotion:Update(char, dt, State.Pat.EngineState)
+                    end
 				end
 			end
 		end)
 		if not ok then
+            PatMotion:Stop()
 			warn("[COCA] Troll execution error (" .. tostring(State.Moves.Mode) .. "): " .. tostring(execErr))
 			State.Moves.Running = false
 			myHum.PlatformStand = false
@@ -2484,7 +3640,7 @@ RunService.Heartbeat:Connect(function()
 		if targetChar then
 			updateESP(targetChar)
 			local tHum = hum(targetChar)
-			local tRt = root(targetChar)
+			local tRt = resolveCharacterRoot(targetChar)
 			if tabs.Target.Visible and tHum then 
 				local hpTxt = math.floor(tHum.Health) .. " / " .. math.floor(tHum.MaxHealth)
 				local pct = math.clamp(tHum.Health / tHum.MaxHealth, 0, 1)
@@ -2506,12 +3662,12 @@ RunService.Heartbeat:Connect(function()
 				intelDist.Text = "Distance: N/A"
 				for _, md in ipairs(miniDashes) do tween(md.hpFill, {Size = UDim2.new(0, 0, 1, 0)}, 0.2) end
 			end
-			for id, track in pairs(activeCopiedTracks) do pcall(function() track.mTrack:Stop() end) end
+			if next(activeCopiedTracks) then clearTracks() end
 			return
 		end
 	else
 		updateESP(nil)
-		for id, track in pairs(activeCopiedTracks) do pcall(function() track.mTrack:Stop() end) end
+		if next(activeCopiedTracks) then clearTracks() end
 		return
 	end
 
@@ -2525,33 +3681,26 @@ RunService.Heartbeat:Connect(function()
 			if tAnim and mAnim then
 				local playingNow = {}
 				for _, tTrack in ipairs(tAnim:GetPlayingAnimationTracks()) do
-					if tTrack.Animation and tTrack.Animation.AnimationId ~= "" then
-						local id = tTrack.Animation.AnimationId
-						playingNow[id] = true
-						if not activeCopiedTracks[id] then
-							local newAnim = Instance.new("Animation")
-							newAnim.AnimationId = id
-							newAnim.Parent = char 
-							pcall(function() 
-								local mTrack = mAnim:LoadAnimation(newAnim)
-								mTrack.Priority = Enum.AnimationPriority.Action4
-								mTrack:Play()
-								activeCopiedTracks[id] = { mTrack = mTrack, animObj = newAnim }
-							end)
-						end
-						if activeCopiedTracks[id] then 
-							pcall(function() activeCopiedTracks[id].mTrack:AdjustSpeed(tTrack.Speed) end) 
-						end
+					if tTrack.IsPlaying and tTrack.Animation and tTrack.Animation.AnimationId ~= "" then
+						playingNow[tTrack] = true
+						syncCopiedTrack(tTrack, mAnim)
 					end
 				end
-				for id, cache in pairs(activeCopiedTracks) do 
-					if not playingNow[id] then 
-						pcall(function() cache.mTrack:Stop(); cache.animObj:Destroy() end)
-						activeCopiedTracks[id] = nil 
-					end 
+				for sourceTrack, cache in pairs(activeCopiedTracks) do
+					if not playingNow[sourceTrack] or not sourceTrack.Parent or not sourceTrack.IsPlaying then
+						pcall(function()
+							cache.mTrack:Stop(0.08)
+							cache.mTrack:Destroy()
+							cache.animObj:Destroy()
+						end)
+						activeCopiedTracks[sourceTrack] = nil
+					end
 				end
 			end
 		end
+	else
+		-- Track sync was disabled or the target disappeared.
+		if next(activeCopiedTracks) then clearTracks() end
 	end
 end)
 
@@ -2665,7 +3814,12 @@ verifyStatus.Parent = verification
 
 getKeyBtn.Activated:Connect(function()
 	local opened = false
-	pcall(function() GuiService:OpenBrowserWindow(DISCORD_WEB_LINK); opened = true end)
+    pcall(function()
+        if GuiService and GuiService.OpenBrowserWindow then
+            GuiService:OpenBrowserWindow(DISCORD_WEB_LINK)
+            opened = true
+        end
+    end)
 	if opened then 
 		verifyStatus.Text = "Discord profile opened."
 		verifyStatus.TextColor3 = SUCCESS 
@@ -2675,7 +3829,10 @@ getKeyBtn.Activated:Connect(function()
 	end
 end)
 
+local unlocking = false
 local function unlockUI()
+    if unlocking or State.Unlocked then return end
+    unlocking = true
 	local inputStr = string.match(keyBox.Text, "^%s*(.-)%s*$") or ""
 	local playerName = string.lower(LP.Name)
 	
@@ -2690,6 +3847,7 @@ local function unlockUI()
 			task.delay(0.05, function() tween(keyBox, {Position = UDim2.new(0, 30, 0, 220)}, 0.05) end) 
 		end)
 		task.delay(2, function() if verification.Visible then verifyStatus.Text = "Awaiting authentication..."; verifyStatus.TextColor3 = TEXT_SUB end end)
+        unlocking = false
 		return
 	end
 	
@@ -2704,9 +3862,11 @@ local function unlockUI()
 			task.delay(0.05, function() tween(keyBox, {Position = UDim2.new(0, 30, 0, 220)}, 0.05) end) 
 		end)
 		task.delay(1.5, function() if verification.Visible then verifyStatus.Text = "Awaiting authentication..."; verifyStatus.TextColor3 = TEXT_SUB end end)
+        unlocking = false
 		return
 	end
 	
+    State.Unlocked = true
 	playSound(SOUNDS.Success, 1.0)
 	verifyStatus.Text = "Authentication Success!"
 	verifyStatus.TextColor3 = SUCCESS
@@ -2726,13 +3886,13 @@ local function unlockUI()
 	end
 	
 	task.delay(0.5, function()
-		State.Unlocked = true
 		verification.Visible = false
 		wrapper.Visible = true
 		wrapper.Position = UDim2.new(1, 100, 0.5, -260)
 		tween(wrapper, {Position = UDim2.new(1, -300, 0.5, -260)}, 0.6, Enum.EasingStyle.Back)
 		Internal.ApplyTarget(nil)
 		Internal.RefreshTargets()
+        updateQuickBarVisuals()
 		Notify("SYSTEM", "Coca Dashboard Unlocked.", SUCCESS)
 	end)
 end
@@ -2834,18 +3994,31 @@ Players.PlayerAdded:Connect(function()
 	if State.Unlocked then Internal.RefreshTargets() end 
 end)
 
-Players.PlayerRemoving:Connect(function(plr) 
-	if State.Target and State.Target.player == plr then 
-		Internal.ApplyTarget(nil)
-		if State.Moves.Running then Internal.StopMoves() end 
-	end
-	if State.Unlocked then 
-		task.wait(0.2)
-		Internal.RefreshTargets() 
-	end 
+Players.PlayerRemoving:Connect(function(plr)
+    if State.Target and State.Target.player == plr then
+        if State.Filling.AutoRejoin then
+            State.Filling.RejoinUserId = plr.UserId
+        else
+            State.Filling.RejoinUserId = nil
+        end
+        if State.Filling.Running then
+            State.Filling.Running = false
+            if cocaFlingConn then cocaFlingConn:Disconnect(); cocaFlingConn = nil end
+            if cocaSeatConn then cocaSeatConn:Disconnect(); cocaSeatConn = nil end
+            fillingStart.Text = "▶ START COCA FLING"
+        end
+        Internal.ApplyTarget(nil)
+        if State.Moves.Running then Internal.StopMoves() end
+    end
+    if State.Unlocked then
+        task.wait(0.2)
+        Internal.RefreshTargets()
+    end
 end)
 
 verification.Visible = true
+quickDock.Visible = false
+quickManager.Visible = false
 verification.ZIndex = 1000
 wrapper.Visible = false
 wrapper.ZIndex = 100
@@ -2867,6 +4040,10 @@ task.defer(function()
 	wrapper.Visible = State.Unlocked
 	if State.Unlocked then
 		Internal.RefreshTargets()
+        updateQuickBarVisuals()
+	else
+        quickDock.Visible = false
+        quickManager.Visible = false
 	end
 end)
-print("COCA CAPSULE: V45 RESTORED STABLE ENGINE INITIALIZED | Key: KINGCOCA")
+print("COCA CAPSULE: V50 CLEAN UI / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
