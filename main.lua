@@ -142,11 +142,11 @@ local targetGuiParent = nil
 pcall(function() if gethui then targetGuiParent = gethui() else targetGuiParent = CoreGui end end)
 if not targetGuiParent then targetGuiParent = LP:WaitForChild("PlayerGui") end
 
-local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V42")
+local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V43") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
 if oldGui then oldGui:Destroy() end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "COCA_Capsule_V42"
+gui.Name = "COCA_Capsule_V43"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -282,23 +282,64 @@ local function getTargetRoot()
 	return tc and root(tc)
 end
 
+-- IMPORTANT: declare this before getTargets. The previous build referenced
+-- isProtectedPlayer before its local declaration, which made Lua resolve it
+-- as a nil global and stopped the entire server roster from being created.
+local function isProtectedPlayer(player)
+	if not player then return false end
+	local name = string.lower(player.Name)
+	return VIP_USERNAMES[name] ~= nil or State.WhitelistedPlayers[name] == true
+end
+
 local function getTargets()
 	local result = {}
-	local seen = {}
+	local seenPlayers = {}
+	local seenNPCs = {}
+
+	-- Server player roster is collected first and independently.
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LP and not isProtectedPlayer(player) then 
-			table.insert(result, { kind = "PLAYER", player = player, instance = player.Character, name = player.DisplayName, username = player.Name }) 
-		end
-	end
-	for _, object in ipairs(workspace:GetDescendants()) do
-		if object:IsA("Model") and object ~= LP.Character and not Players:GetPlayerFromCharacter(object) and hum(object) and root(object) then
-			if not seen[object.Name] then 
-				table.insert(result, { kind = "NPC", instance = object, player = nil, name = object.Name, username = "NPC" })
-				seen[object.Name] = true 
+		if player ~= LP and not isProtectedPlayer(player) then
+			local key = tostring(player.UserId)
+			if not seenPlayers[key] then
+				table.insert(result, {
+					kind = "PLAYER",
+					player = player,
+					instance = player.Character,
+					name = player.DisplayName ~= "" and player.DisplayName or player.Name,
+					username = player.Name
+				})
+				seenPlayers[key] = true
 			end
 		end
 	end
-	table.sort(result, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+
+	-- Preserve NPC support, but an NPC scan failure must never hide players.
+	pcall(function()
+		for _, object in ipairs(workspace:GetDescendants()) do
+			if object:IsA("Model")
+				and object ~= LP.Character
+				and not Players:GetPlayerFromCharacter(object)
+				and hum(object)
+				and root(object) then
+				local key = object:GetDebugId()
+				if not seenNPCs[key] then
+					table.insert(result, {
+						kind = "NPC",
+						instance = object,
+						player = nil,
+						name = object.Name,
+						username = "NPC"
+					})
+					seenNPCs[key] = true
+				end
+			end
+		end
+	end)
+
+	table.sort(result, function(a, b)
+		if a.kind ~= b.kind then return a.kind == "PLAYER" end
+		return string.lower(a.name) < string.lower(b.name)
+	end)
 	return result
 end
 
@@ -311,12 +352,6 @@ end
 local function getVIPRole(username)
 	local data = VIP_USERNAMES[string.lower(username or "")]
 	return data and data.role or nil
-end
-
-local function isProtectedPlayer(player)
-	if not player then return false end
-	local name = string.lower(player.Name)
-	return VIP_USERNAMES[name] ~= nil or State.WhitelistedPlayers[name] == true
 end
 
 local function getExecutorName()
@@ -1014,6 +1049,16 @@ createToggle(tabs.Target, "Show Target Highlight (ESP)", State, "TargetESP", fun
 	if tc then updateESP(tc) else updateESP(nil) end 
 end)
 
+local playerListHeader = Instance.new("TextLabel")
+playerListHeader.BackgroundTransparency = 1
+playerListHeader.Text = "SERVER PLAYERS  •  LIVE"
+playerListHeader.TextColor3 = TEXT_SUB
+playerListHeader.Font = Enum.Font.GothamBlack
+playerListHeader.TextSize = 10
+playerListHeader.Size = UDim2.new(1, 0, 0, 20)
+playerListHeader.TextXAlignment = Enum.TextXAlignment.Left
+playerListHeader.Parent = tabs.Target
+
 local tList = Instance.new("Frame")
 tList.BackgroundTransparency = 1
 tList.Size = UDim2.new(1, 0, 0, 0)
@@ -1025,10 +1070,139 @@ tListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 	tList.Size = UDim2.new(1, 0, 0, tListLayout.AbsoluteContentSize.Y) 
 end)
 
-local targetButtonData = {} 
+local targetButtonData = {}
+
+local function targetRoleData(target)
+	if target and target.kind == "PLAYER" then
+		return VIP_USERNAMES[string.lower(target.username or "")]
+	end
+	return nil
+end
+
+local function createTargetRow(parent, target)
+	local role = targetRoleData(target)
+	local isPlayer = target.kind == "PLAYER"
+
+	local row = Instance.new("Frame")
+	row.Name = "TargetRow"
+	row.Size = UDim2.new(1, 0, 0, isPlayer and 58 or 42)
+	row.BackgroundColor3 = BG_ELEMENT
+	row.BorderSizePixel = 0
+	row.ZIndex = 3
+	row.Parent = parent
+	Instance.new("UICorner", row).CornerRadius = UDim.new(0, 11)
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(45, 45, 55)
+	stroke.Thickness = 1
+	stroke.Parent = row
+
+	if isPlayer then
+		local avatar = Instance.new("ImageLabel")
+		avatar.Size = UDim2.new(0, 42, 0, 42)
+		avatar.Position = UDim2.new(0, 8, 0.5, -21)
+		avatar.BackgroundColor3 = BG_MAIN
+		avatar.ScaleType = Enum.ScaleType.Crop
+		avatar.ZIndex = 4
+		avatar.Parent = row
+		Instance.new("UICorner", avatar).CornerRadius = UDim.new(1, 0)
+
+		local avatarStroke = Instance.new("UIStroke")
+		avatarStroke.Color = role and (role.tier == 3 and YELLOW or GRAD_2) or Color3.fromRGB(55,55,65)
+		avatarStroke.Thickness = role and 2 or 1
+		avatarStroke.Parent = avatar
+
+		task.spawn(function()
+			local ok, img = pcall(function()
+				return Players:GetUserThumbnailAsync(
+					target.player.UserId,
+					Enum.ThumbnailType.HeadShot,
+					Enum.ThumbnailSize.Size100x100
+				)
+			end)
+			if ok and img and avatar.Parent then avatar.Image = img end
+		end)
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = target.name
+		nameLabel.TextColor3 = TEXT_MAIN
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.TextSize = 12
+		nameLabel.Size = UDim2.new(1, role and -125 or -82, 0, 22)
+		nameLabel.Position = UDim2.new(0, 60, 0, 7)
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLabel.ZIndex = 4
+		nameLabel.Parent = row
+
+		local userLabel = Instance.new("TextLabel")
+		userLabel.BackgroundTransparency = 1
+		userLabel.Text = "@" .. target.username
+		userLabel.TextColor3 = TEXT_SUB
+		userLabel.Font = Enum.Font.Gotham
+		userLabel.TextSize = 10
+		userLabel.Size = UDim2.new(1, role and -125 or -82, 0, 18)
+		userLabel.Position = UDim2.new(0, 60, 0, 29)
+		userLabel.TextXAlignment = Enum.TextXAlignment.Left
+		userLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		userLabel.ZIndex = 4
+		userLabel.Parent = row
+
+		if role and State.Badges.ShowRoleBadges then
+			local badge = Instance.new("TextLabel")
+			badge.BackgroundColor3 = role.tier == 3 and Color3.fromRGB(60, 45, 12) or Color3.fromRGB(45, 20, 70)
+			badge.Text = role.icon .. " " .. (role.tier == 3 and "SUPREME" or "PREMIUM")
+			badge.TextColor3 = role.tier == 3 and YELLOW or Color3.fromRGB(220, 175, 255)
+			badge.Font = Enum.Font.GothamBlack
+			badge.TextSize = 8
+			badge.Size = UDim2.new(0, role.tier == 3 and 78 or 70, 0, 20)
+			badge.Position = UDim2.new(1, role.tier == 3 and -84 or -76, 0.5, -10)
+			badge.ZIndex = 5
+			badge.Parent = row
+			Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 6)
+		end
+	else
+		local icon = Instance.new("TextLabel")
+		icon.BackgroundTransparency = 1
+		icon.Text = "🤖"
+		icon.TextSize = 17
+		icon.Size = UDim2.new(0, 35, 1, 0)
+		icon.Position = UDim2.new(0, 7, 0, 0)
+		icon.ZIndex = 4
+		icon.Parent = row
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = target.name
+		nameLabel.TextColor3 = TEXT_MAIN
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.TextSize = 11
+		nameLabel.Size = UDim2.new(1, -52, 1, 0)
+		nameLabel.Position = UDim2.new(0, 45, 0, 0)
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		nameLabel.ZIndex = 4
+		nameLabel.Parent = row
+	end
+
+	local selectButton = Instance.new("TextButton")
+	selectButton.BackgroundTransparency = 1
+	selectButton.Text = ""
+	selectButton.AutoButtonColor = false
+	selectButton.Size = UDim2.new(1, 0, 1, 0)
+	selectButton.ZIndex = 6
+	selectButton.Parent = row
+	selectButton.Activated:Connect(function()
+		Internal.ApplyTarget(target)
+	end)
+
+	return row
+end
 
 Internal.ApplyTarget = function(target)
 	State.Target = target
+
 	if not State.Target then
 		updateESP(nil)
 		intelAvatar.Image = ""
@@ -1036,40 +1210,43 @@ Internal.ApplyTarget = function(target)
 		intelName.TextColor3 = TEXT_SUB
 		intelHealth.Text = "HP: 0/0"
 		intelDist.Text = "Distance: N/A"
-		tween(hpFill, {Size = UDim2.new(0,0,1,0)}, 0.3)
+		tween(hpFill, {Size = UDim2.new(0,0,1,0)}, 0.2)
 		intelAdvAge.Text = "Account Age: -"
 		intelAdvFriends.Text = "Friends: -"
-		for _, md in ipairs(miniDashes) do 
+		for _, md in ipairs(miniDashes) do
 			md.avatar.Image = ""
 			md.name.Text = "No Target"
 			md.name.TextColor3 = TEXT_SUB
-			tween(md.hpFill, {Size = UDim2.new(0,0,1,0)}, 0.3) 
+			tween(md.hpFill, {Size = UDim2.new(0,0,1,0)}, 0.2)
 		end
 		Internal.TargetUserId = nil
 		Notify("SYSTEM", "Target lock disengaged.", DANGER)
 	else
-		intelName.Text = State.Target.name .. " (@" .. State.Target.username .. ")"
+		intelName.Text = State.Target.name .. "  (@" .. State.Target.username .. ")"
 		intelName.TextColor3 = TEXT_MAIN
-		for _, md in ipairs(miniDashes) do 
+		for _, md in ipairs(miniDashes) do
 			md.name.Text = State.Target.name
-			md.name.TextColor3 = ACCENT 
+			md.name.TextColor3 = ACCENT
 		end
-		
+
 		if State.Target.kind == "PLAYER" and State.Target.player then
 			Internal.TargetUserId = State.Target.player.UserId
-			task.spawn(function() 
-				local ok, img = pcall(function() return Players:GetUserThumbnailAsync(State.Target.player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150) end)
-				if ok and img then 
+			local targetId = State.Target.player.UserId
+			task.spawn(function()
+				local ok, img = pcall(function()
+					return Players:GetUserThumbnailAsync(targetId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+				end)
+				if ok and img and State.Target and State.Target.player
+					and State.Target.player.UserId == targetId then
 					intelAvatar.Image = img
-					for _, md in ipairs(miniDashes) do md.avatar.Image = img end 
-				end 
+					for _, md in ipairs(miniDashes) do md.avatar.Image = img end
+				end
 			end)
-			
 			task.spawn(function()
 				intelAdvAge.Text = "Account Age: Fetching..."
 				intelAdvFriends.Text = "Friends: Fetching..."
-				local info = fetchAdvancedInfo(State.Target.player.UserId)
-				if State.Target and State.Target.player and State.Target.player.UserId == Internal.TargetUserId then
+				local info = fetchAdvancedInfo(targetId)
+				if State.Target and State.Target.player and State.Target.player.UserId == targetId then
 					intelAdvAge.Text = "Account Age: " .. info.age
 					intelAdvFriends.Text = "Friends: " .. info.friends
 				end
@@ -1087,51 +1264,63 @@ Internal.ApplyTarget = function(target)
 	for _, data in ipairs(targetButtonData) do
 		local isMatch = false
 		if State.Target then
-			if State.Target.kind == "PLAYER" and State.Target.player == data.targetData.player then 
-				isMatch = true
-			elseif State.Target.kind == "NPC" and State.Target.instance == data.targetData.instance then 
-				isMatch = true 
-			end
+			isMatch = (State.Target.kind == "PLAYER" and State.Target.player == data.targetData.player)
+				or (State.Target.kind == "NPC" and State.Target.instance == data.targetData.instance)
 		end
-		local stroke = data.btn:FindFirstChildOfClass("UIStroke")
-		if isMatch then 
-			tween(data.btn, {BackgroundColor3 = Color3.fromRGB(40, 70, 45)}, 0.2)
-			data.btn.TextColor3 = SUCCESS
-			if stroke then stroke.Color = SUCCESS end
-		else 
-			tween(data.btn, {BackgroundColor3 = BG_ELEMENT}, 0.2)
-			data.btn.TextColor3 = TEXT_MAIN
-			if stroke then stroke.Color = Color3.fromRGB(45, 45, 55) end
+		local rowStroke = data.btn:FindFirstChildOfClass("UIStroke")
+		if isMatch then
+			tween(data.btn, {BackgroundColor3 = Color3.fromRGB(38, 58, 46)}, 0.15)
+			if rowStroke then rowStroke.Color = SUCCESS; rowStroke.Thickness = 1.5 end
+		else
+			tween(data.btn, {BackgroundColor3 = BG_ELEMENT}, 0.15)
+			if rowStroke then rowStroke.Color = Color3.fromRGB(45,45,55); rowStroke.Thickness = 1 end
 		end
 	end
 end
 
 tClear.Activated:Connect(function() Internal.ApplyTarget(nil) end)
 
+local targetRefreshBusy = false
 Internal.RefreshTargets = function()
-	for _, data in ipairs(targetButtonData) do data.btn:Destroy() end
+	if targetRefreshBusy then return end
+	targetRefreshBusy = true
+
+	local ok, targets = pcall(getTargets)
+	if not ok or type(targets) ~= "table" then
+		targetRefreshBusy = false
+		warn("[COCA] Target refresh failed: " .. tostring(targets))
+		return
+	end
+
+	for _, data in ipairs(targetButtonData) do
+		if data.btn and data.btn.Parent then data.btn:Destroy() end
+	end
 	targetButtonData = {}
-	for _, t in ipairs(getTargets()) do
-		if targetMatches(t, tSearch.Text) then
-			local b = button(tList, "  " .. (t.kind=="PLAYER" and "👤 " or "🤖 ") .. t.name)
-			b.TextXAlignment = Enum.TextXAlignment.Left
-			table.insert(targetButtonData, {btn = b, targetData = t})
-			
-			local isMatch = false
+
+	local playerCount = 0
+	for _, target in ipairs(targets) do
+		if target.kind == "PLAYER" then playerCount += 1 end
+	end
+	playerListHeader.Text = "SERVER PLAYERS  •  " .. tostring(playerCount) .. " AVAILABLE"
+
+	for _, target in ipairs(targets) do
+		if targetMatches(target, tSearch.Text) then
+			local row = createTargetRow(tList, target)
+			table.insert(targetButtonData, {btn = row, targetData = target})
 			if State.Target then
-				if State.Target.kind == "PLAYER" and State.Target.player == t.player then isMatch = true
-				elseif State.Target.kind == "NPC" and State.Target.instance == t.instance then isMatch = true end
+				local match = (State.Target.kind == "PLAYER" and State.Target.player == target.player)
+					or (State.Target.kind == "NPC" and State.Target.instance == target.instance)
+				if match then
+					row.BackgroundColor3 = Color3.fromRGB(38,58,46)
+					local s = row:FindFirstChildOfClass("UIStroke")
+					if s then s.Color = SUCCESS; s.Thickness = 1.5 end
+				end
 			end
-			local stroke = b:FindFirstChildOfClass("UIStroke")
-			if isMatch then 
-				b.BackgroundColor3 = Color3.fromRGB(40, 70, 45)
-				b.TextColor3 = SUCCESS
-				if stroke then stroke.Color = SUCCESS end
-			end
-			b.MouseButton1Click:Connect(function() Internal.ApplyTarget(t) end) 
 		end
 	end
+	targetRefreshBusy = false
 end
+
 tSearch:GetPropertyChangedSignal("Text"):Connect(Internal.RefreshTargets)
 
 --============================================================
@@ -1777,72 +1966,94 @@ titleHeader(tabs.Performance, "◈ PERFORMANCE CENTER")
 createMiniDash(tabs.Performance)
 
 local perfCard = Instance.new("Frame")
-perfCard.Size = UDim2.new(1, 0, 0, 190)
+perfCard.Size = UDim2.new(1, 0, 0, 232)
 perfCard.BackgroundColor3 = BG_ELEMENT
+perfCard.BorderSizePixel = 0
 perfCard.Parent = tabs.Performance
 Instance.new("UICorner", perfCard).CornerRadius = UDim.new(0, 14)
 local perfStroke = Instance.new("UIStroke", perfCard)
 perfStroke.Color = Color3.fromRGB(45, 45, 55)
+perfStroke.Thickness = 1
 
 local perfTitle = Instance.new("TextLabel")
 perfTitle.BackgroundTransparency = 1
 perfTitle.Text = "LIVE CLIENT STATUS"
 perfTitle.TextSize = 11
 perfTitle.TextColor3 = TEXT_SUB
-perfTitle.Font = Enum.Font.GothamBold
-perfTitle.Size = UDim2.new(1, -20, 0, 20)
-perfTitle.Position = UDim2.new(0, 10, 0, 8)
+perfTitle.Font = Enum.Font.GothamBlack
+perfTitle.Size = UDim2.new(1, -24, 0, 20)
+perfTitle.Position = UDim2.new(0, 12, 0, 10)
 perfTitle.TextXAlignment = Enum.TextXAlignment.Left
 perfTitle.Parent = perfCard
 
+local perfLine = Instance.new("Frame")
+perfLine.Size = UDim2.new(1, -24, 0, 1)
+perfLine.Position = UDim2.new(0, 12, 0, 35)
+perfLine.BackgroundColor3 = Color3.fromRGB(45,45,55)
+perfLine.BorderSizePixel = 0
+perfLine.Parent = perfCard
+
 local perfFPS = Instance.new("TextLabel")
 perfFPS.BackgroundTransparency = 1
-perfFPS.Text = "FPS: --"
-perfFPS.TextSize = 22
+perfFPS.Text = "FPS  --"
+perfFPS.TextSize = 18
 perfFPS.TextColor3 = SUCCESS
 perfFPS.Font = Enum.Font.GothamBlack
-perfFPS.Size = UDim2.new(0.5, -10, 0, 35)
-perfFPS.Position = UDim2.new(0, 10, 0, 35)
+perfFPS.Size = UDim2.new(0.5, -18, 0, 32)
+perfFPS.Position = UDim2.new(0, 12, 0, 50)
 perfFPS.TextXAlignment = Enum.TextXAlignment.Left
 perfFPS.Parent = perfCard
 
 local perfPing = Instance.new("TextLabel")
 perfPing.BackgroundTransparency = 1
-perfPing.Text = "PING: --"
-perfPing.TextSize = 22
+perfPing.Text = "PING  --"
+perfPing.TextSize = 18
 perfPing.TextColor3 = YELLOW
 perfPing.Font = Enum.Font.GothamBlack
-perfPing.Size = UDim2.new(0.5, -10, 0, 35)
-perfPing.Position = UDim2.new(0.5, 0, 0, 35)
+perfPing.Size = UDim2.new(0.5, -18, 0, 32)
+perfPing.Position = UDim2.new(0.5, 6, 0, 50)
 perfPing.TextXAlignment = Enum.TextXAlignment.Right
 perfPing.Parent = perfCard
 
 local perfExecutor = Instance.new("TextLabel")
-perfExecutor.BackgroundTransparency = 1
-perfExecutor.Text = "EXECUTOR: Detecting..."
-perfExecutor.TextSize = 12
+perfExecutor.BackgroundColor3 = BG_MAIN
+perfExecutor.BackgroundTransparency = 0.15
+perfExecutor.Text = "EXECUTOR  •  Detecting..."
+perfExecutor.TextSize = 11
 perfExecutor.TextColor3 = TEXT_MAIN
 perfExecutor.Font = Enum.Font.GothamBold
-perfExecutor.Size = UDim2.new(1, -20, 0, 25)
-perfExecutor.Position = UDim2.new(0, 10, 0, 80)
+perfExecutor.Size = UDim2.new(1, -24, 0, 34)
+perfExecutor.Position = UDim2.new(0, 12, 0, 92)
 perfExecutor.TextXAlignment = Enum.TextXAlignment.Center
 perfExecutor.TextTruncate = Enum.TextTruncate.AtEnd
 perfExecutor.Parent = perfCard
+Instance.new("UICorner", perfExecutor).CornerRadius = UDim.new(0, 8)
 
 local perfHint = Instance.new("TextLabel")
 perfHint.BackgroundTransparency = 1
-perfHint.Text = "Client metrics • updates automatically"
-perfHint.TextSize = 10
+perfHint.Text = "Client metrics  •  refreshed twice per second"
+perfHint.TextSize = 9
 perfHint.TextColor3 = TEXT_SUB
 perfHint.Font = Enum.Font.Gotham
-perfHint.Size = UDim2.new(1, -20, 0, 20)
-perfHint.Position = UDim2.new(0, 10, 0, 110)
+perfHint.Size = UDim2.new(1, -24, 0, 22)
+perfHint.Position = UDim2.new(0, 12, 0, 136)
 perfHint.TextXAlignment = Enum.TextXAlignment.Center
 perfHint.Parent = perfCard
 
+local perfStatus = Instance.new("TextLabel")
+perfStatus.BackgroundTransparency = 1
+perfStatus.Text = "●  MONITORING ACTIVE"
+perfStatus.TextSize = 9
+perfStatus.TextColor3 = SUCCESS
+perfStatus.Font = Enum.Font.GothamBlack
+perfStatus.Size = UDim2.new(1, -24, 0, 20)
+perfStatus.Position = UDim2.new(0, 12, 0, 178)
+perfStatus.TextXAlignment = Enum.TextXAlignment.Center
+perfStatus.Parent = perfCard
+
 local perfHud = Instance.new("Frame")
 perfHud.Name = "PerformanceHUD"
-perfHud.Size = UDim2.new(0, 190, 0, 48)
+perfHud.Size = UDim2.new(0, 210, 0, 46)
 perfHud.Position = UDim2.new(0, 14, 0, 14)
 perfHud.BackgroundColor3 = BG_MAIN
 perfHud.BackgroundTransparency = 0.08
@@ -1856,16 +2067,15 @@ phStroke.Thickness = 1.5
 
 local phText = Instance.new("TextLabel")
 phText.BackgroundTransparency = 1
-phText.Text = "FPS --  •  PING --"
-phText.TextSize = 11
+phText.Text = "FPS --   •   PING --"
+phText.TextSize = 10
 phText.TextColor3 = TEXT_MAIN
-phText.Font = Enum.Font.GothamBold
+phText.Font = Enum.Font.GothamBlack
 phText.Size = UDim2.new(1, -12, 1, 0)
 phText.Position = UDim2.new(0, 6, 0, 0)
 phText.TextXAlignment = Enum.TextXAlignment.Center
 phText.Parent = perfHud
 
-local perfExecutorName = getExecutorName()
 perfExecutor.Text = "EXECUTOR: " .. perfExecutorName
 
 -- Refreshing this display at a modest interval avoids adding unnecessary work to the
@@ -1878,8 +2088,8 @@ RunService.RenderStepped:Connect(function(dt)
 	if perfAccum >= 0.5 then
 		local fps = math.floor((perfFrames / perfAccum) + 0.5)
 		local ping = getPingMs()
-		perfFPS.Text = "FPS: " .. tostring(fps)
-		perfPing.Text = "PING: " .. (ping and (tostring(ping) .. " ms") or "--")
+		perfFPS.Text = "FPS  " .. tostring(fps)
+		perfPing.Text = "PING  " .. (ping and (tostring(ping) .. " ms") or "--")
 		phText.Text = "FPS " .. tostring(fps) .. "  •  PING " .. (ping and (tostring(ping) .. "ms") or "--")
 		perfFrames, perfAccum = 0, 0
 	end
@@ -2456,4 +2666,14 @@ end)
 
 verification.Visible = true
 wrapper.Visible = false
-print("COCA CAPSULE: V42 ULTIMATE CLOUD ENGINE INITIALIZED | Key: KINGCOCA")
+
+task.spawn(function()
+	while gui.Parent do
+		task.wait(2)
+		if State.Unlocked and activeTab == tabs.Target then
+			Internal.RefreshTargets()
+		end
+	end
+end)
+
+print("COCA CAPSULE: V43 PREMIUM CLOUD ENGINE INITIALIZED | Key: KINGCOCA")
