@@ -1,12 +1,86 @@
 --============================================================
--- COCA SCRIPT : V50 CLEAN UI / TARGET / DEEPHAT / ANIMATION EDITION
--- Key: KINGCOCA | Roblox Lua/Luau | client-side utility
+-- COCA SCRIPT : V50 UNIVERSAL LUAU / CLEAN UI / TARGET / DEEPHAT
+-- Key: KINGCOCA | Roblox Luau | adaptive executor compatibility
+--
+-- This build uses Roblox APIs first and only uses optional executor
+-- adapters when the host provides them. Unsupported adapters simply
+-- fall back instead of crashing the whole script.
 --============================================================
 
-local cloneref = cloneref or function(...) return ... end
-local S = setmetatable({}, {__index=function(_,n) return cloneref(game:GetService(n)) end})
-local Players, RunService, UserInputService, TextChatService, TweenService, VirtualUser, CoreGui, HttpService, GuiService, Stats =
-	S.Players, S.RunService, S.UserInputService, S.TextChatService, S.TweenService, S.VirtualUser, S.CoreGui, S.HttpService, S.GuiService, S.Stats
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TextChatService = game:GetService("TextChatService")
+local TweenService = game:GetService("TweenService")
+local VirtualUser = game:GetService("VirtualUser")
+local HttpService = game:GetService("HttpService")
+local GuiService = game:GetService("GuiService")
+local Stats = game:GetService("Stats")
+local SoundService = game:GetService("SoundService")
+
+--============================================================
+-- UNIVERSAL HOST COMPATIBILITY LAYER
+--============================================================
+-- Different Roblox executors expose different optional helpers.  The core
+-- script never depends on one specific executor.  These adapters probe for
+-- commonly exposed helpers and fall back to normal Roblox APIs when absent.
+local function optionalGlobal(name)
+    local ok, value = pcall(function() return _G[name] end)
+    if ok and value ~= nil then return value end
+
+    local ok2, value2 = pcall(function()
+        if type(getgenv) == "function" then
+            local env = getgenv()
+            return env and env[name]
+        end
+    end)
+    if ok2 and value2 ~= nil then return value2 end
+    return nil
+end
+
+local function getPreferredGuiParent(player)
+    local gethuiFn = optionalGlobal("gethui")
+    if type(gethuiFn) == "function" then
+        local ok, hui = pcall(gethuiFn)
+        if ok and hui then return hui end
+    end
+
+    local coreGui = game:GetService("CoreGui")
+    if coreGui then
+        local ok, usable = pcall(function()
+            local probe = Instance.new("Folder")
+            probe.Name = "__COCA_GUI_PROBE"
+            probe.Parent = coreGui
+            probe:Destroy()
+            return true
+        end)
+        if ok and usable then return coreGui end
+    end
+
+    return player:WaitForChild("PlayerGui")
+end
+
+local function universalRequest(options)
+    local candidates = {
+        optionalGlobal("request"),
+        optionalGlobal("http_request"),
+        optionalGlobal("httprequest"),
+    }
+
+    local synTable = optionalGlobal("syn")
+    if type(synTable) == "table" and type(synTable.request) == "function" then
+        candidates[#candidates + 1] = synTable.request
+    end
+
+    for _, fn in ipairs(candidates) do
+        if type(fn) == "function" then
+            local ok, result = pcall(fn, options)
+            if ok and result then return true, result end
+        end
+    end
+
+    return false, nil
+end
 
 local LP = Players.LocalPlayer
 
@@ -219,7 +293,7 @@ local function playSound(id, vol, pitch)
 		s.SoundId = "rbxassetid://" .. id
 		s.Volume = vol or 0.5
 		s.Pitch = pitch or 1.0
-		s.Parent = CoreGui
+		s.Parent = SoundService
 		s:Play()
 		s.Ended:Wait()
 		s:Destroy()
@@ -278,20 +352,12 @@ local function applyGradient(obj)
 end
 
 --============================================================
--- SAFE GUI PARENTING & HIGHLIGHTS
+-- UNIVERSAL GUI PARENTING & HIGHLIGHTS
 --============================================================
 
-local targetGuiParent = nil
-pcall(function()
-    if gethui then
-        local h = gethui()
-        if typeof(h) == "Instance" then targetGuiParent = h end
-    end
-end)
-if not targetGuiParent then targetGuiParent = CoreGui end
-if not targetGuiParent or typeof(targetGuiParent) ~= "Instance" then
-    targetGuiParent = LP:WaitForChild("PlayerGui")
-end
+-- Prefer an executor's protected GUI container when available, then CoreGui,
+-- then PlayerGui. This lets the same source run in different Luau hosts.
+local targetGuiParent = getPreferredGuiParent(LP)
 
 local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V50") or targetGuiParent:FindFirstChild("COCA_Capsule_V49") or targetGuiParent:FindFirstChild("COCA_Capsule_V48") or targetGuiParent:FindFirstChild("COCA_Capsule_V47") or targetGuiParent:FindFirstChild("COCA_Capsule_V44") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
 if oldGui then oldGui:Destroy() end
@@ -656,18 +722,24 @@ local function getVIPRole(username)
 end
 
 local function getExecutorName()
-	local probes = {
-		function() return identifyexecutor and identifyexecutor() end,
-		function() return getexecutorname and getexecutorname() end,
-		function() return (syn and syn.get_executor_name and syn.get_executor_name()) end,
-	}
-	for _, probe in ipairs(probes) do
-		local ok, value = pcall(probe)
-		if ok and value and tostring(value) ~= "" then
-			return tostring(value)
-		end
-	end
-	return "Unknown / Roblox"
+    -- Optional executor identification. Never required by the core script.
+    local probes = {
+        optionalGlobal("identifyexecutor"),
+        optionalGlobal("getexecutorname"),
+    }
+    local synTable = optionalGlobal("syn")
+    if type(synTable) == "table" and type(synTable.get_executor_name) == "function" then
+        probes[#probes + 1] = synTable.get_executor_name
+    end
+    for _, probe in ipairs(probes) do
+        if type(probe) == "function" then
+            local ok, value = pcall(probe)
+            if ok and value and tostring(value) ~= "" then
+                return tostring(value)
+            end
+        end
+    end
+    return "Roblox / LocalScript"
 end
 
 local function getPingMs()
@@ -1857,29 +1929,49 @@ end
 -- HTTP SERVICE DATA FETCHER (SAFE CLIENT PROXY)
 --============================================================
 local function fetchAdvancedInfo(uid)
-	local info = { age = "N/A", friends = "N/A" }
-	pcall(function()
-		local req = (http_request or request or syn.request or (http and http.request))
-		if req then
-			local res = req({Url = "https://users.roblox.com/v1/users/"..uid, Method = "GET"})
-			if res and res.Body then
-				local d = HttpService:JSONDecode(res.Body)
-				if d.created then
-					local c = DateTime.fromIsoDate(d.created)
-					local days = (DateTime.now().UnixTimestamp - c.UnixTimestamp) / 86400
-					if days < 30 then info.age = math.floor(days).."d" 
-					elseif days < 365 then info.age = math.floor(days/30).."mo" 
-					else info.age = math.floor(days/365).."y" end
-				end
-			end
-			local fRes = req({Url = "https://friends.roblox.com/v1/users/"..uid.."/friends/count", Method = "GET"})
-			if fRes and fRes.Body then
-				local d = HttpService:JSONDecode(fRes.Body)
-				if d.count then info.friends = tostring(d.count) end
-			end
-		end
-	end)
-	return info
+    -- Use executor HTTP only when the host explicitly exposes a compatible
+    -- request function; otherwise fall back to Roblox's local Player data.
+    local info = { age = "N/A", friends = "N/A" }
+    local requestOptions = {
+        Url = "https://users.roblox.com/v1/users/" .. tostring(uid),
+        Method = "GET"
+    }
+    local ok, res = universalRequest(requestOptions)
+    if ok and res and res.Body then
+        pcall(function()
+            local d = HttpService:JSONDecode(res.Body)
+            if d and d.created then
+                local c = DateTime.fromIsoDate(d.created)
+                local days = (DateTime.now().UnixTimestamp - c.UnixTimestamp) / 86400
+                if days < 30 then info.age = math.floor(days) .. "d"
+                elseif days < 365 then info.age = math.floor(days / 30) .. "mo"
+                else info.age = math.floor(days / 365) .. "y" end
+            end
+        end)
+        local okF, fRes = universalRequest({
+            Url = "https://friends.roblox.com/v1/users/" .. tostring(uid) .. "/friends/count",
+            Method = "GET"
+        })
+        if okF and fRes and fRes.Body then
+            pcall(function()
+                local d = HttpService:JSONDecode(fRes.Body)
+                if d and d.count ~= nil then info.friends = tostring(d.count) end
+            end)
+        end
+    end
+
+    if info.age == "N/A" then
+        local okP, player = pcall(function()
+            return Players:GetPlayerByUserId(tonumber(uid))
+        end)
+        if okP and player then
+            local days = tonumber(player.AccountAge) or 0
+            if days < 30 then info.age = math.floor(days) .. "d"
+            elseif days < 365 then info.age = math.floor(days / 30) .. "mo"
+            else info.age = math.floor(days / 365) .. "y" end
+        end
+    end
+    return info
 end
 
 --============================================================
@@ -3241,8 +3333,19 @@ saveSafe.Activated:Connect(function()
 end)
 
 header(tabs.Safety, "AFK BYPASS")
-createToggle(tabs.Safety, "Virtual Anti-AFK", State.Safety, "AntiAFK", function(isOn) 
-	if isOn then pcall(function() if getconnections then for _, v in pairs(getconnections(LP.Idled)) do v:Disable() end end end) end 
+createToggle(tabs.Safety, "Virtual Anti-AFK", State.Safety, "AntiAFK", function(isOn)
+    if isOn then
+        local getconnectionsFn = optionalGlobal("getconnections")
+        if type(getconnectionsFn) == "function" then
+            pcall(function()
+                for _, connection in pairs(getconnectionsFn(LP.Idled)) do
+                    if connection and type(connection.Disable) == "function" then
+                        connection:Disable()
+                    end
+                end
+            end)
+        end
+    end
 end)
 
 LP.Idled:Connect(function() 
@@ -4046,4 +4149,4 @@ task.defer(function()
         quickManager.Visible = false
 	end
 end)
-print("COCA CAPSULE: V50 CLEAN UI / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
+print("COCA CAPSULE: V50 UNIVERSAL LUAU / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
