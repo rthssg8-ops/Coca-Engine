@@ -1,5 +1,5 @@
 --============================================================
--- COCA SCRIPT : V52 UNIVERSAL LUAU / EXECUTOR-STABLE / FULL FEATURES / DEEPHAT
+-- COCA SCRIPT : V53 UNIVERSAL LUAU / EXECUTOR-STABLE / FULL FEATURES / DEEPHAT
 -- Key: KINGCOCA | Roblox Luau | adaptive executor compatibility
 --
 -- This build uses Roblox APIs first and only uses optional executor
@@ -202,7 +202,28 @@ local State = {
 }
 
 local Internal = { ApplyTarget = nil, StopMoves = nil, RefreshTargets = nil, RefreshImmunityList = nil, TargetUserId = nil }
-local flyVelocity = Vector3.zero 
+local flyVelocity = Vector3.zero
+
+-- Character part cache: avoids scanning every descendant on every Heartbeat.
+local collisionParts = {}
+local collisionConnections = {}
+local function disconnectCollisionConnections()
+    for _, c in ipairs(collisionConnections) do pcall(function() c:Disconnect() end) end
+    table.clear(collisionConnections)
+end
+local function rebuildCollisionCache(char)
+    table.clear(collisionParts)
+    disconnectCollisionConnections()
+    if not char then return end
+    for _, obj in ipairs(char:GetDescendants()) do
+        if obj:IsA("BasePart") then collisionParts[#collisionParts + 1] = obj end
+    end
+    collisionConnections[#collisionConnections + 1] = char.DescendantAdded:Connect(function(obj)
+        if obj:IsA("BasePart") then collisionParts[#collisionParts + 1] = obj end
+    end)
+end
+rebuildCollisionCache(LP.Character)
+
 local selectedEmoteBtn = nil
 
 -- Forward declarations: the reverse recorder is connected before the core
@@ -411,11 +432,20 @@ end
 -- then PlayerGui. This lets the same source run in different Luau hosts.
 local targetGuiParent = getPreferredGuiParent(LP)
 
-local oldGui = targetGuiParent:FindFirstChild("COCA_Capsule_V50") or targetGuiParent:FindFirstChild("COCA_Capsule_V49") or targetGuiParent:FindFirstChild("COCA_Capsule_V48") or targetGuiParent:FindFirstChild("COCA_Capsule_V47") or targetGuiParent:FindFirstChild("COCA_Capsule_V44") or targetGuiParent:FindFirstChild("COCA_Capsule_V42")
-if oldGui then oldGui:Destroy() end
+local oldNames = {
+    "COCA_Capsule_V53", "COCA_Capsule_V52", "COCA_Capsule_V51", "COCA_Capsule_V50",
+    "COCA_Capsule_V49", "COCA_Capsule_V48", "COCA_Capsule_V47", "COCA_Capsule_V46",
+    "COCA_Capsule_V45", "COCA_Capsule_V44", "COCA_Capsule_V42"
+}
+for _, oldName in ipairs(oldNames) do
+    local oldGui = targetGuiParent:FindFirstChild(oldName)
+    if oldGui then pcall(function() oldGui:Destroy() end) end
+end
+local oldESP = targetGuiParent:FindFirstChild("COCA_ESP")
+if oldESP then pcall(function() oldESP:Destroy() end) end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "COCA_Capsule_V50"
+gui.Name = "COCA_Capsule_V53"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -3599,16 +3629,16 @@ RunService.Heartbeat:Connect(function(dt)
 		end 
 	end
 
-	-- Collision Cancellation
-	if State.Movement.Noclip then
-		for _, p in ipairs(char:GetDescendants()) do
-			if p:IsA("BasePart") then p.CanCollide = false end
-		end
-	else
-		for _, p in ipairs(char:GetDescendants()) do
-			if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.CanCollide = true end
-		end
-	end
+	-- Collision Cancellation (cached parts; no full character scan every frame)
+    if State.Movement.Noclip then
+        for _, p in ipairs(collisionParts) do
+            if p and p.Parent and p.CanCollide then p.CanCollide = false end
+        end
+    elseif collisionSyncDue then
+        for _, p in ipairs(collisionParts) do
+            if p and p.Parent and p.Name ~= "HumanoidRootPart" and not p.CanCollide then p.CanCollide = true end
+        end
+    end
 
 	-- WalkSpeed Sync
 	if State.Movement.SpeedEnabled then myHum.WalkSpeed = State.Movement.WalkSpeed end
@@ -3786,7 +3816,17 @@ end)
 -- HEARTBEAT (UI & LIVE REPLICATION)
 --============================================================
 
-RunService.Heartbeat:Connect(function()
+local collisionSyncClock = 0
+local collisionSyncDue = false
+
+LP.CharacterAdded:Connect(function(char)
+    rebuildCollisionCache(char)
+end)
+
+RunService.Heartbeat:Connect(function(dt)
+    collisionSyncClock += dt or 0
+    collisionSyncDue = collisionSyncClock >= 0.15
+    if collisionSyncDue then collisionSyncClock = 0 end
 	if not State.Unlocked then return end
 	local char = LP.Character
 	local myRoot = char and root(char)
@@ -4202,4 +4242,4 @@ task.defer(function()
         quickManager.Visible = false
 	end
 end)
-print("COCA CAPSULE: V52 UNIVERSAL EXECUTOR LUAU / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
+print("COCA CAPSULE: V53 UNIVERSAL EXECUTOR LUAU / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
