@@ -1,5 +1,5 @@
 --============================================================
--- COCA SCRIPT : V50 UNIVERSAL LUAU / CLEAN UI / TARGET / DEEPHAT
+-- COCA SCRIPT : V52 UNIVERSAL LUAU / EXECUTOR-STABLE / FULL FEATURES / DEEPHAT
 -- Key: KINGCOCA | Roblox Luau | adaptive executor compatibility
 --
 -- This build uses Roblox APIs first and only uses optional executor
@@ -42,21 +42,33 @@ local function getPreferredGuiParent(player)
     local gethuiFn = optionalGlobal("gethui")
     if type(gethuiFn) == "function" then
         local ok, hui = pcall(gethuiFn)
-        if ok and hui then return hui end
+        if ok and hui and typeof(hui) == "Instance" then
+            return hui
+        end
     end
 
-    local coreGui = game:GetService("CoreGui")
+    local clonerefFn = optionalGlobal("cloneref")
+    local coreGui
+    pcall(function() coreGui = game:GetService("CoreGui") end)
+    if coreGui and type(clonerefFn) == "function" then
+        local ok, clone = pcall(clonerefFn, coreGui)
+        if ok and clone then coreGui = clone end
+    end
+
     if coreGui then
         local ok, usable = pcall(function()
             local probe = Instance.new("Folder")
             probe.Name = "__COCA_GUI_PROBE"
             probe.Parent = coreGui
+            local parentWorked = probe.Parent ~= nil
             probe:Destroy()
-            return true
+            return parentWorked
         end)
         if ok and usable then return coreGui end
     end
 
+    local pg = player and player:FindFirstChildOfClass("PlayerGui")
+    if pg then return pg end
     return player:WaitForChild("PlayerGui")
 end
 
@@ -83,6 +95,41 @@ local function universalRequest(options)
 end
 
 local LP = Players.LocalPlayer
+
+local EXECUTOR = {
+    Name = "Roblox",
+    HasGUI = false,
+    HasHTTP = false,
+    HasGetConnections = false,
+    HasClipboard = false,
+    HasQueueTeleport = false,
+}
+
+local function detectExecutor()
+    local identify = optionalGlobal("identifyexecutor")
+    if type(identify) == "function" then
+        pcall(function()
+            local a, b = identify()
+            EXECUTOR.Name = tostring(a or b or "Executor")
+        end)
+    end
+    if EXECUTOR.Name == "Roblox" then
+        local getName = optionalGlobal("getexecutorname")
+        if type(getName) == "function" then
+            pcall(function() EXECUTOR.Name = tostring(getName()) end)
+        end
+    end
+    EXECUTOR.HasHTTP = type(optionalGlobal("request")) == "function"
+        or type(optionalGlobal("http_request")) == "function"
+        or type(optionalGlobal("httprequest")) == "function"
+    EXECUTOR.HasGetConnections = type(optionalGlobal("getconnections")) == "function"
+    EXECUTOR.HasClipboard = type(optionalGlobal("setclipboard")) == "function"
+        or type(optionalGlobal("toclipboard")) == "function"
+    EXECUTOR.HasQueueTeleport = type(optionalGlobal("queue_on_teleport")) == "function"
+        or type(optionalGlobal("queueonteleport")) == "function"
+end
+
+detectExecutor()
 
 --============================================================
 -- 🔒 SUPREME ACCESS WHITELIST
@@ -157,6 +204,11 @@ local State = {
 local Internal = { ApplyTarget = nil, StopMoves = nil, RefreshTargets = nil, RefreshImmunityList = nil, TargetUserId = nil }
 local flyVelocity = Vector3.zero 
 local selectedEmoteBtn = nil
+
+-- Forward declarations: the reverse recorder is connected before the core
+-- helpers are assigned later in the file. Without these locals, some Luau
+-- hosts resolve hum/root as globals and the Heartbeat recorder errors.
+local hum, root, getCharacter
 
 --============================================================
 -- 30-SECOND AUTOMATIC REVERSE MEMORY
@@ -472,15 +524,15 @@ end
 -- CORE MATHEMATICAL & ENGINE UTILITIES
 --============================================================
 
-local function hum(model) return model and model:FindFirstChildOfClass("Humanoid") end
-local function root(model)
+hum = function(model) return model and model:FindFirstChildOfClass("Humanoid") end
+root = function(model)
     if not model then return nil end
     return model:FindFirstChild("HumanoidRootPart")
         or model.PrimaryPart
         or model:FindFirstChild("UpperTorso")
         or model:FindFirstChild("Torso")
 end
-local function getCharacter() return LP.Character or LP.CharacterAdded:Wait() end
+getCharacter = function() return LP.Character or LP.CharacterAdded:Wait() end
 
 local function flatCF(cf) 
 	local _, y, _ = cf:ToOrientation()
@@ -3348,14 +3400,15 @@ createToggle(tabs.Safety, "Virtual Anti-AFK", State.Safety, "AntiAFK", function(
     end
 end)
 
-LP.Idled:Connect(function() 
-	if State.Safety.AntiAFK then 
-		pcall(function() 
-			VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-			task.wait(1)
-			VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame) 
-		end) 
-	end 
+LP.Idled:Connect(function()
+    if not State.Safety.AntiAFK or not VirtualUser then return end
+    pcall(function()
+        local camera = workspace.CurrentCamera
+        if not camera then return end
+        VirtualUser:Button2Down(Vector2.new(0, 0), camera.CFrame)
+        task.wait(1)
+        VirtualUser:Button2Up(Vector2.new(0, 0), camera.CFrame)
+    end)
 end)
 
 --============================================================
@@ -4149,4 +4202,4 @@ task.defer(function()
         quickManager.Visible = false
 	end
 end)
-print("COCA CAPSULE: V50 UNIVERSAL LUAU / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
+print("COCA CAPSULE: V52 UNIVERSAL EXECUTOR LUAU / TARGET / DEEPHAT / ANIMATION ENGINE INITIALIZED | Key: KINGCOCA")
