@@ -1039,7 +1039,7 @@ do
 								end
 								return
 							end 
-							
+
 							local v3 = nil
 
 							for _, v4 in ipairs(AttachFeatures) do
@@ -10306,47 +10306,7 @@ do
 					end,
 					action = function()
 						if not tbl[r2112] then
-							local flag8 = r2112 ~= "Bagpack"
-
-							if flag8 then
-								flag8 = r2112 ~= "Hipbang"
-							end
-
-							if flag8 then
-								flag8 = r2112 ~= "CustomAttach"
-							end
-
-							local v3 = resolveAttachTarget(r2112, flag8)
-
-							if r2112 == "Pat" then
-								PatTarget = v3
-							elseif r2112 == "Headsit" then
-								HeadsitTarget = v3
-							elseif r2112 == "Backhug" then
-								BackhugTarget = v3
-							elseif r2112 == "Fronthug" then
-								FronthugTarget = v3
-							elseif r2112 == "Propose" then
-								ProposeTarget = v3
-							elseif r2112 == "Hipbang" then
-								HipbangTarget = v3
-							elseif r2112 == "Facebang" then
-								FacebangTarget = v3
-							elseif r2112 == "Bagpack" then
-								BagpackTarget = v3
-							elseif r2112 == "Goon" then
-								GoonTarget = v3
-							elseif r2112 == "CustomAttach" then
-								CustomAttachTarget = v3
-							end
-
-							if v3 then
-								syncAttachTarget(v3)
-								SetAttachState(r2112, true)
-							else
-								SetAttachState(r2112, false)
-								SendNotification("Eternity", "No target found!", 2)
-							end
+							SetAttachState(r2112, true)
 						else
 							SetAttachState(r2112, false)
 						end
