@@ -1008,14 +1008,38 @@ do
 								return
 							end
 
-							pgPlayer_ = TargetPlayer or FacebangTarget or HipbangTarget or PatTarget or HeadsitTarget or BackhugTarget or FronthugTarget or ProposeTarget or BagpackTarget or GoonTarget or CustomAttachTarget
+							local currentTarget = nil
+							if arg == "Facebang" then currentTarget = FacebangTarget
+							elseif arg == "Hipbang" then currentTarget = HipbangTarget
+							elseif arg == "Pat" then currentTarget = PatTarget
+							elseif arg == "Headsit" then currentTarget = HeadsitTarget
+							elseif arg == "Backhug" then currentTarget = BackhugTarget
+							elseif arg == "Fronthug" then currentTarget = FronthugTarget
+							elseif arg == "Propose" then currentTarget = ProposeTarget
+							elseif arg == "Bagpack" then currentTarget = BagpackTarget
+							elseif arg == "Goon" then currentTarget = GoonTarget
+							elseif arg == "CustomAttach" then currentTarget = CustomAttachTarget
+							end
+
+							pgPlayer_ = TargetPlayer or currentTarget
 
 							if not pgPlayer_ then
-                              if typeof(TargetPlayer) == "Instance" then
-                                pgPlayer_ = TargetPlayer
-                            end
-                        end
+								local isFront = (arg ~= "Bagpack" and arg ~= "Hipbang" and arg ~= "CustomAttach")
+								if typeof(resolveAttachTarget) == "function" then
+									pgPlayer_ = resolveAttachTarget(arg, isFront)
+								end
+							end
 
+							if not pgPlayer_ then
+								if typeof(SendNotification) == "function" then
+									SendNotification("Eternity", "No target found!", 2)
+								end
+								if GridButtonVisuals[arg] then 
+									GridButtonVisuals[arg](false) 
+								end
+								return
+							end 
+							
 							local v3 = nil
 
 							for _, v4 in ipairs(AttachFeatures) do
