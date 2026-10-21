@@ -1303,6 +1303,8 @@ local cocaOrbitAngle = 0
 local cocaFlingConn = nil
 local cocaSeatConn = nil
 
+local runCocaFlingStep -- Forward declare to fix syntax scope reference order
+
 local function stopCocaFling()
 	State.Filling.Running = false
 	fillingStart.Text = "▶ START COCA FLING"
@@ -1321,7 +1323,7 @@ local function stopCocaFling()
 	end
 end
 
-local function runCocaFlingStep(dt)
+runCocaFlingStep = function(dt)
 	if not State.Filling.Running then return end
 	local tr = getTargetRoot()
 	local mr = root(LP.Character)
