@@ -1,5 +1,5 @@
 --============================================================
--- COCA SCRIPT : V47 GITHUB CLOUD EDITION (LOW-END OPTIMIZED)
+-- COCA SCRIPT : V47 GITHUB CLOUD EDITION (EXECUTOR OPTIMIZED)
 -- Key: KINGCOCA | Pure Lua | 100% Crash-Proof | Flawless UI
 --============================================================
 
@@ -8,11 +8,10 @@ local S = setmetatable({}, {__index=function(_,n) return cloneref(game:GetServic
 local Players, RunService, UserInputService, TextChatService, TweenService, VirtualUser, CoreGui, HttpService =
 	S.Players, S.RunService, S.UserInputService, S.TextChatService, S.TweenService, S.VirtualUser, S.CoreGui, S.HttpService
 
-local sethiddenproperty = sethiddenproperty or set_hidden_property or set_hidden_prop
 local OriginalFPDH = workspace.FallenPartsDestroyHeight
 local LP = Players.LocalPlayer
 
--- Luau Performance Cache for Low-End Devices
+-- Luau Performance Cache
 local math_floor = math.floor
 local math_clamp = math.clamp
 local math_sin = math.sin
@@ -1303,7 +1302,7 @@ local cocaOrbitAngle = 0
 local cocaFlingConn = nil
 local cocaSeatConn = nil
 
-local runCocaFlingStep -- Forward declare to fix syntax scope reference order
+local runCocaFlingStep = nil
 
 local function stopCocaFling()
 	State.Filling.Running = false
@@ -1390,7 +1389,7 @@ Players.PlayerAdded:Connect(function(p)
 end)
 
 --============================================================
--- 5. CHAT SPAMMER (FIXED & OPTIMIZED FOR TEXTCHATSERVICE)
+-- 5. CHAT SPAMMER
 --============================================================
 titleHeader(tabs.Chat, "💬 CHAT SPAMMER")
 createMiniDash(tabs.Chat)
@@ -1802,7 +1801,7 @@ LP.Idled:Connect(function()
 end)
 
 --============================================================
--- WELDER & PHYSICS ENGINE (PHYSICSREPROOTPART + HEARTBEAT)
+-- WELDER & PHYSICS ENGINE
 --============================================================
 
 UserInputService.JumpRequest:Connect(function() 
@@ -1825,7 +1824,6 @@ local function executeWeldAttachment()
 	local targetRoot = targetChar and root(targetChar)
 	local targetHead = targetChar and targetChar:FindFirstChild("Head")
 
-	-- Side-by-Side Anchor Tracking
 	if State.Anim.Follow and targetPart then
 		pcall(function() 
 			if myHum.Sit then myHum.Sit = false end
@@ -1838,16 +1836,9 @@ local function executeWeldAttachment()
 			myRoot.CFrame = targetPart.CFrame * offset
 			myRoot.AssemblyLinearVelocity = Vector3.zero
 			myRoot.AssemblyAngularVelocity = Vector3.zero
-
-			if sethiddenproperty then
-				pcall(function()
-					sethiddenproperty(myRoot, "PhysicsRepRootPart", targetPart)
-				end)
-			end
 		end)
 	end
 
-	-- Master Welder & Troll Execution Pipeline
 	if State.Moves.Running and targetPart and targetRoot then
 		local t = os_clock()
 		local dist = math.max(0.1, State.Moves.Distance)
@@ -1942,12 +1933,6 @@ local function executeWeldAttachment()
 					local bob = math_sin(t * 8) * 0.25
 					myRoot.CFrame = CFrame.lookAt(sidePos, targetPos) * CFrame.new(0, bob, 0)
 				end
-			end
-
-			if sethiddenproperty then
-				pcall(function()
-					sethiddenproperty(myRoot, "PhysicsRepRootPart", targetPart)
-				end)
 			end
 		end)
 	end
